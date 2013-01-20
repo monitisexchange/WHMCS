@@ -1,4 +1,8 @@
 <?php
+/*
+ * Standard structure for WHMCS addons. The functions are callbacks
+ * that WHMCS uses to delegate handling user input and/or rendering output.
+ */
 
 if (!defined("WHMCS"))
 	die("This file cannot be accessed directly");
