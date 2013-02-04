@@ -35,6 +35,21 @@ function monitis_get($apiurl, $apikey, $action, $params) {
   return $json;
 }
 
+function monitis_results_url($vars, $test_id) {
+  list($ep, $ak, $sk) = monitis_extract_api_info($vars);
+  $params = array();
+  $params['testId'] = $test_id;
+  $params['day'] = date("d");
+  $params['month'] = date("m");
+  $params['year'] = date("Y");
+  $params['version'] = '2';
+  $params['action'] = 'testresult';
+  $params['apikey'] = $ak;
+  $query = http_build_query($params);
+  return $ep . '?' . $query;
+}
+
+
 function monitis_post($apiurl, $apikey, $secretkey, $action, $params) {
   // TODO: error handling when JSON is not returned
   $params['version'] = '2';
