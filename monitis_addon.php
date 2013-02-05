@@ -1,4 +1,5 @@
 <?php
+
 /*
  * Standard structure for WHMCS addons. The functions are callbacks
  * that WHMCS uses to delegate handling user input and/or rendering output.
@@ -12,6 +13,9 @@ include_once('monitis_api.php');
 include_once('monitis_addon_view.php');
 include_once('monitis_addon_helper.php');
 
+/*
+ * Addon configuration options
+ */
 function monitis_addon_config() {
     $configarray = array(
     "name" => "Monitis Addon",
@@ -27,6 +31,9 @@ function monitis_addon_config() {
     return $configarray;
 }
 
+/*
+ * Handle addon activation
+ */
 function monitis_addon_activate() {
   // Create Custom DB Table
   // TODO handle DB failures
@@ -39,16 +46,20 @@ function monitis_addon_activate() {
   return array('status'=>'success','description'=>'');
 }
 
+/*
+ * Handle addon deactivation
+ */
 function monitis_addon_deactivate() {
   // Remove Custom DB Table
   // TODO handle db failures 
   $query = "DROP TABLE `mod_monitis_addon`, `mod_monitis_server`";
 	$result = mysql_query($query);
   return array('status'=>'success','description'=>'Deactivation successful');
-  //return array('status'=>'error','description'=>'Deactivation error');
-  //return array('status'=>'info','description'=>'Deactivation info');
 }
 
+/*
+ * HTML snippet for addon admin UI embedded in WHMCS UI
+ */
 function monitis_addon_output($vars) {
   // Dispatch output based on get/post params
   // default to the server table
@@ -91,6 +102,9 @@ function monitis_addon_output($vars) {
   print view_deleted_server_table($vars);
 }
 
+/*
+ * HTML snippet for addon client UI embedded in WHMCS UI
+ */
 function monitis_addon_clientarea() {
   $configarray = array(
     "name" => "Monitis Addon Name",
@@ -101,6 +115,9 @@ function monitis_addon_clientarea() {
   return $configarray;
 }
 
+/*
+ * HTML snippet embedded in WHMCS sidebar for addon content
+ */
 function monitis_addon_sidebar() {
   $modulelink = $vars['modulelink'];
   $sidebar = <<<EOF
