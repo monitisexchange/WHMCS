@@ -1,5 +1,13 @@
 <?php
 
+/* 
+ * Views for components of Monitis WHMCS addon module.  Functions here
+ * emit snippets of HTML rendered to the browser in monitis_addon.php
+ */
+
+/*
+ * Format monitis results as series data for an HTML Rickshaw chart
+ */
 function monitis_to_rickshaw($data) {
   // in: monitis time series data from parsed json
   // out: rickshaw-formatted time series data as json
@@ -7,12 +15,93 @@ function monitis_to_rickshaw($data) {
   foreach ($data as $point) {
     list($time, $value, $ok) = $point;
     // ignore the $ok for now
-    $r_time = strtotime($time);
+    $r_time = $time;
     $r_substrings[] = "{ x: " . $r_time . ", y: " . $value . " }";
   }
   return "[ " . implode(", ", $r_substrings) . " ]";
 }
 
+/*
+ * Format monitis results as series data for an HTML HighCharts chart
+ */
+function monitis_to_highchart($data) {
+  // in: monitis time series data from parsed json
+  // out: highcharts formatted time series data as json
+  $r_substrings = array();
+  foreach ($data as $point) {
+    list($time, $value, $ok) = $point;
+    // ignore the $ok for now
+    //$r_time = strtotime($time)*1000 ;
+    $r_time = $time*1000 ;
+    $r_substrings[] = "[" . $r_time . "," . $value . "]";
+  }
+  return "[ " . implode(", ", $r_substrings) . " ]";
+}
+
+/*
+ * Format monitis results in an HTML HighCharts chart
+ */
+function view_chart_highchart($series) {
+  $series_strings = array();
+  foreach ($series as $name => $data) {
+    $series_tmp = '';
+    $series_tmp .= "name: '$name',\n";
+    $series_tmp .= "data: " . monitis_to_highchart($data) ;
+    $series_strings[] = $series_tmp;
+  }
+  $series_html = implode($series_strings, "},\n{") . "\n";
+
+  $html = <<<EOF
+  <script src="http://new.monitis.com/libs/jquery/js/highcharts.js"></script>
+  <script src="http://www.highcharts.com/js/themes/gray.js"></script>
+<div id="highcharts_container" style="width: 100%; height: 400px"></div>
+<script>
+var chart1; // globally available
+$(document).ready(function() {
+      chart1 = new Highcharts.Chart({
+         chart: {
+            renderTo: 'highcharts_container',
+            type: 'spline'
+         },
+         title: {
+            text: 'Monitis Ping Monitor'
+         },
+         xAxis: {
+            type: 'datetime',
+            staggerLines: 2
+         },
+         yAxis: {
+            min: 0,
+            title: {
+               text: 'Response time (ms)'
+            }
+         },
+        plotOptions: {
+          series: {
+
+            marker: {
+              radius: 4,
+              symbol: "circle",
+              enabled: false,
+              states: {
+                hover: {
+                  enabled: true
+                }
+              }
+            }
+          }
+        },
+         series: [{ $series_html }]
+      });
+   });
+</script>
+EOF;
+  return $html;
+}
+
+/*
+ * Format monitis results in an HTML Rickshaw chart
+ */
 function view_chart($series) {
   // in: series, an array of datasets in the format expected by rickshaw
   //     i.e., "[ { x: 0, y: 40 }, { x: 1, y: 49 }, ...{ x: 4, y: 16 } ]"
@@ -21,7 +110,7 @@ function view_chart($series) {
   $series_strings = array();
   foreach ($series as $name => $data) {
     $series_tmp = '';
-    $series_tmp .= "{\n data: " . $data . ",\n";
+    $series_tmp .= "{\n data: " . monitis_to_rickshaw($data) . ",\n";
     $series_tmp .= "name: '$name',\n";
     $series_tmp .= "padding: {top: '0.15', left: '0.15', right: '0.15', bottom: '15'},\n";
     $series_tmp .= "color: palette.color()\n}";
@@ -75,6 +164,9 @@ EOF;
   return $html;
 }
 
+/*
+ * Format status messages as WHMCS error/succcess message DIVs
+ */
 function view_status_messages($success_msg, $error_msg) {
   // If any of the actions set a message, display it
   // TODO print separate box per message (params should be array)
@@ -88,10 +180,9 @@ function view_status_messages($success_msg, $error_msg) {
   return $html;
 }
 
-//function print_server_table($vars) {
-//  $html .= view_server_table($vars);
-//}
-
+/*
+ * Return HTML snippet for a table of WHMCS managed servers
+ */
 function view_server_table($vars) {
   $html = <<<EOF
 <br/><h3>Servers</h3>
@@ -112,6 +203,7 @@ function view_server_table($vars) {
   </tr></thead>\n
   <tbody>\n
 EOF;
+  // No user input in query
   $query = "select s.name, s.hostname, s.ipaddress, s.noc, s.maxaccounts, "
          . "s.type, s.active, s.disabled, m.monitored, m.test_id "
          . "from tblservers s left outer join mod_monitis_server m on "
@@ -151,10 +243,9 @@ EOF;
   return $html;
 }
 
-//function print_deleted_server_table($vars) {
-//  print view_deleted_server_table($vars);
-//}
-
+/*
+ * Return HTML snippet listing servers managed by Monitis, but deleted from WHMCS
+ */
 function view_deleted_server_table($vars) {
   // find the monitors that don't correspond to servers, and remove them
   // remove both from mod_monitis_server and monitis API
@@ -170,6 +261,7 @@ function view_deleted_server_table($vars) {
   </tr></thead>\n
   <tbody>\n
 EOF;
+  // No user input in query
   $query = 'select * from mod_monitis_server m where m.ip_addr not in (select ipaddress from tblservers)';
   $result = mysql_query($query);
   while  ($data = mysql_fetch_array($result)) {
@@ -189,25 +281,21 @@ EOF;
   return $html;
 }
 
+/*
+ * Detail view of a particular server, primarily including a chart 
+ * of recent Monitis ping monitor results.
+ */
 function view_detail($vars, $test_id) {
   // returns the string to be output
   // TODO: ensure that the length of each series is the same, truncate
   $return = '';
-  $result = monitis_test_result($vars, $test_id);
-  $series = array();
-  foreach ($result as $loc) {
-    $name = $loc['locationName'];
-    $series[$name] = monitis_to_rickshaw($loc['data']);
-  }
-  // truncate any longer arrays
-  // matching lengths currently handled via zeroFill
-  //$lengths = array_map(count, $series);
-  //$shortest_length = min($lengths);
+  $series = monitis_test_result_recent($vars, $test_id, 7200); // 2 hours
 
   $ip_addr = test_to_ip($test_id);
   $return .= "<h3>Ping Monitor Detail for $ip_addr</h3>\n";
   if ($series) {
-    $return .= view_chart($series);
+    //$return .= view_chart_highchart($series) . view_chart($series);
+    $return .= view_chart_highchart($series);
   }
   else {
     $return .= "<span class='textred'>No data available. Please allow several minutes " 
