@@ -1,5 +1,12 @@
 <?php
 
+/* 
+ * Helper functions to support addon controller and views
+ */
+
+/*
+ * Get the Monitis test ID for a server IP
+ */
 function ip_to_test($server_ip) {
   // in: server ip
   // out: test id
@@ -9,6 +16,9 @@ function ip_to_test($server_ip) {
   return $data['test_id'];
 }
 
+/*
+ * Get the server IP address monitored by the given test ID
+ */
 function test_to_ip($test_id) {
   // in: monitis test id
   // out: monitored IP address
@@ -18,9 +28,20 @@ function test_to_ip($test_id) {
   return $data['ip_addr'];
 }
 
+/*
+ * Add a ping monitor, and create a corresponding record in the addon DB
+ */
 function add_ping_monitor($vars, $server_ip) {
   // in: request vars and IP to add
   // out: on success, returns test_id, on failure, returns err message
+  //
+  // Validate input on $server_ip
+  if(!filter_var($ip, FILTER_VALIDATE_IP)) {
+    $msg = "Adding monitor for IP failed: invalid IP address";
+    return array('ok'=>'', 'err'=>$msg);
+  }
+  
+  // valid IP, so create the ping monitor and add to DB
   $result = monitis_add_ping_monitor($vars, $server_ip);
   if ($result['status'] == 'ok') {
     $test_id = $result['data']['testId'];
@@ -36,7 +57,16 @@ function add_ping_monitor($vars, $server_ip) {
   }
 }
 
+/*
+ * Delete a ping monitor and remove the corresponding DB record
+ */
 function remove_ping_monitor($vars, $server_ip) {
+  // Validate input on $server_ip
+  if(!filter_var($ip, FILTER_VALIDATE_IP)) {
+    $msg = "Removing monitor for IP failed: invalid IP address";
+    return array('ok'=>'', 'err'=>$msg);
+  }
+  
   $test_id = ip_to_test($server_ip);
   if (!$test_id) {
     return array('ok'=>'', 'err'=>"Server $server_ip not currently monitored");
