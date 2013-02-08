@@ -118,48 +118,48 @@ function view_chart($series) {
   }
   $series_html = implode($series_strings, ",\n") . "\n";
   $html = <<<EOF
-<link type="text/css" rel="stylesheet" href="http://code.shutterstock.com/rickshaw/rickshaw.min.css">
-<script src="http://code.shutterstock.com/rickshaw/vendor/d3.min.js"></script>
-<script src="http://code.shutterstock.com/rickshaw/vendor/d3.layout.min.js"></script>
-<script src="http://code.shutterstock.com/rickshaw/rickshaw.min.js"></script>
-<style>
-#chart_container { display: inline-block; font-family: Arial, Helvetica, sans-serif; }
-#chart { float: left; }
-#legend { float: left; margin-left: 15px; }
-#offset_form { float: left; margin: 2em 0 0 15px; font-size: 13px; }
-#y_axis { float: left; width: 40px; }
-</style>
-<div id="chart_container">
-  <div id="y_axis"></div>
-  <div id="chart"></div>
-  <div id="legend"></div>
-</div>
-<script>
-var palette = new Rickshaw.Color.Palette();
-var series = [ $series_html ];
-Rickshaw.Series.zeroFill(series);
-var graph = new Rickshaw.Graph({
-  element: document.querySelector("#chart"),
-  width: 760,
-  height: 400,
-  stroke: true,
-  renderer: 'scatterplot',
-  series: series 
-});
-//graph.renderer.unstack = true;
-var x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
-var y_axis = new Rickshaw.Graph.Axis.Y( {
-        graph: graph, orientation: 'left', tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
-        element: document.getElementById('y_axis'), } );
-var legend = new Rickshaw.Graph.Legend( {
-        element: document.querySelector('#legend'), graph: graph } );
-var hoverDetail = new Rickshaw.Graph.HoverDetail( { graph: graph } );
-var shelving = new Rickshaw.Graph.Behavior.Series.Toggle({ graph: graph, legend: legend });
-var order = new Rickshaw.Graph.Behavior.Series.Order({ graph: graph, legend: legend });
-var highlighter = new Rickshaw.Graph.Behavior.Series.Highlight({ graph: graph, legend: legend });
+  <link type="text/css" rel="stylesheet" href="http://code.shutterstock.com/rickshaw/rickshaw.min.css">
+  <script src="http://code.shutterstock.com/rickshaw/vendor/d3.min.js"></script>
+  <script src="http://code.shutterstock.com/rickshaw/vendor/d3.layout.min.js"></script>
+  <script src="http://code.shutterstock.com/rickshaw/rickshaw.min.js"></script>
+  <style>
+    #chart_container { display: inline-block; font-family: Arial, Helvetica, sans-serif; }
+    #chart { float: left; }
+    #legend { float: left; margin-left: 15px; }
+    #offset_form { float: left; margin: 2em 0 0 15px; font-size: 13px; }
+    #y_axis { float: left; width: 40px; }
+  </style>
+  <div id="chart_container">
+    <div id="y_axis"></div>
+    <div id="chart"></div>
+    <div id="legend"></div>
+  </div>
+  <script>
+    var palette = new Rickshaw.Color.Palette();
+    var series = [ $series_html ];
+    Rickshaw.Series.zeroFill(series);
+    var graph = new Rickshaw.Graph({
+      element: document.querySelector("#chart"),
+      width: 760,
+      height: 400,
+      stroke: true,
+      renderer: 'scatterplot',
+      series: series 
+    });
+    //graph.renderer.unstack = true;
+    var x_axis = new Rickshaw.Graph.Axis.Time( { graph: graph } );
+    var y_axis = new Rickshaw.Graph.Axis.Y( {
+      graph: graph, orientation: 'left', tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+      element: document.getElementById('y_axis'), } );
+    var legend = new Rickshaw.Graph.Legend( {
+      element: document.querySelector('#legend'), graph: graph } );
+    var hoverDetail = new Rickshaw.Graph.HoverDetail( { graph: graph } );
+    var shelving = new Rickshaw.Graph.Behavior.Series.Toggle({ graph: graph, legend: legend });
+    var order = new Rickshaw.Graph.Behavior.Series.Order({ graph: graph, legend: legend });
+    var highlighter = new Rickshaw.Graph.Behavior.Series.Highlight({ graph: graph, legend: legend });
 
-graph.render();
-</script> 
+    graph.render();
+  </script> 
 EOF;
   return $html;
 }
@@ -252,14 +252,14 @@ function view_deleted_server_table($vars) {
 
   $html = <<<EOF
   <br/><h3>Monitors for removed Servers</h3>
-  <form method="post" action="{$vars['modulelink']}">\n
-  <div class='tablebg'>
-  <table class="datatable" width="100%" cellspacing="1" cellpadding="3" border="0">\n
-  <thead><tr>\n
-  <th></th>
-  <th>IP Address</th>
-  </tr></thead>\n
-  <tbody>\n
+    <form method="post" action="{$vars['modulelink']}">
+    <div class='tablebg'>
+      <table class="datatable" width="100%" cellspacing="1" cellpadding="3" border="0">
+      <thead><tr>
+        <th></th>
+        <th>IP Address</th>
+      </tr></thead>
+      <tbody>
 EOF;
   // No user input in query
   $query = 'select * from mod_monitis_server m where m.ip_addr not in (select ipaddress from tblservers)';
@@ -273,9 +273,10 @@ EOF;
     $html .= "</tr>\n";
   }
   $html .= <<<EOF
-  </tbody>\n</table>\n
-  <button class='btn-primary' name='action' value='remove_deleted'>Remove from Monitis</button></td>\n
-  </div>\n
+      </tbody>
+    </table>
+  <button class='btn-primary' name='action' value='remove_deleted'>Remove from Monitis</button></td>
+  </div>
   </form>
 EOF;
   return $html;
