@@ -99,7 +99,7 @@ function monitis_addon_output($vars) {
 
   print view_status_messages($success_msg, $error_msg);
   print view_server_table($vars);
-  print view_deleted_server_table($vars);
+  //print view_deleted_server_table($vars);
 }
 
 /*

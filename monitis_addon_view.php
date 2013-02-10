@@ -200,10 +200,11 @@ function select_change(sel) {
   <div class='tablebg'>
   Select: <select id='monitors' onchange="select_change(this)" >
     <option value=""></option>
-    <option value="none">Select none</option>
-    <option value="monitored">Select monitored</option>
-    <option value="unmonitored">Select unmonitored</option>
-    <option value="all">Select all</option>
+    <option value="none">None</option>
+    <option value="monitored">Monitored</option>
+    <option value="unmonitored">Unmonitored</option>
+    <option value="deleted">Deleted</option>
+    <option value="all">All</option>
   </select>
   <table class="datatable" width="100%" cellspacing="1" cellpadding="3" border="0">
   <thead><tr>\n
@@ -249,6 +250,7 @@ EOF;
     }
     $html .= "</tr>\n";
   }
+  $html .= view_deleted_server_table($vars);
   $html .= <<<EOF
   </tbody>\n
   </table>\n
@@ -267,35 +269,38 @@ function view_deleted_server_table($vars) {
   // find the monitors that don't correspond to servers, and remove them
   // remove both from mod_monitis_server and monitis API
 
-  $html = <<<EOF
-  <br/><h3>Monitors for removed Servers</h3>
-    <form method="post" action="{$vars['modulelink']}">
-    <div class='tablebg'>
-      <table class="datatable" width="100%" cellspacing="1" cellpadding="3" border="0">
-      <thead><tr>
-        <th></th>
-        <th>IP Address</th>
-      </tr></thead>
-      <tbody>
-EOF;
+  //$html = <<<EOF
+  //<br/><h3>Monitors for removed Servers</h3>
+    //<form method="post" action="{$vars['modulelink']}">
+    //<div class='tablebg'>
+      //<table class="datatable" width="100%" cellspacing="1" cellpadding="3" border="0">
+      //<thead><tr>
+        //<th></th>
+        //<th>IP Address</th>
+      //</tr></thead>
+      //<tbody>
+//EOF;
+  $html = "";
   // No user input in query
   $query = 'select * from mod_monitis_server m where m.ip_addr not in (select ipaddress from tblservers)';
   $result = mysql_query($query);
   while  ($data = mysql_fetch_array($result)) {
-    $html .= "<tr>\n";
+    $html .= "<tr class='deleted'>\n";
     $html .= "<td><input type=\"checkbox\" name=\"servers[]\" value=\""
         . $data['ip_addr'] . "\"/></td>\n";
-    $html .= "<td>" . $data['ip_addr']. "</td>\n";
+    $html .= "<td></td><td></td><td>" . $data['ip_addr']. "</td>\n";
+    $html .= "<td></td><td></td><td></td><td></td><td></td>";
+    $html .= "<td align='center'><span class='textred'>DELETED</span></td>\n";
 
     $html .= "</tr>\n";
   }
-  $html .= <<<EOF
-      </tbody>
-    </table>
-  <button class='btn-primary' name='action' value='remove_deleted'>Remove from Monitis</button></td>
-  </div>
-  </form>
-EOF;
+  //$html .= <<<EOF
+      //</tbody>
+    //</table>
+  //<button class='btn-primary' name='action' value='remove_deleted'>Remove from Monitis</button></td>
+  //</div>
+  //</form>
+//EOF;
   return $html;
 }
 
