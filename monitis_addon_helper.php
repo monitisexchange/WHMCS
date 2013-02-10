@@ -36,7 +36,7 @@ function add_ping_monitor($vars, $server_ip) {
   // out: on success, returns test_id, on failure, returns err message
   //
   // Validate input on $server_ip
-  if(!filter_var($ip, FILTER_VALIDATE_IP)) {
+  if(!filter_var($server_ip, FILTER_VALIDATE_IP)) {
     $msg = "Adding monitor for IP failed: invalid IP address";
     return array('ok'=>'', 'err'=>$msg);
   }
@@ -62,7 +62,7 @@ function add_ping_monitor($vars, $server_ip) {
  */
 function remove_ping_monitor($vars, $server_ip) {
   // Validate input on $server_ip
-  if(!filter_var($ip, FILTER_VALIDATE_IP)) {
+  if(!filter_var($server_ip, FILTER_VALIDATE_IP)) {
     $msg = "Removing monitor for IP failed: invalid IP address";
     return array('ok'=>'', 'err'=>$msg);
   }
