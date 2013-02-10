@@ -185,9 +185,26 @@ function view_status_messages($success_msg, $error_msg) {
  */
 function view_server_table($vars) {
   $html = <<<EOF
+<script>
+function select_change(sel) {
+  checkboxes = document.getElementsByName('servers[]');
+  len = checkboxes.length;
+  for (var i = 0; i < len; i++) {
+    cn = checkboxes[i].parentNode.parentNode.className;
+    checkboxes[i].checked = (cn == sel.value || sel.value == "all");
+  }
+};
+</script>
 <br/><h3>Servers</h3>
   <form method="post" action="{$vars['modulelink']}">\n
   <div class='tablebg'>
+  Select: <select id='monitors' onchange="select_change(this)" >
+    <option value=""></option>
+    <option value="none">Select none</option>
+    <option value="monitored">Select monitored</option>
+    <option value="unmonitored">Select unmonitored</option>
+    <option value="all">Select all</option>
+  </select>
   <table class="datatable" width="100%" cellspacing="1" cellpadding="3" border="0">
   <thead><tr>\n
   <th></th>
@@ -210,7 +227,7 @@ EOF;
          . "m.ip_addr = s.ipaddress";
   $result = mysql_query($query);
   while  ($data = mysql_fetch_array($result)) {
-    $html .= "<tr>\n";
+    $html .= "<tr class='" . ($data['monitored']?"monitored":"unmonitored") . "'>\n";
     $html .= "<td><input type=\"checkbox\" name=\"servers[]\" value=\""
         . $data['ipaddress'] . "\"/></td>\n";
     $html .= "<td>" . $data['name'] . "</td>\n";
