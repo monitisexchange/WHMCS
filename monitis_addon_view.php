@@ -41,7 +41,7 @@ function monitis_to_highchart($data) {
 /*
  * Format monitis results in an HTML HighCharts chart
  */
-function view_chart_highchart($series) {
+function view_chart_highchart($ip, $series) {
   $series_strings = array();
   foreach ($series as $name => $data) {
     $series_tmp = '';
@@ -64,7 +64,7 @@ $(document).ready(function() {
             type: 'spline'
          },
          title: {
-            text: 'Monitis Ping Monitor'
+            text: 'Ping response for $ip'
          },
          xAxis: {
             type: 'datetime',
@@ -315,10 +315,10 @@ function view_detail($vars, $test_id) {
   $series = monitis_test_result_recent($vars, $test_id, 7200); // 2 hours
 
   $ip_addr = test_to_ip($test_id);
-  $return .= "<h3>Ping Monitor Detail for $ip_addr</h3>\n";
+  //$return .= "<h3>Ping Monitor Detail for $ip_addr</h3>\n";
   if ($series) {
     //$return .= view_chart_highchart($series) . view_chart($series);
-    $return .= view_chart_highchart($series);
+    $return .= view_chart_highchart($ip_addr, $series);
   }
   else {
     $return .= "<span class='textred'>No data available. Please allow several minutes " 
