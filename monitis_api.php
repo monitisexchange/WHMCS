@@ -67,6 +67,16 @@ function monitis_post($apiurl, $apikey, $secretkey, $action, $params) {
 }
 
 /*
+ * Get Monitis agents
+ */
+function monitis_agents($vars) {
+  list($ep, $ak, $sk) = monitis_extract_api_info($vars);
+  $params = array();
+  $result = monitis_get($ep, $ak, 'agents', $params);
+  return $result;
+}
+
+/*
  * Add a new Monitis ping monitor, returning the API JSON result
  */
 function monitis_add_ping_monitor($vars, $ip) {
@@ -157,6 +167,67 @@ function monitis_test_result($vars, $test_id, $time) {
     $series[$name] = $loc['data'];
   }
   return $series;
+}
+
+/*
+ * Get most recent status for all external monitors
+ */
+function external_snapshot($vars) {
+  list($ep, $ak, $sk) = monitis_extract_api_info($vars);
+  $results = monitis_get($ep, $ak, 'testsLastValues');
+
+  $agg_status = array();
+  $agg_perf = array();
+  // iterate over the results, extract interesting features, keyed on test_id
+  foreach ($results as $loc) {
+    foreach ($loc['data'] as $d) {
+      $test_id = $d['id'];
+      $status = $d['status'];
+      $perf = $d['perf'];
+      // aggregate status as OK if any are OK, NOK otherwise
+      if ($status && ($agg_status[$test_id] != 'OK')) $agg_status[$test_id] = $status;
+      // aggregate performance as minimum of ping time
+      if (!$agg_perf[$test_id] || $agg_perf[$test_id] > $perf) $agg_perf[$test_id] = $perf;
+    }
+  }
+  return array('status' => $agg_status, 'perf' => $agg_perf);
+}
+
+/*
+ * Add pages in the Monitis Dashboard
+ */
+function monitis_add_page($vars, $title) {
+  // create a page with the given title, return a page id
+  list($ep, $ak, $sk) = monitis_extract_api_info($vars);
+  $params['title'] = $title;
+  $result = monitis_post($ep, $ak, $sk, 'addPage', $params);
+  return $result;
+}
+
+/*
+ * Delete pages in the Monitis Dashboard
+ */
+function monitis_delete_page($vars, $page_id) {
+  list($ep, $ak, $sk) = monitis_extract_api_info($vars);
+  $params['pageId'] = $page_id;
+  $result = monitis_post($ep, $ak, $sk, 'deletePage', $params);
+  return $result;
+}
+
+/*
+ * Add module to page in the Monitis Dashboard
+ */
+function monitis_add_page_module($vars, $page_id, $test_id) {
+  // for now, default to inserting the content top-left
+  // and, assume ping monitor
+  list($ep, $ak, $sk) = monitis_extract_api_info($vars);
+  $params['moduleName'] = 'External';
+  $params['pageId'] = $page_id;
+  $params['column'] = '1';
+  $params['row'] = '1';
+  $params['dataModuleId'] = $test_id;
+  $result = monitis_post($ep, $ak, $sk, 'addPageModule', $params);
+  return $result;
 }
 
 ?>
