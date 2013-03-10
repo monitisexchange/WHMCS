@@ -9,7 +9,7 @@
  *
  * TODO: Add support for levels other than debug
  */
-include_once('KLogger/src/KLogger.php');
+include_once('lib/vendor/KLogger/src/KLogger.php');
 $monitis_log = new KLogger("/tmp", KLogger::DEBUG);
 
 function debug($msg, $obj = KLogger::NO_ARGUMENTS) {
@@ -173,5 +173,6 @@ function agent_names($vars) {
   return $names;
 
 }
+
 
 ?>
