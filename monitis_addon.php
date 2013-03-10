@@ -13,6 +13,7 @@ include_once('monitis_api.php');
 include_once('monitis_addon_view.php');
 include_once('monitis_addon_helper.php');
 
+
 /*
  * Addon configuration options
  */
@@ -41,7 +42,7 @@ function monitis_addon_activate() {
 	$result = mysql_query($query);
   $query = "CREATE TABLE `mod_monitis_server` (`id` INT( 1 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,"
          . "`ip_addr` TEXT NOT NULL, "
-         . "`monitored` BOOL, test_id INT )";
+         . "`monitored` BOOL, test_id INT, page_id INT, `agent_name` TEXT)";
 	$result = mysql_query($query);
   return array('status'=>'success','description'=>'');
 }
@@ -61,6 +62,11 @@ function monitis_addon_deactivate() {
  * HTML snippet for addon admin UI embedded in WHMCS UI
  */
 function monitis_addon_output($vars) {
+  //debug("Starting monitis_addon_output", array($vars, $_POST, $_GET));
+  //info("This is an info log");
+  //warn("This is a warning");
+  //error("This is an error");
+
   // Dispatch output based on get/post params
   // default to the server table
   $success_msg = array();
@@ -69,6 +75,11 @@ function monitis_addon_output($vars) {
   if ($_POST) {
     $action = $_POST['action'];
     if ($action) {
+      if ($action == 'agent_name') {
+        $result = update_agent_name($vars, $_POST['agent_name'], $_POST['ip']);
+          print $result;
+          return;
+      }
       foreach ($_POST['servers'] as $server_ip) {
         if ($action == 'add') {
           $result = add_ping_monitor($vars, $server_ip);
@@ -76,9 +87,9 @@ function monitis_addon_output($vars) {
         elseif ($action == 'remove') {
           $result = remove_ping_monitor($vars, $server_ip);
         }
-        elseif ($action == 'remove_deleted') {
-          $result = remove_ping_monitor($vars, $server_ip);
-        }
+        //elseif ($action == 'remove_deleted') {
+          //$result = remove_ping_monitor($vars, $server_ip);
+        //}
         if ($msg = $result['ok']) {
           $success_msg[] = $msg;
         }
@@ -90,10 +101,17 @@ function monitis_addon_output($vars) {
   }
   else { // no POST, check for specific GET-based views
     // Detail view for a specific test ID
-    if ($view = $_GET['view'] == 'detail') {
+    $view = $_GET['view']; 
+    if ($view == 'detail') {
       if ($test_id = $_GET['test_id']) {
         print view_detail($vars, $test_id);
       }
+    }
+    elseif ($view == 'save') {
+      return;
+    }
+    elseif ($view == 'agents') {
+      print json_encode(agent_names($vars));
     }
   }
 

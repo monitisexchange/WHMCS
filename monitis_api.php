@@ -43,6 +43,8 @@ function monitis_get($apiurl, $apikey, $action, $params) {
   $ch = curl_init($apiurl . '?' . $query);
   curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
   $json = json_decode(curl_exec($ch), true);
+  //debug("GET: ", $params);
+  //debug("RESPONSE: ", $json);
   return $json;
 }
 
@@ -63,6 +65,8 @@ function monitis_post($apiurl, $apikey, $secretkey, $action, $params) {
   curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
   $result = curl_exec($ch);
   $json = json_decode($result, true);
+  //debug("POST: ", $params);
+  //debug("RESPONSE: ", $json);
   return $json;
 }
 
@@ -73,6 +77,7 @@ function monitis_agents($vars) {
   list($ep, $ak, $sk) = monitis_extract_api_info($vars);
   $params = array();
   $result = monitis_get($ep, $ak, 'agents', $params);
+  debug("monitis_agents: ", $result);
   return $result;
 }
 

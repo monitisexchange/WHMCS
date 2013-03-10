@@ -52,8 +52,8 @@ function view_chart_highchart($ip, $series) {
   $series_html = implode($series_strings, "},\n{") . "\n";
 
   $html = <<<EOF
-  <script src="http://new.monitis.com/libs/jquery/js/highcharts.js"></script>
-  <script src="http://www.highcharts.com/js/themes/gray.js"></script>
+  <script src="../modules/addons/monitis_addon/js/vendor/highcharts.js"></script>
+  <script src="../modules/addons/monitis_addon/js/vendor/gray.js"></script>
 <div id="highcharts_container" style="width: 100%; height: 400px"></div>
 <script>
 var chart1; // globally available
@@ -119,8 +119,8 @@ function view_chart($series) {
   $series_html = implode($series_strings, ",\n") . "\n";
   $html = <<<EOF
   <link type="text/css" rel="stylesheet" href="http://code.shutterstock.com/rickshaw/rickshaw.min.css">
-  <script src="http://code.shutterstock.com/rickshaw/vendor/d3.min.js"></script>
-  <script src="http://code.shutterstock.com/rickshaw/vendor/d3.layout.min.js"></script>
+  <script src="../modules/addons/monitis_addon/js/vendor/d3.v3.min.js"></script>
+  <script src="../modules/addons/monitis_addon/js/vendor/d3.layout.min.js"></script>
   <script src="http://code.shutterstock.com/rickshaw/rickshaw.min.js"></script>
   <style>
     #chart_container { display: inline-block; font-family: Arial, Helvetica, sans-serif; }
@@ -170,21 +170,69 @@ EOF;
 function view_status_messages($success_msg, $error_msg) {
   // If any of the actions set a message, display it
   // TODO print separate box per message (params should be array)
-  $html = '';
+  $html = '<div id="status_messages"><div></div>';
   foreach ($success_msg as $msg) {
     $html .= '<div class="successbox">'.$msg.'</div>';
   }
   foreach ($error_msg as $msg) {
     $html .= '<div class="errorbox">'.$msg.'</div>';
   }
+  $html .= '</div>';
   return $html;
+}
+
+/*
+ * Save updates to database
+ * Return is irrevelant, as these should be called anync, even though
+ * they may come in via the addon_output() methods which will
+ * still return some HTML (to a client that should ignore it)
+ * 
+ * These are the things we must do within the restrictions of the
+ * WHMCS addon toolset.
+ */
+function update_agent_name($vars, $agent_name, $server_ip) {
+  $name = filter_var($agent_name, FILTER_SANITIZE_STRING);
+  $ip = filter_var($server_ip, FILTER_VALIDATE_IP);
+  $response_html = '';
+  debug("In update_agent_name", array('name' => $name, 'ip' => $ip, 'vars' => $vars));
+
+  // ensure that the provided name is the name of an existing agent
+  debug("Check that $name is in agent names", agent_names($vars));
+  if (! in_array($name, agent_names($vars))) {
+    return "<div id='jse_response'>No agent named $name</div>";
+  }
+
+  if ($name && $ip ) {
+    // check if exists, and update
+    // otherwise, create new entry
+    $result = select_query('mod_monitis_server', 'ip_addr',
+      array("ip_addr" => $ip));
+    $data = mysql_fetch_array($result);
+    if ($data) {
+      update_query('mod_monitis_server',
+        array("agent_name" => $name),
+        array("ip_addr" => $ip));
+    }
+    else {
+      insert_query('mod_monitis_server',
+        array("agent_name" => $name, "ip_addr" => $ip));
+    }
+    $response_html = ""; // no need to return anything on success
+  }
+  else {
+    $response_html = "<div id='jse_response'>FAILURE</div>";
+  }
+  return $response_html;
 }
 
 /*
  * Return HTML snippet for a table of WHMCS managed servers
  */
 function view_server_table($vars) {
+
+  $snapshot = external_snapshot($vars);
   $html = <<<EOF
+<script src="../modules/addons/monitis_addon/js/vendor/jquery.jeditable.js"></script>
 <script>
 function select_change(sel) {
   checkboxes = document.getElementsByName('servers[]');
@@ -207,7 +255,7 @@ function select_change(sel) {
     <option value="all">All</option>
   </select>
   <table class="datatable" width="100%" cellspacing="1" cellpadding="3" border="0">
-  <thead><tr>\n
+  <thead><tr>
   <th></th>
   <th>Name</th>
   <th>Hostname</th>
@@ -217,13 +265,15 @@ function select_change(sel) {
   <th>Type</th>
   <th>Active</th>
   <th>Disabled</th>
+  <th>Status</th>
+  <th>Agent Name</th>
   <th>Monitored</th>
-  </tr></thead>\n
-  <tbody>\n
+  </tr></thead>
+  <tbody>
 EOF;
   // No user input in query
   $query = "select s.name, s.hostname, s.ipaddress, s.noc, s.maxaccounts, "
-         . "s.type, s.active, s.disabled, m.monitored, m.test_id "
+         . "s.type, s.active, s.disabled, m.monitored, m.test_id, m.agent_name "
          . "from tblservers s left outer join mod_monitis_server m on "
          . "m.ip_addr = s.ipaddress";
   $result = mysql_query($query);
@@ -231,14 +281,26 @@ EOF;
     $html .= "<tr class='" . ($data['monitored']?"monitored":"unmonitored") . "'>\n";
     $html .= "<td><input type=\"checkbox\" name=\"servers[]\" value=\""
         . $data['ipaddress'] . "\"/></td>\n";
-    $html .= "<td>" . $data['name'] . "</td>\n";
-    $html .= "<td>" . $data['hostname'] . "</td>\n"; 
-    $html .= "<td>" . $data['ipaddress'] . "</td>\n";
-    $html .= "<td>" . $data['noc'] . "</td>\n";
-    $html .= "<td>" . $data['maxaccounts'] . "</td>\n";
-    $html .= "<td>" . $data['type'] . "</td>\n";
-    $html .= "<td>" . $data['active'] . "</td>\n";
-    $html .= "<td>" . $data['disabled'] . "</td>\n";
+    $test_id = $data['test_id'];
+    $status = $snapshot['status'][$test_id];
+    if ($status == 'OK') {
+      $status_html = '<img src="images/success.png" title="OK" alt="OK">';
+    }
+    else {
+      $status_html = '<img src="images/error.png" title="NOK" alt="NOK">';
+    }
+    $html .= <<<EOF
+      <td>{$data['name']}</td>
+      <td>{$data['hostname']}</td>
+      <td>{$data['ipaddress']}</td>
+      <td>{$data['noc']}</td>
+      <td>{$data['maxaccounts']}</td>
+      <td>{$data['type']}</td>
+      <td>{$data['active']}</td>
+      <td>{$data['disabled']}</td>
+      <td>$status_html</td>
+      <td><div class="edit" id="{$data['ipaddress']}">{$data['agent_name']}</div></td>
+EOF;
     if ($data['monitored']) {
       $html .= '<td><span style="display: block; text-align: center">'
         . '<span class="textgreen">YES</span>' . "\n"
@@ -258,6 +320,35 @@ EOF;
   <button class='btn-primary' name='action' value='remove'>Remove from Monitis</button></td>\n
   </div>\n
   </form>\n
+<script>
+
+$(document).ready(function() {
+  $('.edit').editable(function(value, settings) {
+    msg = "test";
+    console.log("Editable called");
+    $.post('{$vars['modulelink']}', {action: "agent_name", ip: this.id, agent_name: value, prev_name: this.parentElement.innerHTML})
+      .done(function(response) {
+        //console.log(this, value, settings);
+        match = response.match(/<div id='jse_response'>([^<]*)<\/div>/);
+        if (match) {
+          msg = match[1];
+          $('#status_messages').children().replaceWith('<div class="errorbox">'.concat(msg,'</div>'));
+        }
+        else {
+          $('#status_messages').children().replaceWith('<div></div>');
+          msg = 'value okay';
+        }
+        console.log("inside", msg);
+      });
+    console.log("outside", msg);
+    return value;
+  },{
+    indicator : "Saving...",
+    tooltip   : "Click to edit...",
+  });
+});
+
+</script>
 EOF;
   return $html;
 }
@@ -269,17 +360,6 @@ function view_deleted_server_table($vars) {
   // find the monitors that don't correspond to servers, and remove them
   // remove both from mod_monitis_server and monitis API
 
-  //$html = <<<EOF
-  //<br/><h3>Monitors for removed Servers</h3>
-    //<form method="post" action="{$vars['modulelink']}">
-    //<div class='tablebg'>
-      //<table class="datatable" width="100%" cellspacing="1" cellpadding="3" border="0">
-      //<thead><tr>
-        //<th></th>
-        //<th>IP Address</th>
-      //</tr></thead>
-      //<tbody>
-//EOF;
   $html = "";
   // No user input in query
   $query = 'select * from mod_monitis_server m where m.ip_addr not in (select ipaddress from tblservers)';
@@ -289,17 +369,11 @@ function view_deleted_server_table($vars) {
     $html .= "<td><input type=\"checkbox\" name=\"servers[]\" value=\""
         . $data['ip_addr'] . "\"/></td>\n";
     $html .= "<td></td><td></td><td>" . $data['ip_addr']. "</td>\n";
-    $html .= "<td></td><td></td><td></td><td></td><td></td>";
+    $html .= "<td></td><td></td><td></td><td></td><td></td><td></td><td></td>";
     $html .= "<td align='center'><span class='textred'>DELETED</span></td>\n";
 
     $html .= "</tr>\n";
   }
-  //$html .= <<<EOF
-      //</tbody>
-    //</table>
-  //<button class='btn-primary' name='action' value='remove_deleted'>Remove from Monitis</button></td>
-  //</div>
-  //</form>
 //EOF;
   return $html;
 }
@@ -310,9 +384,10 @@ function view_deleted_server_table($vars) {
  */
 function view_detail($vars, $test_id) {
   // returns the string to be output
-  // TODO: ensure that the length of each series is the same, truncate
   $return = '';
   $series = monitis_test_result_recent($vars, $test_id, 7200); // 2 hours
+  $series_count = count($series);
+  debug("view_detail: retreived {$series_count} series to chart", array_keys($series));
 
   $ip_addr = test_to_ip($test_id);
   //$return .= "<h3>Ping Monitor Detail for $ip_addr</h3>\n";
