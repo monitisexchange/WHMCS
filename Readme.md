@@ -22,7 +22,7 @@ Once you're done configuring the access rights, click __Save__ to complete the p
 #### Getting Started
 To access the Monitis addon, simply navigate to _Addons > Monitis Addon_.  
 
-First, you need to provide your Monitis account credentials (_API key and Secret key, available from your Monitis dashboard: Account >API key_) on Monitis Account tab.  
+First, you need to provide your Monitis account credentials ( _API key and Secret key, available from your Monitis dashboard: Account >API key_ ) on Monitis Account tab.  
 If you do not have Monitis account, please, [signup](https://portal.monitis.com/free-signup).  
 Next step is configuration of settings for predefined monitor types _Addons > Monitis Addon > Settings_.  
 Here you define default monitor types (server and network) and configurations.  
