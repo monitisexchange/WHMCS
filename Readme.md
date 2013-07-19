@@ -8,7 +8,7 @@ Monitis addon for WHMCS provides integration with the [Monitis](http://monitis.c
 #### Installation
 Copy or clone the repository and install it as follows:  
 
-1. monitis_addon folder needs to be uploaded to the __/modules/addons/__ directory of your WHMCS installation
+1. monitis_addon folder needs to be uploaded to the **/modules/addons/** directory of your WHMCS installation
 2. upload __monitis_monitors.php__ into the WHMCS root folder
 3. upload __monitis_monitors.tpl__ into the template folder 
 4. add new tab in the main navigation template (__header.tpl__) and set link to the page __monitis_monitors.php__
