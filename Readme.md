@@ -17,7 +17,9 @@ Copy or clone the repository and install it as follows:
 
 Additional settings relating to the Monitis addon configuration are provided within the addon itself.  
 __Access Control__ - These checkboxes allow you to define which role groups you want to allow to access and use the project management system  
-Once you're done configuring the access rights, click __Save__ to complete the process.
+Once you're done configuring the access rights, click __Save__ to complete the process.  
+
+Please, note that we have tested addon on WHMCS version 5.1.2 and higher.
 
 #### Getting Started
 To access the Monitis addon, simply navigate to Addons > Monitis Addon.  
