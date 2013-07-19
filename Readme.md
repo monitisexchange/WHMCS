@@ -8,11 +8,11 @@ Monitis addon for WHMCS provides integration with the [Monitis](http://monitis.c
 #### Installation
 Copy or clone the repository and install it as follows:  
 
-1. monitis_addon folder needs to be uploaded to the ** /modules/addons/ ** directory of your WHMCS installation
+1. monitis_addon folder needs to be uploaded to the /modules/addons/ directory of your WHMCS installation
 2. upload __monitis_monitors.php__ into the WHMCS root folder
 3. upload __monitis_monitors.tpl__ into the template folder 
-4. add new tab in the main navigation template (__header.tpl__) and set link to the page __monitis_monitors.php__
-5. you then need to navigate to _Setup > Addon Modules_ within your WHMCS Admin Area to activate and configure the module
+4. add new tab in the main navigation template ( __header.tpl__ ) and set link to the page __monitis_monitors.php__
+5. you then need to navigate to Setup > Addon Modules within your WHMCS Admin Area to activate and configure the module
 6. upon activation, you will need to configure "Access Control" settings.  
 
 Additional settings relating to the Monitis addon configuration are provided within the addon itself.  
@@ -20,7 +20,7 @@ __Access Control__ - These checkboxes allow you to define which role groups you
 Once you're done configuring the access rights, click __Save__ to complete the process.
 
 #### Getting Started
-To access the Monitis addon, simply navigate to _Addons > Monitis Addon_.  
+To access the Monitis addon, simply navigate to Addons > Monitis Addon.  
 
 First, you need to provide your Monitis account credentials ( _API key and Secret key, available from your Monitis dashboard: Account >API key_ ) on Monitis Account tab.  
 If you do not have Monitis account, please, [signup](https://portal.monitis.com/free-signup).  
@@ -36,7 +36,7 @@ In order to automate monitor creation for existing or newly provisioned servers,
 Please, be very careful when filling in these fields.  
 
   - __IP Address__ will be used for creating uptime monitor.  
-  - __Hostname__ will be used to identify Monitis Agent installed on the server (_It is required that Monitis Agent Name is set to the hostname_).  
+  - __Hostname__ will be used to identify Monitis Agent installed on the server ( _It is required that Monitis Agent Name is set to the hostname_ ).  
 
 Please, note that Monitis addon doesn’t automate Monitis Agent installation on your servers.   
 
