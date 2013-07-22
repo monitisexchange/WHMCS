@@ -22,22 +22,24 @@ function m_log( $log_text, $title='', $filename=''){
 	return TRUE;
 }
 
-function hook_AdminAreaHeadOutput($vars) {
+function hook_monitis_AdminAreaHeadOutput($vars) {
 	$head = '';
 	$head .= '<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/jquery.validate.min.js"></script>';
 	$head .= '<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/highcharts.js"></script>';
 	$head .= '<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitis.js"></script>';
 	$head .= '<link href="../modules/addons/monitis_addon/static/css/monitis.css" rel="stylesheet" type="text/css" />';
 	
+	//$head .= '<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/jquery.validate.min.js"></script>';
+	//$head .= '<link href="../modules/addons/monitis_addon/static/css/chosen.css" rel="stylesheet" type="text/css" />';
 	return $head;
 }
-add_hook("AdminAreaHeadOutput", 1, "hook_AdminAreaHeadOutput");
+add_hook("AdminAreaHeadOutput", 1, "hook_monitis_AdminAreaHeadOutput");
 
 
 ///////////////////////////////////////////////////////////////////////////////////// Hooks: Admin
 // http://docs.whmcs.com/Hooks:Admin
 
-function hook_ServerAdd($vars) {
+function hook_monitis_ServerAdd($vars) {
 	require_once 'MonitisApp.php';
 	$res = mysql_query(sprintf('SELECT id, name, ipaddress, hostname FROM tblservers WHERE id=%d', $vars['serverid']));
 	$server = mysql_fetch_assoc($res);
@@ -46,36 +48,84 @@ function hook_ServerAdd($vars) {
 	//MonitisApiHelper::addDefaultAgents($client_id, $server);
 	//exit;
 }
-add_hook("ServerAdd", 1, "hook_ServerAdd");
+add_hook("ServerAdd", 1, "hook_monitis_ServerAdd");
 
-function hook_ServerDelete($vars) {
+function hook_monitis_ServerDelete($vars) {
 	require_once 'MonitisApp.php';
 	$server_id = $vars['serverid'];
 	$oWhmcs = new WHMCS_class( MONITIS_CLIENT_ID );
 	$oWhmcs->removeMonitorsByServersId($server_id);
 	//_dump($vars);
 }
-add_hook("ServerDelete",1,"hook_ServerDelete");
+add_hook("ServerDelete",1,"hook_monitis_ServerDelete");
+
+
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////// Hooks: Order Process
 // FraudOrder
-function hookAcceptOrder($vars) {
-	//m_log( $vars, 'AcceptOrder', 'order');
+function hook_monitis_AcceptOrder($vars) {
 	
+	$orderid = $vars["orderid"];
+	logActivity("MONITIS LOG ***** HOOK AcceptOrder: orderid = $orderid ");
+
 	require_once 'MonitisApp.php';
 	require_once 'lib/product.class.php';
 	require_once 'lib/services.class.php';
+	
+	//m_log( $vars, 'AcceptOrder', 'order');
 
 	$oService = new servicesClass();
-	$orderid = $vars['orderid'];
-	$product = $oService->product_by_order( $orderid );
-	if( $product ) {
-		$oService->createMonitors( $product );
-		//return '<div>Order is Accept</div>';
-	} else {
 	
+	$values = array( "id"=> $orderid  );		// status: Pending, Active, Fraud, Cancelled
+	$iOrder = localAPI( "getorders", $values, "admin");
+	
+	//logActivity("***** HOOK AcceptOrder: orderid = $orderid  **** iOrder=". json_encode( $iOrder));
+	
+	//$product = $oService->product_by_order( $orderid );
+	$product = $oService->test_by_order( $orderid, $iOrder );
+
+	if( $product ) {
+		
+		$oService->createMonitors( $product );
 	}
 }
-add_hook("AcceptOrder",1,"hookAcceptOrder");
+
+add_hook("AcceptOrder",1,"hook_monitis_AcceptOrder");
+
+
+function hook_monitis_DeleteOrder($vars) {
+	//m_log( $vars, 'DeleteOrder', 'order');
+	require_once 'MonitisApp.php';
+	require_once 'lib/product.class.php';
+	require_once 'lib/services.class.php';
+	
+	$oService = new servicesClass();
+	$oService->deactiveMonitorByOrder( $vars['orderid'] );
+}
+add_hook("DeleteOrder",1,"hook_monitis_DeleteOrder");
+
+
+function hook_monitis_CancelOrder($vars) {
+	//m_log( $vars, 'CancelOrder', 'order');
+	require_once 'MonitisApp.php';
+	require_once 'lib/product.class.php';
+	require_once 'lib/services.class.php';
+	
+	$oService = new servicesClass();
+	$oService->deactiveMonitorByOrder( $vars['orderid'] );
+}
+add_hook("CancelOrder",1,"hook_monitis_CancelOrder");
+
+function hook_monitis_PendingOrder($vars) {
+	//m_log( $vars, 'PendingOrder', 'order');
+	require_once 'MonitisApp.php';
+	require_once 'lib/product.class.php';
+	require_once 'lib/services.class.php';
+	
+	$oService = new servicesClass();
+	$oService->deactiveMonitorByOrder( $vars['orderid'] );
+}
+add_hook("PendingOrder",1,"hook_monitis_PendingOrder");
 

@@ -53,7 +53,6 @@ switch ($type) {
 	break;
 	
 	case 'cpu' :
-//L::ii( 'submit monitorID = ' .  $monitorID );
 		if( $monitorID > 0 ) {
 			$monitor = MonitisApi::getCPUMonitor( $monitorID );
 			$platform = $monitor['agentPlatform'];
@@ -71,8 +70,6 @@ switch ($type) {
 				MonitisApp::addMessage('CPU Monitor successfully updated');
 			else
 				MonitisApp::addError('Unable to updated monitor, API request failed: '. $resp['error']);	
-//_dump( $resp );
-//exit(199);
 		} else {
 
 			$hostname=$server['hostname'];
@@ -104,18 +101,6 @@ switch ($type) {
 				} else {
 					MonitisApp::addError('Create monitor, API request failed: '. $resp['error']);
 				}
-//L::ii( 'editcpuMonitor resp = ' .  json_encode( $resp) );
-
-				/*if ($isEdit) {
-					$resp = MonitisApiHelper::editCPUMonitor( $client_id, $agentInfo, $intMonitors['cpus'], $cpuSets );
-					if( $resp && $resp['status'] == 'ok') {
-						MonitisApp::addMessage('CPU Monitor successfully updated');
-					} else {
-						MonitisApp::addError('Unable to updated monitor, API request failed: '. $resp['error']);
-					}
-				} else {
-					$resp = MonitisApiHelper::addCPUMonitor( $client_id, $agentInfo, $intMonitors['cpus'], $cpuSets );
-				}*/
 
 			} else {
 				MonitisApp::addError('This server does not have an agent');	
@@ -124,7 +109,6 @@ switch ($type) {
 	break;
 	case 'memory' :
 	
-		
 		if( $monitorID > 0 ) {
 			$monitor = MonitisApi::getMemoryInfo( $monitorID );
 
@@ -155,8 +139,6 @@ switch ($type) {
 				$agentKey = $agents[0]['key'];
 				$platform = $agents[0]['platform'];
 				$agentId = $agents[0]['id'];
-				
-				
 				$params = array(
 					'agentkey'	=>	$agentKey,
 					'name'		=>	'memory@'.$hostname,
@@ -164,14 +146,6 @@ switch ($type) {
 					'platform'	=>	$platform
 				);
 		
-				
-				/*$agentInfo = array(
-					'agentKey' => $agentKey,
-					'agentId' => $agentId,
-					'name' => $hostname,
-					'platform' => $platform 
-				);*/
-				
 				$memory = MonitisConf::$settings['memory'][$platform];
 				foreach($memory as $key=>$val){
 					$params[$key] = isset($_POST[$key]) ? intval($_POST[$key]) : $memory[$key];
@@ -191,7 +165,6 @@ switch ($type) {
 						"client_id"=> $client_id
 					);
 					insert_query('mod_monitis_int_monitors', $values);
-//L::ii( '**********************memory values = ' .  json_encode( $values) );
 					MonitisApp::addMessage('Memory Monitor successfully created');
 				} else {
 					MonitisApp::addError('Create memory monitor error: ');

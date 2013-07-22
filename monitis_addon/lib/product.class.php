@@ -75,8 +75,14 @@ class WHMCS_product_db extends whmcs_db {
 
 
 	protected function serviceByOrderId($orderid) {
-
+/*
 		$sql = 'SELECT ordernum, tblorders.userid as user_id, ipaddress, tblorders.status as orderstatus,
+		orderid, tblhosting.id as serviceid, domain, domainstatus
+		FROM tblorders
+		LEFT JOIN tblhosting on (tblhosting.orderid = tblorders.id )
+		WHERE tblorders.id='.$orderid;
+*/
+		$sql = 'SELECT ordernum, tblorders.userid as user_id, tblorders.status as orderstatus,
 		orderid, tblhosting.id as serviceid
 		FROM tblorders
 		LEFT JOIN tblhosting on (tblhosting.orderid = tblorders.id )
@@ -86,6 +92,7 @@ class WHMCS_product_db extends whmcs_db {
 		if( $vals ){ return $vals[0];
 		} else { return null; }
 	}
+	
 	protected function serviceById($serviceid) {
 		$sql = 'SELECT * FROM tblhosting WHERE id='.$serviceid;
 		//return $this->query( $sql );
@@ -93,16 +100,37 @@ class WHMCS_product_db extends whmcs_db {
 		if( $vals ){ return $vals[0];
 		} else { return null; }
 	}
+
+	protected function addonServiceByOrderId($orderid) {
+		$sql = 'SELECT * FROM tblhostingaddons WHERE orderid='.$orderid;
+		//return $this->query( $sql );
+		$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }
+	}
+	
+	protected function addonService($orderid) {
+		$sql = 'SELECT addonid, tblhostingaddons.hostingid, tblhosting.domain, tblhosting.dedicatedip
+		FROM tblhostingaddons 
+		LEFT JOIN tblhosting on (tblhosting.id = tblhostingaddons.hostingid )
+		WHERE tblhostingaddons.orderid='.$orderid;
+		//return $this->query( $sql );
+		$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }
+	}
+	
 	protected function orderById($orderid) {
-		$sql = 'SELECT id, ordernum, userid, status, ipaddress FROM tblorders WHERE id='.$orderid;
-		return $this->query( $sql );
-		//$vals = $this->query( $sql );
-		//if( $vals ){ return $vals[0];
-		//} else { return null; }
+		//$sql = 'SELECT id, ordernum, userid, status, ipaddress FROM tblorders WHERE id='.$orderid;
+		$sql = 'SELECT id, ordernum, userid, status FROM tblorders WHERE id='.$orderid;
+		//return $this->query( $sql );
+		$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }
 	}
 	
 	protected function orderByServiceId($serviceid) {
-		$sql = 'SELECT tblhosting.id as serviceid, tblorders.userid, orderid, ordernum, domain, domainstatus, status as orderstatus, ipaddress 
+		$sql = 'SELECT tblhosting.id as serviceid, tblorders.userid, orderid, ordernum, domain, domainstatus, status as orderstatus 
 			FROM tblhosting 
 			LEFT JOIN tblorders on ( tblorders.id = tblhosting.orderid ) 
 			WHERE tblhosting.id='.$serviceid;
@@ -112,8 +140,24 @@ class WHMCS_product_db extends whmcs_db {
 		//} else { return null; }
 	}
 	
+	protected function _deactiveMonitorByOrder($orderid) {
+		$sql = 'DELETE FROM mod_monitis_product_monitor WHERE orderid='.$orderid;
+		return $this->query_del( $sql );
+	}
+		
+	
+	///////////////////////////////////////////
+	protected function isCustomAddon($addonid) {
+		$sql = 'SELECT * FROM mod_monitis_addon WHERE addon_id='.$addonid;
+		//return $this->query( $sql );
+		$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }
+	}
+	
+	
 	protected function orderByAddonId($addonid) {
-		$sql = 'SELECT tblhostingaddons.id as hostingaddonsid, hostingid, addonid, name, tblorders.userid, orderid, ordernum, tblorders.status as orderstatus, ipaddress
+		$sql = 'SELECT tblhostingaddons.id as hostingaddonsid, hostingid, addonid, name, tblorders.userid, orderid, ordernum, tblorders.status as orderstatus
 			FROM tblhostingaddons 
 			LEFT JOIN tblorders on ( tblorders.id = tblhostingaddons.orderid ) 
 			WHERE tblhostingaddons.addonid='.$addonid;
@@ -122,12 +166,42 @@ class WHMCS_product_db extends whmcs_db {
 	//	if( $vals ){ return $vals[0];
 	//	} else { return null; }
 	}
+
 	protected function addonServiceById( $serviceid ) {
 		//$sql = 'SELECT * FROM tblhostingaddons WHERE id='.$serviceid;
-		$sql = 'SELECT tblhostingaddons.id as hostingaddonsid, hostingid, addonid, name, tblorders.userid, orderid, ordernum, tblorders.status as orderstatus, ipaddress
+		$sql = 'SELECT tblhostingaddons.id as hostingaddonsid, hostingid, tblhostingaddons.status as hostingaddonstatus, addonid, name, tblorders.userid, orderid, ordernum, tblorders.status as orderstatus 
 			FROM tblhostingaddons 
 			LEFT JOIN tblorders on ( tblorders.id = tblhostingaddons.orderid ) 
 			WHERE tblhostingaddons.id='.$serviceid;
+		//return $this->query( $sql );
+		$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }
+	}
+	////////////////////////////////
+	protected function isMonitorAddon($serviceid) {
+		//$sql = 'SELECT * FROM tblhostingaddons WHERE hostingid='.$serviceid;
+		
+		$sql = 'SELECT tblhostingaddons.addonid, mod_monitis_addon.settings, mod_monitis_addon.type 
+		FROM tblhostingaddons 
+		LEFT JOIN mod_monitis_addon on ( mod_monitis_addon.addon_id = tblhostingaddons.addonid ) 
+		WHERE hostingid='.$serviceid.' AND tblhostingaddons.status="Active"';
+		//WHERE hostingid='.$serviceid;
+		return $this->query( $sql );
+	/*	$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }*/
+	}
+	
+	protected function isMonAddon($addonid) {
+	
+		$sql = 'SELECT * FROM mod_monitis_addon WHERE addon_id='.$addonid;
+		
+/*		$sql = 'SELECT tblhostingaddons.addonid, mod_monitis_addon.settings, mod_monitis_addon.type 
+		FROM tblhostingaddons 
+		LEFT JOIN mod_monitis_addon on ( mod_monitis_addon.addon_id = tblhostingaddons.addonid ) 
+		WHERE hostingid='.$serviceid.' AND tblhostingaddons.status="Active"';*/
+		//WHERE hostingid='.$serviceid;
 		//return $this->query( $sql );
 		$vals = $this->query( $sql );
 		if( $vals ){ return $vals[0];
@@ -245,6 +319,14 @@ class productClass extends WHMCS_product_db {
 		update_query('tblcustomfields', $monType_update, $where);		
 	}
 	
+        public function updateProductSettings_1( $pid,  $settings ) {
+				
+		$value = array( 'settings' => $settings);
+		$where = array('product_id' => $pid );
+		return update_query('mod_monitis_product', $value, $where);
+	}
+
+  
 }
 
 

@@ -46,6 +46,7 @@ class L{
 		
 		if (! $f = fopen ( $logFile, "a" )) return FALSE;
 		if (! fwrite ( $f, $string )) return FALSE;
+		chmod($logFile, 0777);
 		fclose ( $f );
 		return TRUE;
 	}

@@ -194,12 +194,16 @@ class WHMCS_class extends whmcs_db {
 		$this->removeExtMonitorsByServersId($server_id);
 	}
 
-      ///for notification test///
-
       public function adminList(){  
             $roleIds= $this->adminRoleIds();             
             $sql = 'SELECT username, id, email FROM tbladmins WHERE roleid in ('.$roleIds.')';
-	    return $this->query( $sql );
+
+	    $result=$this->query($sql); 
+           if($result){                    
+			return $result;
+           }
+
+          else return null;
         }
   
        
@@ -214,19 +218,29 @@ class WHMCS_class extends whmcs_db {
                  $idSet=$arr[$key];
                 }
                }                                 
+         if($idSet){  
         
              return  $idSet;    
+            
+		} else return null;                                
+        
+             
+   
         }
+        
         
     public function adminList_test($admin_id){  
            // $roleIds= $this->adminRoleIds();           
             $sql = 'SELECT * FROM tbladmins WHERE id='.$admin_id;
             $result=$this->query($sql);             
+           if($result){                    
 	    return json_encode($result);
 
         } 
      
+          else return null;
    
+        } 
 	
 }
 

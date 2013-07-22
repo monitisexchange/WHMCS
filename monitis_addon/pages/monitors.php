@@ -1,6 +1,4 @@
 <?php
-$client_id = MONITIS_CLIENT_ID;
-///////////////////////////////////////////////////////////////////////
 
 $editMode = 'create';
 $serverID = monitisGetInt('server_id');
@@ -18,45 +16,27 @@ $serverName = $srv_info[0]['name'];
 $ext_monitors = $oWHMCS->extServerMonitors($serverID);
 $int_monitors = $oWHMCS->intServerMonitorsAll($serverID);
 
-//_dump($ext_monitors);
-
-//_dump($int_monitors);
 
 if( !$ext_monitors && !$int_monitors  ) {
-	//$mExt['client_id'] = MONITIS_CLIENT_ID;
-	//$monitorTypes = array( );
+
 	MonitisApiHelper::addAllDefault(MONITIS_CLIENT_ID, $srv_info[0] );
 	$ext_monitors = $oWHMCS->extServerMonitors($serverID);
 	$int_monitors = $oWHMCS->intServerMonitorsAll($serverID);
 }
 
-
 $hostname = $srv_info[0]['hostname'];
 $oInt = new internalClass(); 
-
 $agentInfo = $oInt->getAgentInfo( $hostname );
-
-//echo "agentInfo *** hostname = $hostname *************** <br>";
-//_dump($agentInfo);
 
 //
 //$driveIds = '';
 if( $agentInfo) {
 	$agentKey = $agentInfo['agentKey'];
 	$agentId = $agentInfo['agentId'];
-	//if( isset($agentInfo['driveMonitors']) )
-	//	$driveIds = implode(",", $agentInfo['driveMonitors']);
-//echo "driveIds = $driveIds ****************** <br>";
-	//$drivesList = $agentInfo['drivesList'];
 	$isAgent = 1;
 } else 
 	$isAgent = 0;
 
-
-//_dump($agentInfo);
-//echo "*** agentId=$agentId *** agentKey=$agentKey *** serverID=$serverID **** <br>";
-//$associateModule = MonitisApp::getModule('AssociateMonitorServer');
-//$associateModuleContent = $associateModule->execute();
 $createModule = MonitisApp::getModule('CreateMonitorServer');
 $createModule->linkText = "Create / modify monitor for this server";
 $createModule->serverID = $serverID;
@@ -91,8 +71,8 @@ if (count($ext_monitors) < 1 && count($int_monitors)) {
 	echo '<br/><br/>';
 	//echo '<center><h3>No monitors associated with this server</h3></center>';
 	MonitisApp::addWarning("No monitors associated with this server.");
+}
 	MonitisApp::printNotifications();
-} 
 ?>
 
 <div style="text-align: right;">

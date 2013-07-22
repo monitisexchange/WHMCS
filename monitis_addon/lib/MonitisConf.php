@@ -51,20 +51,28 @@ class MonitisConf {
 	}	
 	
 	
-	static function load_config($client_id) {
-		$res = mysql_query('SELECT * FROM mod_monitis_client WHERE client_id=' . $client_id);
-		$row = mysql_fetch_assoc($res);
-		//$oWhmcs = new WHMCS_class($client_id);
-		//$row = $oWhmcs->clientInfo();
+	static function load_config() {
+	
+		$res = mysql_query('SELECT * FROM mod_monitis_client WHERE client_id=' . MONITIS_CLIENT_ID);
+		if( $res && mysql_num_rows($res) > 0 ) {
+			//$row = mysql_fetch_assoc($res);
+			while ($row = mysql_fetch_assoc($res)) {
 		self::$apiKey = $row['apiKey'];
 		self::$secretKey = $row['secretKey'];
 		self::$newServerMonitors = $row['newServerMonitors'];
 		self::$settings = json_decode($row['settings'], true);
 	}
+			//$oWhmcs = new WHMCS_class($client_id);
+			//$row = $oWhmcs->clientInfo();
+
+			return true;
+		} else 
+			return false;
+	}
 	
-	static function setupDB( $client_id ) {
+	static function setupDB( ) {
 		$values = array(
-			'client_id' => $client_id,
+			'client_id' => MONITIS_CLIENT_ID,
 			'apiKey' => self::$apiKey,
 			'secretKey' => self::$secretKey,
 			'settings' => self::$default_settings,

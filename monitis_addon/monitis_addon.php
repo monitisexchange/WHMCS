@@ -38,8 +38,8 @@ function monitis_addon_activate() {
 				`monitor_type` varchar(50),
 				`user_id` INT NOT NULL,
 				`orderid` INT NOT NULL,
-				`ordernum` INT NOT NULL,
-				`publickey` varchar(100),
+				`ordernum` varchar(255),
+				`publickey` varchar(255),
 				PRIMARY KEY ( `monitor_id` )
 				);";
 	$result = mysql_query($query);
@@ -90,11 +90,9 @@ function monitis_addon_activate() {
 				);";
 	$result = mysql_query($query);	
 	
-	$client_id = -1;
-	if( isset($_SESSION['adminid']) && $_SESSION['adminid'] > 0 ) {
-		$client_id = -1;
-	}
-	MonitisConf::setupDB($client_id);
+	//$client_id = 1;
+
+	MonitisConf::setupDB();
 	//MonitisConf::admin_setupDB();
 	return array('status'=>'success','description'=>'Monitis addon activation successful');
 }

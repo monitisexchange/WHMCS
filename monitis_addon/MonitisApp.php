@@ -2,7 +2,7 @@
 define('MONITIS_APP_PATH', dirname(realpath(__FILE__)));
 define('MONITIS_APP_URL', '?module=monitis_addon');
 define('MONITIS_PAGE_LIMIT', 20);
-define('MONITIS_CLIENT_ID', -1 );	// admin
+define('MONITIS_CLIENT_ID', 1 );	// admin
 
 
 function _dump($var) {
@@ -51,23 +51,30 @@ echo "<p>$sql</p>";
 _dump($vObj);
 }
 
-
-
-
 require_once 'logger.php';
 
 // Includes lib
 require_once 'lib/whmcs.class.php';
 require_once 'lib/internal.class.php';
-
+//require_once 'lib/product.class.php';
+//require_once 'lib/services.class.php';
 require_once 'lib/MonitisConf.php';
 require_once 'lib/MonitisApi.php';
 require_once 'lib/MonitisRouter.php';
 
+/*
+require_once 'lib/Highcharts/Highchart.php';
+require_once 'lib/MonitisChart.php';
+require_once 'lib/MonitisChartExternal.php';
+require_once 'lib/MonitisChartPing.php';
+require_once 'lib/MonitisChartHttp.php';
+require_once 'lib/MonitisChartHttps.php';
+require_once 'lib/MonitisWidgetContainer.php';
+*/
 require_once 'lib/MonitisApiHelper.php';
 
 //MonitisConf::load();
-MonitisConf::load_config( MONITIS_CLIENT_ID );
+MonitisConf::load_config();
 
 class MonitisApp {
 	private static $errors = array();
@@ -119,7 +126,7 @@ class MonitisApp {
 					-webkit-border-radius: 5px;
 					-o-border-radius: 5px;
 					border-radius: 5px;">'
-					. $msg . '<span class="notification_x">×</span></div>';
+					. $msg . '<span class="notification_x">×</span></div>';	// mml
 		}
 	}
 	static function printWarnings() {
