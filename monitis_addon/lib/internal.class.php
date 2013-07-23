@@ -40,15 +40,21 @@ class internalClass {
 		
 		$agentInfo = null;
 		$agentResp = MonitisApi::getAgent( $keyRegExp );
+
 		if( $agentResp ) {
 			$agent = $agentResp[0];
+			
+			//$status = $agent['status'];
+			
 			$agentInfo = array(
 				'agentKey' => $agent['key'],
 				'agentId' => $agent['id'],
 				'name' => $keyRegExp,
 				'tag' => $keyRegExp.'_whmcs',
+				'status' => $agent['status'],
 				'platform' => $agent['platform']
 			);
+			
 			$drives = $agent['drives'];
 			if( $drives ) {
 				$list = array();

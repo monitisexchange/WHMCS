@@ -76,6 +76,7 @@ function monitis_addon_activate() {
 				`server_id` INT NOT NULL,
 				`monitor_id` INT NOT NULL,
 				`monitor_type` varchar(100),
+				`publickey` varchar(255),
 				PRIMARY KEY ( `monitor_id` )
 				);";
 	$result = mysql_query($query);
@@ -86,6 +87,7 @@ function monitis_addon_activate() {
 				`agent_id` INT NOT NULL,
 				`monitor_id` INT NOT NULL,
 				`monitor_type` varchar(100),
+				`publickey` varchar(255),
 				PRIMARY KEY ( `monitor_id` )
 				);";
 	$result = mysql_query($query);	

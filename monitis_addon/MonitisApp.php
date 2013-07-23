@@ -3,13 +3,20 @@ define('MONITIS_APP_PATH', dirname(realpath(__FILE__)));
 define('MONITIS_APP_URL', '?module=monitis_addon');
 define('MONITIS_PAGE_LIMIT', 20);
 define('MONITIS_CLIENT_ID', 1 );	// admin
-
+define('MONITIS_LOGGER', true );	
 
 function _dump($var) {
 	echo "<div style='border: 2px solid #ccc; padding: 3px; margin: 2px; text-align: left;'><pre>";
 	var_dump($var);
 	echo "</pre></div>";
 }
+
+function _logActivity($str) {
+	if( MONITIS_LOGGER ) {
+		logActivity("MONITIS LOG ***** ".$str);
+	}
+}
+
 function monitisGet($varName, $default = '') {
 	return isset($_GET[$varName]) ? $_GET[$varName] : $default;
 }

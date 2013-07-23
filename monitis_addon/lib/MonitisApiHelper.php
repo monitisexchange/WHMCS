@@ -38,8 +38,11 @@ class MonitisApiHelper {
 
 		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
 			$newID = $resp['data']['testId'];
-			$values = array("server_id" => $server['id'], "monitor_id" => $newID, "monitor_type" => "ping", "client_id"=> $client_id );
+			
+			$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'external','monitorId'=>$newID) );
+			$values = array("server_id" => $server['id'], "monitor_id" => $newID, "monitor_type" => "ping", "client_id"=> $client_id, "publickey"=> $pubKey );
 			@insert_query('mod_monitis_ext_monitors', $values);
+
 			return true;
 		}
 		return false;
@@ -107,12 +110,14 @@ class MonitisApiHelper {
 			$cpus_monitorId = self::addCPU($agentInfo, $cpuSets );
 		} 
 		if( $cpus_monitorId > 0 ) {
+			$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'cpu','monitorId'=>$cpus_monitorId) );
 			$values = array(
 				"server_id" => $server['id'],
 				"monitor_id" => $cpus_monitorId,
 				"agent_id" => $agentId,
 				"monitor_type" => 'cpu',
-				"client_id"=> $client_id
+				"client_id"=> $client_id,
+				"publickey"=> $pubKey
 			);
 
 			insert_query('mod_monitis_int_monitors', $values);
@@ -180,12 +185,14 @@ class MonitisApiHelper {
 					$cpus_monitorId = self::addCPU($agentInfo, MonitisConf::$settings['cpu'] );
 				} 
 				if( $cpus_monitorId > 0 ) {
+					$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'cpu','monitorId'=>$cpus_monitorId) );
 					$values = array(
 						"server_id" => $server['id'],
 						"monitor_id" => $cpus_monitorId,
 						"agent_id" => $agentInfo['agentId'],
 						"monitor_type" => 'cpu',
-						"client_id"=> $client_id
+						"client_id"=> $client_id,
+						"publickey"=>$pubKey
 					);
 					insert_query('mod_monitis_int_monitors', $values);
 				}
@@ -201,12 +208,14 @@ class MonitisApiHelper {
 					$memory_monitorId = self::addMemory($agentInfo, MonitisConf::$settings['memory'] );
 				} 
 				if( $memory_monitorId > 0 ) {
+					$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'memory','monitorId'=>$memory_monitorId) );
 					$values = array(
 						"server_id" => $server['id'],
 						"monitor_id" => $memory_monitorId,
 						"agent_id" => $agentInfo['agentId'],
 						"monitor_type" => 'memory',
-						"client_id"=> $client_id
+						"client_id"=> $client_id,
+						"publickey"=>$pubKey
 					);
 					insert_query('mod_monitis_int_monitors', $values);
 				}
@@ -214,7 +223,9 @@ class MonitisApiHelper {
 		}
 	}
 		
-	static function addDefaultWeb($product, $monitor_type) {
+	static function addDefaultWeb( $product ) {
+		
+		$monitor_type = $product['monitor_type'];
 		$url = $product['web_site'];
 		
 		//$name = $product['ordernum'] . '_'.$monitor_type;
@@ -236,10 +247,11 @@ class MonitisApiHelper {
 			
 
 		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
-		
+
 			//$newID = $resp['data']['testId'];
 			//return array('monitor_id'=> $resp['data']['testId'], 'tag' => $tag);
-			return $resp['data']['testId'];
+			//return $resp['data']['testId'];
+			return $resp['data'];
 		}
 		return false;
 	}
@@ -266,7 +278,8 @@ class MonitisApiHelper {
 		$resp = MonitisApi::createExternalPing( $monParams );
 
 		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
-			return $resp['data']['testId'];
+			//return $resp['data']['testId'];
+			return $resp['data'];
 		}
 		return false;
 	}
@@ -295,6 +308,21 @@ class MonitisApiHelper {
 		$windows = MonitisApi::getAgentsSnapshot('WINDOWS');
 		$toReturn = @array_merge($linux['agents'], $windows['agents']);
 		return $toReturn;
+	}
+	
+	static function embed_module_by_pubkey( $publicKey ) {
+		return  '<script type="text/javascript">
+		monitis_embed_module_id="'.$publicKey.'";
+		monitis_embed_module_width="500";
+		monitis_embed_module_height="350";
+		monitis_embed_module_readonly="false";
+		monitis_embed_module_readonlyChart ="false";
+		monitis_embed_module_readonlyDateRange="false";
+		monitis_embed_module_datePeriod="0";
+		monitis_embed_module_view="1";
+		</script>
+		<script type="text/javascript" src="https://api.monitis.com/sharedModule/shareModule.js"></script>
+		<noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
 	}
 	
 	static function embed_module($monitor_id, $monitor_type) {

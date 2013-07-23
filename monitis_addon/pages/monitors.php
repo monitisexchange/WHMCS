@@ -30,7 +30,7 @@ $agentInfo = $oInt->getAgentInfo( $hostname );
 
 //
 //$driveIds = '';
-if( $agentInfo) {
+if( $agentInfo && isset($agentInfo['status']) && $agentInfo['status'] != 'stopped' ) {
 	$agentKey = $agentInfo['agentKey'];
 	$agentId = $agentInfo['agentId'];
 	$isAgent = 1;

@@ -3,6 +3,38 @@ class MonitisApi {
 	static $endpoint = 'https://api.monitis.com/api';
 	//static $endpoint = 'http://prelive.monitis.com/api';
 
+	
+	static function authToken() {
+		//$resp = self::requestGet('authToken', array());
+		$authToken = null;
+		if( isset($_COOKIE) && isset($_COOKIE["monitis_authtoken"]) && $_COOKIE["monitis_authtoken"] != '' ) {
+			$authToken = $_COOKIE["monitis_authtoken"];
+//_logActivity("<b>from COOKIE *************** Get authToken</b><p>$authToken</p>");
+		} else {
+			$params = array();
+			$params['version'] = '2';
+			$params['action'] = 'authToken';
+			$params['apikey'] = MonitisConf::$apiKey;
+			$params['secretkey'] = MonitisConf::$secretKey;
+			$query = http_build_query($params);
+			$url = self::$endpoint . '?' . $query;
+			$ch = curl_init( $url );
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			$json = curl_exec($ch);
+			$result = json_decode($json, true);
+
+			if( !isset($result['error']) && isset($result['authToken']) ) {
+				$authToken = $result['authToken'];
+				//setcookie("monitis_authtoken", $authToken, time()+(3600*20) );
+				setcookie("monitis_authtoken", $authToken, time()+3600 );
+//_logActivity("<b>from COOKIE *************** Set authToken</b><p>$authToken</p>");
+			} 
+		}
+
+		return $authToken;
+
+	}
+	
 	static function prelive_getWidget( $params ) {
 		$endpoint = 'http://prelive.monitis.com/api';
 
@@ -25,6 +57,15 @@ class MonitisApi {
 		return self::requestGet('getWidget', $params);
 	}
 	
+	static function monitorPublicKey( $params ) {
+		$publicKey = null;
+		$resp = self::requestGet('getWidget', $params);
+		if( $resp && isset($resp['data']) ) {
+			$publicKey = $resp['data'];
+		}
+		return $publicKey;
+	}
+	
 	static function requestGet($action, $params) {
 		// TODO: error handling when JSON is not returned
 		$params['version'] = '2';
@@ -36,25 +77,36 @@ class MonitisApi {
 		$ch = curl_init( $url );
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		$result = curl_exec($ch);
-
+_logActivity("requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>");
 		$json = json_decode($result, true);
 		return $json;
 	}
 	
 	static function requestPost($action, $params) {
 		// TODO: error handling when JSON is not returned
+		
 		$params['version'] = '2';
 		$params['action'] = $action;
 		$params['apikey'] = MonitisConf::$apiKey;
-		$params['timestamp'] = date("Y-m-d H:i:s");
-		$params = self::hmacSign($params);
+
+		
+		$authToken = self::authToken();
+		if( $authToken) {
+			$params['validation'] = 'token';
+			$params['authToken'] = $authToken;
+		} else {
+			$params['timestamp'] = date("Y-m-d H:i:s", time() );
+			$params = self::hmacSign($params);
+		}
+		
 		$query = http_build_query($params);
+
 		$ch = curl_init(self::$endpoint);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_POST, 1 );
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
 		$result = curl_exec($ch);
-		
+_logActivity("requestPost **** action = <b>$action</b><p>$query</p><p>$result</p>");		
 		$json = json_decode($result, true);
 		return $json;
 	}

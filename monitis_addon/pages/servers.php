@@ -2,7 +2,7 @@
 require_once ('../modules/addons/monitis_addon/lib/serverslisttab.class.php');
 $oSrvrs = new serversListTab();
 
-if ( isset( $_POST['create_NewMonitors']) ) {
+if ( isset( $_POST['create_NewMonitors']) && $_POST['create_NewMonitors'] > 0 ) {
 	if( isset( $_POST['serverId']) ) {
 		$servers = array_map( "intval", $_POST['serverId'] );
 
@@ -59,7 +59,7 @@ if( $total % $limit )
 
 //////////////////////////////////////////////////////////////////////////////
 ?>
-<form method="post" action="">
+<form method="post" action="" id="serversListId">
 	<table width="100%" border="0" cellpadding="3" cellspacing="0">
 		<tr>
 			<td width="50%" align="left">
@@ -110,8 +110,9 @@ function sortRequest(sortname) {
 	else
 		$('#'+sortname+'Order').val('ASC');
 	$('#sortnameId').val(sortname); 
-	
+	$('#serversListId [name="create_NewMonitors"]').val(0);
 }
+	
 $('document').ready(function(){
 	$('#drivesListId ul').hide();
 
@@ -147,7 +148,7 @@ $('document').ready(function(){
 		$drive = -1;
 		$disabled = '';
 		if( $monitors && $monitorsCount > 0 ){
-			$disabled = 'disabled="disabled"';
+			//$disabled = 'disabled="disabled"';
 			$agentStatus = '';
 			if( isset($srvrs[$i]['agent_id']) )
 				$agentStatus = $srvrs[$i]['agent_status'];

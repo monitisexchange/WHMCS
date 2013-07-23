@@ -34,21 +34,31 @@ switch ($type) {
 		);
 		if ($isEdit) {
 			$monParams['testId'] = $monitorID;
-			$resp = MonitisApiHelper::editPingMonitor( $monParams );
-
-			if( $resp )
+			//$resp = MonitisApiHelper::editPingMonitor( $monParams );
+			$resp = MonitisApi::editExternalPing( $monParams );
+			//if( $resp )
+			if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
 				MonitisApp::addMessage('Ping Monitor successfully updated');
-			else {
-
+			} else {
 				MonitisApp::addError('Unable to edit monitor, API request failed: '.  $resp['error']);	
 			}
 		} else {
-			$resp = MonitisApiHelper::addPingMonitor($client_id, $server, $monParams );
+			//$resp = MonitisApiHelper::addPingMonitor($client_id, $server, $monParams );
+			
+			$resp = MonitisApi::createExternalPing( $monParams );
 
-			if( $resp )
-				MonitisApp::addMessage('Ping Monitor successfully created and asociated with this server');
-			else
+			if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
+				$newID = $resp['data']['testId'];
+				
+				$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'external','monitorId'=>$newID) );
+				//if( $pubKey ) {
+					$values = array("server_id" => $server['id'], "monitor_id" => $newID, "monitor_type" => "ping", "client_id"=> $client_id, "publickey"=>$pubKey );
+					@insert_query('mod_monitis_ext_monitors', $values);
+					MonitisApp::addMessage('Ping Monitor successfully created and associated with this server');
+				//} 
+			} else {
 				MonitisApp::addError('Unable to create monitor, API request failed: '. $resp['error']);	
+			}
 		}
 	break;
 	
@@ -108,7 +118,7 @@ switch ($type) {
 		}
 	break;
 	case 'memory' :
-	
+		
 		if( $monitorID > 0 ) {
 			$monitor = MonitisApi::getMemoryInfo( $monitorID );
 
@@ -157,14 +167,19 @@ switch ($type) {
 				$resp = MonitisApi::addMemoryMonitor( $params );
 				if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
 					$memory_monitorId = $resp['data']['testId'];
+					
+					$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'memory','monitorId'=>$memory_monitorId) );
+					
 					$values = array(
 						"server_id" => $server['id'],
 						"monitor_id" => $memory_monitorId,
 						"agent_id" => $agentId,
 						"monitor_type" => 'memory',
-						"client_id"=> $client_id
+						"client_id"=> $client_id,
+						"publickey"=> $pubKey
 					);
 					insert_query('mod_monitis_int_monitors', $values);
+//L::ii( 'create memory monitor ********************** values = ' .  json_encode( $values) );
 					MonitisApp::addMessage('Memory Monitor successfully created');
 				} else {
 					MonitisApp::addError('Create memory monitor error: ');
@@ -189,12 +204,15 @@ switch ($type) {
 			if( $resp ){
 				if($resp['status'] == 'ok' ) {
 					if( $action_type == 'associate' ) {
+					
+						$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'drive','monitorId'=>$monitorID) );
 						$values = array(
 							'server_id' => $server['id'],
 							'agent_id' => $_POST['agentId'],
 							'monitor_id' => $monitorID,
 							'monitor_type' => 'drive',
-							'client_id'=> $client_id
+							'client_id'=> $client_id,
+							"publickey"=> $pubKey
 						);
 						insert_query('mod_monitis_int_monitors', $values);
 					}
@@ -215,12 +233,16 @@ switch ($type) {
 				$resp = MonitisApi::addDriveMonitor( $params );
 				if( $resp ) {
 					if($resp['status'] == 'ok') {
+						$newID = $resp['data']['testId'];
+						
+						$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'drive','monitorId'=>$newID) );
 						$values = array(
 							'server_id' => $server['id'],
 							'agent_id' => $_POST['agentId'],
-							'monitor_id' => $resp['data']['testId'],
+							'monitor_id' => $newID,
 							'monitor_type' => 'drive',
-							'client_id'=> $client_id
+							'client_id'=> $client_id,
+							'publickey' => $pubKey
 						);
 						insert_query('mod_monitis_int_monitors', $values);
 						MonitisApp::addMessage('Drive Monitor successfully added');

@@ -68,27 +68,26 @@ add_hook("ServerDelete",1,"hook_monitis_ServerDelete");
 function hook_monitis_AcceptOrder($vars) {
 	
 	$orderid = $vars["orderid"];
-	logActivity("MONITIS LOG ***** HOOK AcceptOrder: orderid = $orderid ");
 
 	require_once 'MonitisApp.php';
 	require_once 'lib/product.class.php';
 	require_once 'lib/services.class.php';
-	
+_logActivity("HOOK AcceptOrder: orderid = $orderid ");
 	//m_log( $vars, 'AcceptOrder', 'order');
 
 	$oService = new servicesClass();
 	
 	$values = array( "id"=> $orderid  );		// status: Pending, Active, Fraud, Cancelled
 	$iOrder = localAPI( "getorders", $values, "admin");
-	
-	//logActivity("***** HOOK AcceptOrder: orderid = $orderid  **** iOrder=". json_encode( $iOrder));
-	
-	//$product = $oService->product_by_order( $orderid );
-	$product = $oService->test_by_order( $orderid, $iOrder );
 
+	$product = $oService->product_by_order( $orderid, $iOrder );
 	if( $product ) {
-		
-		$oService->createMonitors( $product );
+		$resp = $oService->createMonitor( $product );
+		if( $resp['status'] && $resp['status'] == 'error') {
+			$values["orderid"] = $orderid;
+			$results = localAPI("pendingorder", $values, "admin");
+		}
+		_logActivity("createMonitor by AcceptOrder hook: **** result = ". json_encode( $resp));
 	}
 }
 
