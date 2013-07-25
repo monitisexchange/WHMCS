@@ -85,8 +85,8 @@ $addons = $oAddon->addonsList();
 <table class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3" style="text-align: left;">
 	<tr>
 		<th width="20"><!-- input type="checkbox" class="monitis_checkall" / --></th>
-		<th><a href="javascript:void(0)" onclick="submit();">Addon Name</a></th>
-		<th>Addon type</th>
+		<th style="text-align:left;padding-left:20px;width:150px;"><a href="javascript:void(0)" onclick="submit();">Addon Name</a></th>
+		<th style="text-align:left;padding-left:20px;">Monitor type</th>
 	</tr>
 <?
 

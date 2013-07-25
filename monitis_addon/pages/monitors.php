@@ -14,20 +14,23 @@ $srv_info = $oWHMCS->serverInfo( $serverID );
 $serverName = $srv_info[0]['name'];
 
 $ext_monitors = $oWHMCS->extServerMonitors($serverID);
-$int_monitors = $oWHMCS->intServerMonitorsAll($serverID);
+//$int_monitors = $oWHMCS->intServerMonitorsAll($serverID);
+$int_monitors = $oWHMCS->intAssosMonitors($serverID);
 
 
 if( !$ext_monitors && !$int_monitors  ) {
 
 	MonitisApiHelper::addAllDefault(MONITIS_CLIENT_ID, $srv_info[0] );
 	$ext_monitors = $oWHMCS->extServerMonitors($serverID);
-	$int_monitors = $oWHMCS->intServerMonitorsAll($serverID);
+	//$int_monitors = $oWHMCS->intServerMonitorsAll($serverID);
+	$int_monitors = $oWHMCS->intAssosMonitors($serverID);
+	
 }
 
 $hostname = $srv_info[0]['hostname'];
 $oInt = new internalClass(); 
 $agentInfo = $oInt->getAgentInfo( $hostname );
-
+//_dump( $agentInfo );
 //
 //$driveIds = '';
 if( $agentInfo && isset($agentInfo['status']) && $agentInfo['status'] != 'stopped' ) {
@@ -83,6 +86,33 @@ if (count($ext_monitors) < 1 && count($int_monitors)) {
 
 <section class="section_block">
 <?
+
+	if( $ext_monitors ) {
+		for($i=0; $i<count($ext_monitors); $i++) {
+			//echo MonitisApiHelper::embed_module($ext_monitors[$i]['monitor_id'], 'external');
+			$publickey = $ext_monitors[$i]['publickey'];
+			if( $publickey)
+				echo MonitisApiHelper::embed_module_by_pubkey( $publickey );
+			
+		}
+	}
+	if( $int_monitors ) {
+	
+		for($i=0; $i<count($int_monitors); $i++) {
+			//echo MonitisApiHelper::embed_module($ext_monitors[$i]['monitor_id'], 'external');
+			$publickey = $int_monitors[$i]['publickey'];
+			if( $publickey)
+				echo MonitisApiHelper::embed_module_by_pubkey( $publickey );
+			
+		}
+	}
+?>
+</section>
+
+
+<!-- section class="section_block">
+<?
+/*
 	if( $ext_monitors ) {
 		for($i=0; $i<count($ext_monitors); $i++) {
 			//monitis_embed_module($ext_monitors[$i]['monitor_id'], $ext_monitors[$i]['monitor_type']);
@@ -108,5 +138,7 @@ if (count($ext_monitors) < 1 && count($int_monitors)) {
 			}
 		}
 	}
+*/
 ?>
-</section>
+</section -->
+

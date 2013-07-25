@@ -80,7 +80,7 @@ $products = $oMProduct->getproducts();
 }
 .datatable .customfields ul{
 	list-style-type: none;
-	width:200px;
+	width:250px;
 	float:left;
 	margin: 0px;
 	padding: 2px 5px;
@@ -89,9 +89,7 @@ $products = $oMProduct->getproducts();
 	padding: 3px 0px;
 	margin: auto 0px;
 }
-.datatable .customfields .actions {
-	/*text-align:center;*/
-}
+
 </style>
 <center>
 
@@ -99,8 +97,8 @@ $products = $oMProduct->getproducts();
 <table class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3" style="text-align: left;">
 	<tr>
 		<th width="20"><!-- input type="checkbox" class="monitis_checkall" / --></th>
-		<th><a href="javascript:void(0)" onclick="submit();">Product Name</a></th>
-		<th style="text-align:left;padding-left:20px;">Product type</th>
+		<th style="text-align:left;padding-left:20px;"><a href="javascript:void(0)" onclick="submit();">Product Name</a></th>
+		<th style="text-align:left;padding-left:20px;">Monitor type</th>
 
 	</tr>
 <?

@@ -37,6 +37,9 @@ require_once ('../modules/addons/monitis_addon/lib/product.class.php');
 require_once ('../modules/addons/monitis_addon/lib/services.class.php');
 
 
+
+_db_table ( 'tbladdonmodules' );
+
 _db_table ( 'mod_monitis_int_monitors' );
 _db_table ( 'mod_monitis_ext_monitors' );
 

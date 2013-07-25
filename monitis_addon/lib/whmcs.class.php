@@ -111,6 +111,7 @@ class WHMCS_class extends whmcs_db {
 	}
 
 	/////////////
+/*
 	private function _intServerMonitorsAll( & $vals ) {
 		$intMons = array();
 		for( $i=0; $i<count($vals); $i++ ) {
@@ -131,7 +132,6 @@ class WHMCS_class extends whmcs_db {
 				FROM mod_monitis_int_monitors 
 				LEFT JOIN tblservers ON ( tblservers.id=mod_monitis_int_monitors.server_id  )
 				WHERE client_id='.$this->client_id.' AND server_id='.$server_id;
-//echo "$sql<br>";
 		$vals = $this->query( $sql );
 		
 		if( $vals && count($vals) > 0) {
@@ -139,12 +139,18 @@ class WHMCS_class extends whmcs_db {
 		} else
 			return null;
 	}
-	
-	public function intMonitorsByAgentId( $agentId ) {
-		$sql = 'SELECT * FROM mod_monitis_int_monitors WHERE agent_id='.$agentId;
+*/
+	public function intAssosMonitors( $server_id ) {
+		$sql = 'SELECT * FROM mod_monitis_int_monitors WHERE server_id='.$server_id;
 		return $this->query( $sql );
 	}
 	
+	// remove
+/*	public function intMonitorsByAgentId( $agentId ) {
+		$sql = 'SELECT * FROM mod_monitis_int_monitors WHERE agent_id='.$agentId;
+		return $this->query( $sql );
+	}
+*/
 	public function intMonitorsByType( $agentId, $monitorType ) {
 		$sql = 'SELECT * FROM mod_monitis_int_monitors WHERE agent_id='.$agentId.' AND monitor_type="'.$monitorType.'"';
 		return $this->query( $sql );
@@ -159,10 +165,26 @@ class WHMCS_class extends whmcs_db {
 		return $this->query( $sql );
 	}
 	
-	public function allServers(){
+	// remove
+/*	public function allServers(){
 		$sql = 'SELECT id, name, ipaddress, hostname 
 			FROM tblservers
 			LEFT JOIN mod_monitis_ext_monitors ON (tblservers.id = mod_monitis_ext_monitors.server_id AND mod_monitis_ext_monitors.client_id = '.$this->client_id.')';
+		return $this->query( $sql );
+	}
+*/
+	public function servers_ext( $serverIds) {
+		$sql = 'SELECT server_id, monitor_id, publickey, name, hostname 
+		FROM mod_monitis_ext_monitors
+		LEFT JOIN tblservers ON ( tblservers.id = mod_monitis_ext_monitors.server_id )
+		WHERE server_id in ('.$serverIds.')';
+		return $this->query( $sql );
+	}
+	public function servers_int( $serverIds) {
+		$sql = 'SELECT server_id, monitor_id, publickey, name, hostname 
+		FROM mod_monitis_int_monitors
+		LEFT JOIN tblservers ON ( tblservers.id = mod_monitis_int_monitors.server_id )
+		WHERE server_id in ('.$serverIds.')';
 		return $this->query( $sql );
 	}
 	

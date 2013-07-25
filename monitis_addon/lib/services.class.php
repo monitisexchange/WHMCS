@@ -68,12 +68,15 @@ class servicesClass extends WHMCS_product_db {
 		if( $monitor ) {
 			$monitor_id = $monitor['testId'];
 			
+			$result["monitor_id"] = $monitor_id;
+			
 			$type = 'external';
 			$params = array('moduleType'=>$type,'monitorId'=>$monitor_id);
 
 			$resp = MonitisApi::getWidget($params);
 			if( $resp && !$resp['error'] ) {
 				$mon_monitor = $this->productMonitorById($monitor_id);
+				
 				$publicKey = $resp['data'];
 				$values = array(
 					'product_id' => $product['pid'], 
@@ -147,7 +150,24 @@ class servicesClass extends WHMCS_product_db {
 							$info['product_type'] = 'addon';
 
 _logActivity("product_by_order: addon **** orderid = $orderid  addonid -- $addonid");
-
+							if( $type == 'ping'){
+								if( !empty( $service['dedicatedip'] )) {
+									$info["web_site"] = $service['dedicatedip'];
+								} elseif( !empty( $service['domain'] ) ) {
+									$info["web_site"] = $service['domain'];
+								} else {
+									return null;
+								}
+							} else {
+								if( !empty( $service['domain'] ) ) {
+									$info["web_site"] = $service['domain'];
+								} elseif(!empty( $service['dedicatedip'] )) {
+									$info["web_site"] = $service['dedicatedip'];
+								} else {
+									return null;
+								}
+							}
+/*
 							if( $type == 'ping' && !empty( $service['dedicatedip'] ) ) {
 								$info["web_site"] = $service['dedicatedip'];
 							} elseif ( !empty( $service['domain'] ) ) {
@@ -155,6 +175,7 @@ _logActivity("product_by_order: addon **** orderid = $orderid  addonid -- $addon
 							} else {
 								return null;
 							}
+*/
 							return $info;
 						}
 

@@ -166,7 +166,7 @@ class MonitisApiHelper {
 		$agentId = $agents[0]['id'];
 		$monitorTypes = explode(',', MonitisConf::$newServerMonitors);
 		
-		if( $agentKey == $hostname ) {
+		if( strtolower($agentKey) == strtolower($hostname) ) {
 			$agentInfo = array(
 				'agentKey' => $agentKey,
 				'agentId' => $agentId,

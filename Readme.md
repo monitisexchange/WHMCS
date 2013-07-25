@@ -43,9 +43,14 @@ Please, be very careful when filling in these fields.
 Please, note that Monitis addon doesn’t automate Monitis Agent installation on your servers.   
 
 #### Monitoring for web hosting clients
-Monitis addon makes possible to offer monitoring to your clients as a product or product addon.  
-On _Monitis Addon > Products_ tab you will see all your products and configure available monitor types for the product.  
+Monitis addon makes possible to offer monitoring to your clients as a product or product addon.
+
+#### Products
+On _Monitis Addon > Products_ tab you will see all your products, you can mark the product as Monitoring product and configure available monitor types.  
 When activating a product as Monitis monitoring, two new custom fields will be created for that product – URL/IP and Monitor Type.  
 Information provided in these fields will be used for creation of monitor upon order activation. 
 
+#### Product addons
+On _Monitis Addon > Addons_ tab you can mark product addon as Monitis monitoring and define monitor type.  
+Product's Domain and Dedicated IP fields will be used to set up monitors.
 

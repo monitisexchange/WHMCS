@@ -377,17 +377,17 @@ _logActivity("requestPost **** action = <b>$action</b><p>$query</p><p>$result</p
 */
 	static function getAgent( $agentKey ) {
 
-		$params['version'] = '2';
-		$params['action'] = 'agents';
-		$params['apikey'] = MonitisConf::$apiKey;
-		$query = http_build_query($params);
+		//$params['version'] = '2';
+		//$params['action'] = 'agents';
+		//$params['apikey'] = MonitisConf::$apiKey;
+		//$query = http_build_query($params);
 		$url = self::$endpoint . '?keyRegExp=(?i)'.$agentKey.'&version=2&action=agents&apikey=' .MonitisConf::$apiKey;
 		
 		$ch = curl_init( $url );
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		$result = curl_exec($ch);
 
-
+_logActivity("requestGet **** action = <b>agents</b><p>$url</p><p>$result</p>");
 		$json = json_decode($result, true);
 		return $json;
 	}
