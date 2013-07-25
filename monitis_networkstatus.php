@@ -11,12 +11,12 @@ $breadcrumbnav = '<a href="index.php">'.$_LANG['globalsystemname'].'</a>';
 $breadcrumbnav .= ' > <a href="services.php">Web and Design Services</a>'; 
 initialiseClientArea($pagetitle,$pageicon,$breadcrumbnav);
 
+
 $smartyvalues["variablename"] = $value; 
 
 //$templatefile = "services"; 
-$templatefile = "monitis_monitors"; 
+$templatefile = "monitis_networkstatus"; 
 
 outputClientArea($templatefile)
-
 
 ?>

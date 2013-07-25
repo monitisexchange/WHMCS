@@ -1,6 +1,7 @@
 <script type="text/javascript" src="includes/jscript/statesdropdown.js"></script>
 
-{include file="$template/pageheader.tpl" title=$LANG.monitis_my_monitors desc=$LANG.monitis_monitors_list}
+
+{include file="$template/pageheader.tpl" title="My monitors" desc="Monitors list"}
 
 {if $noregistration}
 
@@ -22,8 +23,12 @@
 
 {/if}
 {php}
-
+//require_once('modules/addons/monitis_addon/lib/whmcs.class.php');
+//require_once('modules/addons/monitis_addon/lib/product.class.php');
+//require_once('modules/addons/monitis_addon/lib/services.class.php');
 $userid = $this->_tpl_vars['clientsdetails']['userid'];
+//echo "************ userid = $userid";
+
 $table = "mod_monitis_product_monitor";
 $fields = "*";
 $where = array("user_id"=>$userid);
@@ -32,6 +37,9 @@ $count = mysql_num_rows($result);
 
 echo "<section>";
 while($data = mysql_fetch_array($result)) {
+//echo " ***$count *** <pre>";
+//var_dump($data);
+//echo "</pre>";
 			$publicKey = $data['publickey'];
 	echo '<script type="text/javascript">
 	monitis_embed_module_id="'.$publicKey.'";
