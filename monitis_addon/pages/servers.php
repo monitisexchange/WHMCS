@@ -53,6 +53,8 @@ $opts = array('start'=>$start,'limit'=>$limit,'sort'=>$sortname,'sortorder'=>$so
 $srvrs = $oSrvrs->init($opts);
 $total = $oSrvrs->getTotal();
 
+//_dump( $srvrs );
+
 $pages = intval($total/$limit);
 if( $total % $limit )
 	$pages++;
@@ -109,10 +111,10 @@ function sortRequest(sortname) {
 		$('#'+sortname+'Order').val('DESC');
 	else
 		$('#'+sortname+'Order').val('ASC');
-	$('#sortnameId').val(sortname); 
+	$('#sortnameId').val(sortname);
 	$('#serversListId [name="create_NewMonitors"]').val(0);
 }
-	
+
 $('document').ready(function(){
 	$('#drivesListId ul').hide();
 
@@ -125,6 +127,7 @@ $('document').ready(function(){
 		$('#drivesListId ul').hide(500);
 		ev.stopPropagation();
 	});
+	//////////////////
 });
 </script>
 <table class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3" style="text-align: left;">
@@ -134,6 +137,7 @@ $('document').ready(function(){
 		<th><a href="javascript:void(0)" onclick="sortRequest('ipaddress'); submit();">IP address</a><input type="hidden" name="ipaddressOrder" value="<?=$sList['ipaddress']?>" id="ipaddressOrder" /></th>
 		<th><a href="javascript:void(0)" onclick="sortRequest('hostname'); submit();">Hostname</a><input type="hidden" name="hostnameOrder" value="<?=$sList['hostname']?>" id="hostnameOrder" /></th>
 		<th><a style="text-decoration:none;">Current Status</a></th>
+		<!-- th><a style="text-decoration:none;">Customer available</a></th -->
 		<th><a style="text-decoration:none;">Monitis Monitors</a><input type="hidden" name="sortname" value="hostname" id="sortnameId" /></th>
 	</tr>
 <?php 
@@ -141,7 +145,10 @@ $('document').ready(function(){
 	for($i=0; $i<count($srvrs); $i++) {
 	
 		$monitors = $srvrs[$i]['monitors'];
-		$monitorsCount = count($monitors);	
+		$monitorsCount = count($monitors);
+		$server_id = $srvrs[$i]['id'];
+		
+//$available = $srvrs[$i]['available'];
 		$pings = -1;
 		$cpu = -1;
 		$memory = -1;
@@ -168,7 +175,7 @@ $('document').ready(function(){
 		}	
 ?>
 	<tr>
-		<td><input type="checkbox" class="monitis_checkall" value="<?=$srvrs[$i]['id']?>" name="serverId[]" <?=$disabled?> /></td>
+		<td><input type="checkbox" class="monitis_checkall" value="<?=$server_id?>" name="serverId[]" <?=$disabled?> /></td>
 		<td><?php echo $srvrs[$i]['name'] ?></td>
 		<td><?php echo $srvrs[$i]['ipaddress'] ?></td>
 		<td><?php echo $srvrs[$i]['hostname'] ?></td>
@@ -246,11 +253,12 @@ $('document').ready(function(){
 		}
 ?>
 		</td>
+
 		<td style="text-align: center;">
 <? if($monitorsCount > 0) {?>
-			<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=monitors&server_id=<?php echo $srvrs[$i]['id'] ?>">Monitors &#8594;</a>
+			<a href="<?=MONITIS_APP_URL?>&monitis_page=monitors&server_id=<?=$server_id?>">Monitors &#8594;</a>
 <? } else {?>
-			<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=monitors&server_id=<?php echo $srvrs[$i]['id'] ?>">Add monitors &#8594;</a>
+			<a href="<?=MONITIS_APP_URL?>&monitis_page=monitors&server_id=<?=$server_id?>">Add monitors &#8594;</a>
 <?}?>
 		</td>
 	</tr>

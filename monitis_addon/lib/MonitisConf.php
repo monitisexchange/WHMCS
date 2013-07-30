@@ -4,20 +4,24 @@ class MonitisConf {
 	private static $default_settings = '{"ping":{"interval":1,"timeout":1000,"locationIds":[1,9,10]},"cpu":{"LINUX":{"usedMax":90,"kernelMax":90,"idleMin":0,"ioWaitMax":90,"niceMax":90},"WINDOWS":{"usedMax":100,"kernelMax":90},"OPENSOLARIS":{"usedMax":90,"kernelMax":90}},"memory":{"LINUX":{"freeLimit":2000,"freeSwapLimit":1000,"bufferedLimit":3000,"cachedLimit":3000},"WINDOWS":{"freeLimit":2000,"freeSwapLimit":1000,"freeVirtualLimit":3000},"OPENSOLARIS":{"freeLimit":2000,"freeSwapLimit":1000}},"drive":{"freeLimit":30},"http":{"interval":1,"timeout":10,"locationIds":[1,9,10]},"https":{"interval":1,"timeout":10,"locationIds":[1,9,10]}}';
 	static $apiKey = '';
 	static $secretKey = '';
-	static $newServerMonitors = 'ping,http'; //
 	
+	static $serverAvailable = 1;
+	static $newServerMonitors = 'ping,http'; //
 	static $newAgentPlatform = 'LINUX'; //
-	static $settings = null;
 	static $defaultgroup = 'WHMCS_ADMINGROUP';
+	static $adminuser = '';
 
-	static function update($conf, $value) {	// ??? remove
+	
+	static $settings = null;
+	
+	/*static function update($conf, $value) {	// ??? remove
 		if (!in_array($conf, self::$configs))
 			return;
 		self::$$conf = $value;
 		$update = array('value' => self::$$conf);
 		$where = array('conf' => $conf);
 		update_query('mod_monitis_conf',$update,$where);
-	}
+	}*/
 	static function update_config($client_id, $vals) {
 
 		if( $vals && isset($vals['apiKey']) && isset($vals['secretKey'])) {

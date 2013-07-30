@@ -61,11 +61,18 @@ $createModuleContent = $createModule->execute();
 	<hr/>
 </div>
 <style>
-.section_block {
-	border: 1px solid #ccc; 
+.sectionblock {
+	/*border: 1px solid #ccc; 
 	padding: 20px 5px; 
-	margin: 2px; 
+	margin: 2px; */
 	text-align: left;
+}
+.sectionblock .monitor {
+	width:520px;
+	height:350px;
+	padding: 10px;
+	/*border:1px dotted red;
+	float:left;*/
 }
 </style>
 
@@ -75,7 +82,8 @@ if (count($ext_monitors) < 1 && count($int_monitors)) {
 	//echo '<center><h3>No monitors associated with this server</h3></center>';
 	MonitisApp::addWarning("No monitors associated with this server.");
 }
-	MonitisApp::printNotifications();
+MonitisApp::printNotifications();
+//_dump($ext_monitors);
 ?>
 
 <div style="text-align: right;">
@@ -84,16 +92,20 @@ if (count($ext_monitors) < 1 && count($int_monitors)) {
 
 <div class="dialogTitle"><?php if($serverName!='') echo "<b>Server name:</b> $serverName"; ?></div>
 
-<section class="section_block">
+<section class="sectionblock">
+<form>
 <?
 
 	if( $ext_monitors ) {
 		for($i=0; $i<count($ext_monitors); $i++) {
 			//echo MonitisApiHelper::embed_module($ext_monitors[$i]['monitor_id'], 'external');
 			$publickey = $ext_monitors[$i]['publickey'];
-			if( $publickey)
-				echo MonitisApiHelper::embed_module_by_pubkey( $publickey );
-			
+			if( $publickey) {
+				//echo '<div class="monitor">';
+				echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 500, 350 );
+				//echo '<div><input type="button" value="Delete" onclick="" class="btn-danger"  /></div>';
+				//echo '</div>';
+			}
 		}
 	}
 	if( $int_monitors ) {
@@ -101,44 +113,16 @@ if (count($ext_monitors) < 1 && count($int_monitors)) {
 		for($i=0; $i<count($int_monitors); $i++) {
 			//echo MonitisApiHelper::embed_module($ext_monitors[$i]['monitor_id'], 'external');
 			$publickey = $int_monitors[$i]['publickey'];
-			if( $publickey)
-				echo MonitisApiHelper::embed_module_by_pubkey( $publickey );
+			if( $publickey) {
+				//echo '<div class="monitor">';
+				echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 500, 350 );
+				//echo '<div><input type="button" value="Delete" onclick="" class="btn-danger"  /></div>';
+				//echo '</div>';
+			}
 			
 		}
 	}
 ?>
+</form>
 </section>
-
-
-<!-- section class="section_block">
-<?
-/*
-	if( $ext_monitors ) {
-		for($i=0; $i<count($ext_monitors); $i++) {
-			//monitis_embed_module($ext_monitors[$i]['monitor_id'], $ext_monitors[$i]['monitor_type']);
-			//echo monitis_embed_module($ext_monitors[$i]['monitor_id'], 'external');
-			echo MonitisApiHelper::embed_module($ext_monitors[$i]['monitor_id'], 'external');
-		}
-	}
-
-	if( $int_monitors ) {
-		if( $int_monitors['cpu']) {
-			//echo monitis_embed_module( $int_monitors['cpu']['monitor_id'], 'cpu');
-			echo MonitisApiHelper::embed_module( $int_monitors['cpu']['monitor_id'], 'cpu');
-		}
-		if( $int_monitors['memory']) {
-			//echo monitis_embed_module( $int_monitors['memory']['monitor_id'], 'memory');
-			echo MonitisApiHelper::embed_module( $int_monitors['memory']['monitor_id'], 'memory');
-		}
-		if( isset( $agentInfo['driveMonitors'] ) && count($agentInfo['driveMonitors']) > 0 ) {
-			$driveMonitors = $agentInfo['driveMonitors'];
-			for($i=0; $i<count($driveMonitors); $i++) {
-				//echo monitis_embed_module( $driveMonitors[$i], 'drive');
-				echo MonitisApiHelper::embed_module( $driveMonitors[$i], 'drive');
-			}
-		}
-	}
-*/
-?>
-</section -->
 

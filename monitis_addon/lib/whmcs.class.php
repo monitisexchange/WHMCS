@@ -44,7 +44,7 @@ class whmcs_db {
 class WHMCS_class extends whmcs_db {
 	private $client_id = null;
 	
-	public function __construct ( $client_id=0 ) {
+	public function __construct ( $client_id=1 ) {
 		$this->client_id = $client_id;
 	}
 	
@@ -165,14 +165,6 @@ class WHMCS_class extends whmcs_db {
 		return $this->query( $sql );
 	}
 	
-	// remove
-/*	public function allServers(){
-		$sql = 'SELECT id, name, ipaddress, hostname 
-			FROM tblservers
-			LEFT JOIN mod_monitis_ext_monitors ON (tblservers.id = mod_monitis_ext_monitors.server_id AND mod_monitis_ext_monitors.client_id = '.$this->client_id.')';
-		return $this->query( $sql );
-	}
-*/
 	public function servers_ext( $serverIds) {
 		$sql = 'SELECT server_id, monitor_id, publickey, name, hostname 
 		FROM mod_monitis_ext_monitors
@@ -193,7 +185,10 @@ class WHMCS_class extends whmcs_db {
 		return $this->query( $sql );
 	}
 	public function servers_list_ext( $serverIds) {
-		$sql = 'SELECT * FROM mod_monitis_ext_monitors WHERE server_id in ('.$serverIds.')';
+		$sql = 'SELECT mod_monitis_ext_monitors.*, mod_monitis_server_available.available 
+		FROM mod_monitis_ext_monitors 
+		LEFT JOIN mod_monitis_server_available ON ( mod_monitis_server_available.server_id = mod_monitis_ext_monitors.server_id )
+		WHERE mod_monitis_ext_monitors.server_id in ('.$serverIds.')';
 		return $this->query( $sql );
 	}
 	public function servers_list_int( $serverIds) {
@@ -210,11 +205,64 @@ class WHMCS_class extends whmcs_db {
 		$sql = 'DELETE FROM mod_monitis_int_monitors WHERE server_id='.$server_id;
 		$this->query_del( $sql );
 	}
+	public function removeClientMonitorsByServersId($server_id) {
+		$sql = 'DELETE FROM mod_monitis_product_monitor, mod_monitis_server_available WHERE server_id='.$server_id;
+		$this->query_del( $sql );
+	}
+	
+	// Available
+	public function getServerAvailable( $server_id ){
+		$sql = 'SELECT * FROM mod_monitis_server_available WHERE server_id='.$server_id;
+		return $this->query( $sql );	
+	}
+	public function addServerAvailable( $server_id, $available=1 ){
+		$srv = $this->getServerAvailable( $server_id );
+		if( !$srv ) {
+			$values = array("server_id"=>$server_id,"available"=>$available);
+			insert_query('mod_monitis_server_available',$values);
+		}
+	}	
+	public function setServerAvailable( $server_id, $available=1 ){
+		$update = array("available"=>$available);
+		$where = array("server_id"=>$server_id );
+		return update_query('mod_monitis_server_available', $update, $where);
+		//$sql = 'UPDATE mod_monitis_server_available SET available='.$available.' WHERE server_id='.$server_id;
+		//return $this->query_del( $sql );
+	}
+	
 	// remove ext and int monitors from whmcs db
 	public function removeMonitorsByServersId($server_id) {
 		$this->removeIntMonitorsByServersId($server_id);
 		$this->removeExtMonitorsByServersId($server_id);
+		$this->removeClientMonitorsByServersId($server_id);
 	}
+	
+	//////////////////////////////////////////////////////
+	public function getAdmin(){
+
+		$sql = 'SELECT tbladmins.id as adminid, username, email, tbladmins.roleid as roleid
+		FROM tbladmins 
+		LEFT JOIN tbladminroles ON ( tbladminroles.name = "Full Administrator" AND tbladminroles.id = tbladmins.roleid )';
+		//return $this->query( $sql );
+		$vals = $this->query( $sql );
+		if( $vals ) return $vals[0];
+		else return null;
+	}
+	// tbladdonmodules
+	public function getAdminName( $addonmame, $fieldname){
+		$sql = 'SELECT * FROM tbladdonmodules WHERE module="'.$addonmame.'" AND setting="'.$fieldname.'"';
+		$vals = $this->query( $sql );
+		if( $vals ) return $vals[0];
+		else return null;
+	}
+/*
+	public function adminPermCount(){
+		$sql = 'SELECT count(*) as cnt, roleid FROM tbladminperms WHERE roleid in (1, 2, 3, 4)';
+		return $this->query( $sql );
+		
+	}
+*/
+	//////////////////////////////////////////////////////
 
       public function adminList(){  
             $roleIds= $this->adminRoleIds();             

@@ -110,7 +110,7 @@ class WHMCS_product_db extends whmcs_db {
 	}
 	
 	protected function addonService($orderid) {
-		$sql = 'SELECT addonid, tblhostingaddons.hostingid, tblhosting.domain, tblhosting.dedicatedip
+		$sql = 'SELECT addonid, tblhostingaddons.hostingid, tblhosting.server as serverid, tblhosting.domain, tblhosting.dedicatedip
 		FROM tblhostingaddons 
 		LEFT JOIN tblhosting on (tblhosting.id = tblhostingaddons.hostingid )
 		WHERE tblhostingaddons.orderid='.$orderid;
@@ -277,11 +277,13 @@ class productClass extends WHMCS_product_db {
 					$products[$i]['monitorType'] = false;
 				}
 				$whmcsItem = $this->isProductAssociate( $productId, $whmcsProducts);
-				if( $whmcsItem )
+				if( $whmcsItem ) {
 					$products[$i]['isWhmcsItem'] = true;
-				else
+					$products[$i]['settings'] = $whmcsItem['settings'];
+				} else {
 					$products[$i]['isWhmcsItem'] = false;
-					
+					$products[$i]['settings'] = '';
+				}
 				$products[$i]['customfields'] = $flds;
 
 			}
@@ -319,7 +321,7 @@ class productClass extends WHMCS_product_db {
 		update_query('tblcustomfields', $monType_update, $where);		
 	}
 	
-        public function updateProductSettings_1( $pid,  $settings ) {
+        public function updateProductSettings( $pid,  $settings ) {
 				
 		$value = array( 'settings' => $settings);
 		$where = array('product_id' => $pid );

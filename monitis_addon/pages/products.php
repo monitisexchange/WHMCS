@@ -129,7 +129,7 @@ if( $products && count($products) > 0 ) {
 				</td>
 				<td class="actions">
 					<input type="hidden" name="action" value="setMonitorType" />
-					<input type="submit" value="Set monitor type" />
+					<input type="submit" value="Activate" class="btn-success"  />
 				</td>
 				<td>&nbsp;</td>
 		<?} else {?>

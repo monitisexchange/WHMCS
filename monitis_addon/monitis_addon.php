@@ -21,7 +21,9 @@ function monitis_addon_config() {
 						"FriendlyName" => "",
 						"Description" => "<b>Please grant access to your user from below checkboxes and save changes.<br/>
 							After that go to Addons->Monitis Addon to finish setup.</b>",
-				)
+				),
+				"adminuser" => array ("FriendlyName" => "WHMCS Admin", "Type" => "text", "Size" => "25",
+                              "Description" => "Admin user name for WHMCS API access", "Default" => "", )
     ));
 	return $configarray;
 }
@@ -32,10 +34,12 @@ function monitis_addon_config() {
 function monitis_addon_activate() {
 	//$result = mysql_query("DROP TABLE `mod_monitis_product_monitor`");
 	$query = "CREATE TABLE `mod_monitis_product_monitor` (
+				`server_id` INT NOT NULL,
 				`product_id` INT NOT NULL,
 				`type` varchar(50),
 				`monitor_id` INT NOT NULL,
 				`monitor_type` varchar(50),
+				`available` INT default 1,
 				`user_id` INT NOT NULL,
 				`orderid` INT NOT NULL,
 				`ordernum` varchar(255),
@@ -76,6 +80,7 @@ function monitis_addon_activate() {
 				`server_id` INT NOT NULL,
 				`monitor_id` INT NOT NULL,
 				`monitor_type` varchar(100),
+				`available` INT default 1,
 				`publickey` varchar(255),
 				PRIMARY KEY ( `monitor_id` )
 				);";
@@ -87,14 +92,22 @@ function monitis_addon_activate() {
 				`agent_id` INT NOT NULL,
 				`monitor_id` INT NOT NULL,
 				`monitor_type` varchar(100),
+				`available` INT default 1,
 				`publickey` varchar(255),
 				PRIMARY KEY ( `monitor_id` )
 				);";
 	$result = mysql_query($query);	
 	
-	//$client_id = 1;
+	// 
+	$query = "CREATE TABLE `mod_monitis_server_available` (
+				`server_id` INT NOT NULL,
+				`available` INT default 1,
+				PRIMARY KEY ( `server_id` )
+				);";
+	$result = mysql_query($query);
 
 	MonitisConf::setupDB();
+	
 	//MonitisConf::admin_setupDB();
 	return array('status'=>'success','description'=>'Monitis addon activation successful');
 }
@@ -104,17 +117,16 @@ function monitis_addon_deactivate() {
 
 	$query = "DROP TABLE  `mod_monitis_client`, `mod_monitis_ext_monitors`, `mod_monitis_int_monitors`";
 	$result = mysql_query($query);
-	
-
-	$query = "DROP TABLE `mod_monitis_product`, `mod_monitis_product_monitor`, `mod_monitis_addon`";
+	$query = "DROP TABLE `mod_monitis_product`, `mod_monitis_product_monitor`, `mod_monitis_addon`, `mod_monitis_server_available`";
 	$result = mysql_query($query);
-	// mod_onlinenic
+	
 	return array('status'=>'success','description'=>'Monitis addon deactivation successful');
 }
 
 function monitis_addon_output($vars) {
 	MonitisRouter::route();
 }
+
 
 function monitis_addon_sidebar() {
 	//$modulelink = $vars['modulelink'];
@@ -127,3 +139,29 @@ function monitis_addon_sidebar() {
 EOF;
 	return $sidebar;
 }
+
+
+function monitis_addon_upgrade($vars) {
+ 
+    $version = $vars['version'];
+
+    # Run SQL Updates for V1.0 to V1.1
+    if ($version < 1.1) {
+
+		logActivity("MONITIS ADMIN LOG ***** <b>monitis_addon_upgrade</b>  vars = ". json_encode($vars));
+	/*	$query = "CREATE TABLE `mod_monitis_server_available` (
+					`server_id` INT NOT NULL,
+					`available` INT default 1,
+					PRIMARY KEY ( `server_id` )
+					);";
+		$result = mysql_query($query);*/
+    }
+ 
+    # Run SQL Updates for V1.1 to V1.2
+    if ($version < 1.2) {
+		//$query = "ALTER `mod_addonexample` ADD `demo3` TEXT NOT NULL ";
+		//$result = mysql_query($query);
+    }
+ 
+}
+

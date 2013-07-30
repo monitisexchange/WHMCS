@@ -26,7 +26,7 @@ class MonitisApiHelper {
 		$resp = MonitisApi::editExternalPing( $mParams );
 
 		//$resp = MonitisApi::createExternalPing( $mParams );
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
+		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
 			return true;
 		}
 		return false;
@@ -36,12 +36,13 @@ class MonitisApiHelper {
 
 		$resp = MonitisApi::createExternalPing( $mParams );
 
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
+		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
 			$newID = $resp['data']['testId'];
 			
 			$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'external','monitorId'=>$newID) );
 			$values = array("server_id" => $server['id'], "monitor_id" => $newID, "monitor_type" => "ping", "client_id"=> $client_id, "publickey"=> $pubKey );
 			@insert_query('mod_monitis_ext_monitors', $values);
+			self::addServerAvailable( $server['id'] );
 
 			return true;
 		}
@@ -50,16 +51,12 @@ class MonitisApiHelper {
 	static function addDefaultPing($client_id, $server) {
 		
 		$url = $server['ipaddress'];
-		//$hostname = $server['hostname'];
 		$name = $server['hostname'];
 		
 		if ( empty($url) || empty($name) )
 			return false;
 			
-		//$locationIDs = MonitisConf::$settings['ping']['locationIds'];
 		$locationIDs = array_map( "intval", MonitisConf::$settings['ping']['locationIds'] );
-		
-		//$locationIDs = implode(',', $locationIDs);
 		
 		$monParams = array(
 			'type' => 'ping',
@@ -67,11 +64,8 @@ class MonitisApiHelper {
 			'url' => $url,
 			'interval' => MonitisConf::$settings['ping']['interval'],
 			'timeout' => MonitisConf::$settings['ping']['timeout'],
-			//'locationIds' => MonitisConf::$settings['ping']['locationIds'],
 			'locationIds' => implode(',', $locationIDs),
 			'tag' => $name . '_whmcs'
-			//'uptimeSLA' => '',
-			//'responseSLA' => ''
 		);
 
 		$res = self::addPingMonitor($client_id, $server, $monParams );
@@ -95,7 +89,7 @@ class MonitisApiHelper {
 		
 		$resp = MonitisApi::addCPUMonitor( $params );
 
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
+		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
 			return $resp['data']['testId'];
 		}
 		return 0;
@@ -103,7 +97,6 @@ class MonitisApiHelper {
 
 	static function addCPUMonitor( $server, $client_id, $agentInfo, & $cpus, $cpuSets ) {
 
-		//$cpus_monitorId = self::monitorIdByAgentId( $intMonitors['cpus'], $agentId );
 		$agentId = $agentInfo['agentId'];
 		$cpus_monitorId = self::monitorIdByAgentId( $cpus, $agentId );
 		if( $cpus_monitorId == 0 ) {
@@ -119,16 +112,20 @@ class MonitisApiHelper {
 				"client_id"=> $client_id,
 				"publickey"=> $pubKey
 			);
-
 			insert_query('mod_monitis_int_monitors', $values);
+			self::addServerAvailable( $server['id'] );
 			return true;
 		}
 		return false;
 	}
 	
+	static function addServerAvailable($server_id ) {
+		$whmcs = new WHMCS_class(MONITIS_CLIENT_ID);
+		$whmcs->addServerAvailable( $server_id, MonitisConf::$serverAvailable );
+	}
+	
 	/////////////
 	static function addMemory($agentInfo, $memory ) {
-		//$memory =  MonitisConf::$settings['memory'];
 
 		$platform = $agentInfo['platform'];
 		$params = array(
@@ -142,7 +139,7 @@ class MonitisApiHelper {
 		}
 		
 		$resp = MonitisApi::addMemoryMonitor( $params );
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
+		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
 			return $resp['data']['testId'];
 		}
 		return 0;
@@ -195,6 +192,7 @@ class MonitisApiHelper {
 						"publickey"=>$pubKey
 					);
 					insert_query('mod_monitis_int_monitors', $values);
+					self::addServerAvailable( $server['id'] );
 				}
 			}
 			// memory
@@ -218,6 +216,7 @@ class MonitisApiHelper {
 						"publickey"=>$pubKey
 					);
 					insert_query('mod_monitis_int_monitors', $values);
+					self::addServerAvailable( $server['id'] );
 				}
 			}
 		}
@@ -246,7 +245,7 @@ class MonitisApiHelper {
 			$resp = MonitisApi::createExternalHttps($name, $url, $interval, $timeout, $locationIDs, $tag);
 			
 
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
+		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
 
 			//$newID = $resp['data']['testId'];
 			//return array('monitor_id'=> $resp['data']['testId'], 'tag' => $tag);
@@ -277,7 +276,7 @@ class MonitisApiHelper {
 		);
 		$resp = MonitisApi::createExternalPing( $monParams );
 
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists') {
+		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
 			//return $resp['data']['testId'];
 			return $resp['data'];
 		}
@@ -310,11 +309,11 @@ class MonitisApiHelper {
 		return $toReturn;
 	}
 	
-	static function embed_module_by_pubkey( $publicKey ) {
+	static function embed_module_by_pubkey( $publicKey, $width, $height ) {
 		return  '<script type="text/javascript">
 		monitis_embed_module_id="'.$publicKey.'";
-		monitis_embed_module_width="500";
-		monitis_embed_module_height="350";
+		monitis_embed_module_width="'.$width.'";
+		monitis_embed_module_height="'.$height.'";
 		monitis_embed_module_readonly="false";
 		monitis_embed_module_readonlyChart ="false";
 		monitis_embed_module_readonlyDateRange="false";

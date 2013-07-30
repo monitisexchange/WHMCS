@@ -9,8 +9,8 @@ Monitis addon for WHMCS provides integration with the [Monitis](http://monitis.c
 Copy or clone the repository and install it as follows:  
 
 1. monitis_addon folder needs to be uploaded to the /modules/addons/ directory of your WHMCS installation
-2. upload __monitis_monitors.php__ into the WHMCS root folder
-3. upload __monitis_monitors.tpl__ into the template folder 
+2. upload __monitis_monitors.php__ and __monitis_networkstatus.php__ into WHMCS root folder
+3. upload __monitis_monitors.tpl__ and __monitis_networkstatus.tpl__ into the template folder 
 4. add new tab in the main navigation template ( __header.tpl__ ) and set link to the page __monitis_monitors.php__
 5. you then need to navigate to Setup > Addon Modules within your WHMCS Admin Area to activate and configure the module
 6. upon activation, you will need to configure "Access Control" settings.  
@@ -54,3 +54,4 @@ Information provided in these fields will be used for creation of monitor upon o
 On _Monitis Addon > Addons_ tab you can mark product addon as Monitis monitoring and define monitor type.  
 Product's Domain and Dedicated IP fields will be used to set up monitors.
 
+All the monitors created as Monitoring product or product addon will be available in client area at the new tab that was added based on monitis_monitors.php.

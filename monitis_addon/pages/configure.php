@@ -11,6 +11,7 @@ $newAgentPlatform = MonitisConf::$newAgentPlatform;
 $old_ping =  MonitisConf::$settings['ping'];
 $old_cpu =  MonitisConf::$settings['cpu'][$newAgentPlatform];
 $old_memory =  MonitisConf::$settings['memory'][$newAgentPlatform];
+$old_drive = MonitisConf::$settings['drive'];
 
 $locationIds = $old_ping['locationIds'];
 
@@ -49,9 +50,14 @@ if (monitisPost('saveConfig')) {
 //_dump( $newsets['cpu'] );
 
 	foreach( $newsets['memory'][$platform] as $key=>$val ) {
-		$newsets['memory'][$platform][$key] = isset($_POST[$key]) ? intval($_POST[$key]) : $old_cpu[$key];
+		$newsets['memory'][$platform][$key] = isset($_POST[$key]) ? intval($_POST[$key]) : $old_memory[$key];
 	}
-
+	
+	
+	$newsets['drive'] = array(
+		'freeLimit'	=>	isset($_POST['freeLimit_drive']) ? intval($_POST['freeLimit_drive']) : $old_drive['freeLimit']
+	);
+	
 	$newsets_json = json_encode($newsets);
 	$oldsets_json = json_encode(MonitisConf::$settings);
 	$result = array();
@@ -83,10 +89,12 @@ $newServerMonitors = explode(',', MonitisConf::$newServerMonitors);
 $isPing = false;
 $isCPU = false;
 $isMemory = false;
+//$isDrive = false;
 
 if(in_array('ping', $newServerMonitors))	$isPing = true;
 if(in_array('cpu', $newServerMonitors))	$isCPU = true;
 if(in_array('memory', $newServerMonitors))	$isMemory = true;
+//if(in_array('drive', $newServerMonitors))	$isDrive = true;
 
 //_dump($newServerMonitors);
 ?>
@@ -115,8 +123,24 @@ table.form {
 }
 .form  .monitisDataporps .fieldlabel{
 	color:#000;
+	line-height:26px;
 }
 </style>
+<script>
+/*
+$(document).ready(function(){
+
+	$(".form .monitortypeswitcher").change(function(){
+		var divid = $(this).attr('divid');
+		if( $(this).prop("checked") )
+			$("#"+divid).slideDown("slow");	// $("#"+divid).fadeIn("slow");	//
+		else
+			$("#"+divid).slideUp("slow");		//$("#"+divid).fadeOut("slow"); // 
+	});
+});
+*/
+
+</script>
 <center>
 	<form action="" method="post">
 		<table class="form" width="100%" cellspacing=2 cellpadding=3>
@@ -127,11 +151,12 @@ table.form {
 							<th colspan=3 class="title">External Monitors</th>
 						</tr>
 						<tr>
-							<td colspan="3" class="subtitle"><input type="checkbox" name="newServerMonitors[]" value="ping" <?php if(in_array('ping', $newServerMonitors)) echo 'checked=checked'; ?> 
-							onchange="var node=document.getElementById('Ping_settings_id'); if(this.checked) node.style.display=''; else node.style.display='none';" /> Ping</td>
+							<td colspan="3" class="subtitle">Ping</td>
 						</tr>
 						<tr><td>
-						<table id="Ping_settings_id" <?php if( !$isPing ) echo 'style="display:none"'; ?> bgcolor="#ffffff" width="100%">
+						<div id="Ping_settings_id" <?php if( !$isPing ) echo 'style="display:none"'; ?>>
+						<table   bgcolor="#ffffff" width="100%">
+							<tr><td class="fieldlabel">Automate:</td><td  class="fieldarea"><input type="checkbox" name="newServerMonitors[]" value="ping" <?php if(in_array('ping', $newServerMonitors)) echo 'checked=checked'; ?> divid="Ping_settings_id" class="monitortypeswitcher"  /></td></tr>
 							<tr><td class="fieldlabel">Interval:</td><td class="fieldarea"><input type="text" size="15" name="interval" value="<?php echo MonitisConf::$settings['ping']['interval'] ?>" /></td></tr>
 							<tr><td class="fieldlabel">Timeout:</td><td class="fieldarea"><input type="text" size="15" name="timeout" value="<?php echo MonitisConf::$settings['ping']['timeout'] ?>" /></td></tr>
 <tr>
@@ -171,7 +196,7 @@ table.form {
 </td>
 </tr>
 						</table>
-						
+						</div>
 						</td></tr>						
 					</table>
 					<table class="form monitisDataporps" border=0 width="100%">
@@ -181,31 +206,38 @@ table.form {
 							</th>
 						</tr>
 						<tr>
-							<td class="subtitle" width="50%"><input type="checkbox" name="newServerMonitors[]" value="cpu" <?php if( $isCPU ) echo 'checked=checked'; ?>
-							onchange="var node=document.getElementById('CPU_settings_id'); if(this.checked) node.style.display=''; else node.style.display='none';" /> CPU</td>
-							<td class="subtitle" width="50%"><input type="checkbox" name="newServerMonitors[]" value="memory" <?php if( $isMemory ) echo 'checked=checked'; ?> 
-							onchange="var node=document.getElementById('Memory_settings_id'); if(this.checked) node.style.display=''; else node.style.display='none';" /> Memory</td>
+							<td class="subtitle" width="33%">CPU</td>
+							<td class="subtitle" width="33%">Memory</td>
+							<td class="subtitle" width="33%">Drive</td>
 						</tr>
 <? 
 $cpu = MonitisConf::$settings['cpu'][$newAgentPlatform];
 $memory = MonitisConf::$settings['memory'][$newAgentPlatform];
+$drive = MonitisConf::$settings['drive'];
 
 if( $newAgentPlatform == 'LINUX' ) { 
 ?>
 						<tr>
-						<td width="50%" valign="top"><table id="CPU_settings_id" <?php if( !$isCPU ) echo 'style="display:none"'; ?> bgcolor="#ffffff" width="100%">
+						<td width="33%" valign="top"><div id="CPU_settings_id" ><table bgcolor="#ffffff" width="100%">
+							<tr><td class="fieldlabel" width="50%">Automate:</td><td  class="fieldarea"><input type="checkbox" name="newServerMonitors[]" value="cpu" <?php if( $isCPU ) echo 'checked=checked'; ?> divid="CPU_settings_id" class="monitortypeswitcher"  /></td></tr>
 							<tr><td class="fieldlabel" width="50%">User Max:</td><td class="fieldarea" width="50%"><input type="text" size="5" name="usedMax" value="<?=$cpu['usedMax']?>" /></td></tr>
 							<tr><td class="fieldlabel">Kernel Max:</td><td class="fieldarea"><input type="text" size="5" name="kernelMax" value="<?=$cpu['kernelMax']?>" /></td></tr>
 							<tr><td class="fieldlabel">Min allowed value for idle:</td><td class="fieldarea"><input type="text" size="5" name="idleMin" value="<?=$cpu['idleMin']?>" /></td></tr>
 							<tr><td class="fieldlabel">Max value for iowait:</td><td class="fieldarea"><input type="text" size="5" name="ioWaitMax" value="<?=$cpu['ioWaitMax']?>" /></td></tr>
 							<tr><td class="fieldlabel">Max allowed value for nice:</td><td class="fieldarea"><input type="text" size="5" name="niceMax" value="<?=$cpu['niceMax']?>" /></td></tr>
-						</table></td>
-						<td width="50%" valign="top"><table id="Memory_settings_id" <?php if( !$isMemory ) echo 'style="display:none"'; ?> bgcolor="#ffffff" width="100%">
+						</table></div></td>
+						<td width="33%" valign="top"><div id="Memory_settings_id" ><table bgcolor="#ffffff" width="100%">
+							<tr><td class="fieldlabel" width="50%">Automate:</td><td  class="fieldarea"><input type="checkbox" name="newServerMonitors[]" value="memory" <?php if( $isMemory ) echo 'checked=checked'; ?> divid="Memory_settings_id" class="monitortypeswitcher"  /></td></tr>
 							<tr><td class="fieldlabel" width="50%">Free memory limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit" value="<?=$memory['freeLimit']?>" />&nbsp;MB</td></tr>
 							<tr><td class="fieldlabel">Free swap limit:</td><td class="fieldarea"><input type="text" size="5" name="freeSwapLimit" value="<?=$memory['freeSwapLimit']?>" />&nbsp;MB</td></tr>
 							<tr><td class="fieldlabel">Buffered limit:</td><td class="fieldarea"><input type="text" size="5" name="bufferedLimit" value="<?=$memory['bufferedLimit']?>" />&nbsp;MB</td></tr>
 							<tr><td class="fieldlabel">Cached memory limit:</td><td class="fieldarea"><input type="text" size="5" name="cachedLimit" value="<?=$memory['cachedLimit'] ?>" />&nbsp;MB</td></tr>
-						</table></td>
+							<tr><td class="fieldlabel">&nbsp;</td><td class="fieldarea">&nbsp;</td></tr>
+						</table></div></td>
+						<td width="33%" valign="top"><div id="Memory_settings_id" ><table bgcolor="#ffffff" width="100%">
+							<tr><td class="fieldlabel" width="50%">Free memory limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit_drive" value="<?=$drive['freeLimit']?>" />&nbsp;GB</td></tr>
+							<tr><td class="fieldlabel">&nbsp;</td><td class="fieldarea">&nbsp;</td></tr>
+						</table></div></td>
 						</tr>
 <?}?>
 					</table>

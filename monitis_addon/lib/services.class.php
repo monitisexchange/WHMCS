@@ -2,53 +2,7 @@
 class servicesClass extends WHMCS_product_db {
 
 	public function __construct () {}
-/*
-	public function product_by_order( $orderid ) {
-	
-		$service = $this->serviceByOrderId($orderid);
-		if( $service ) {
-			$serviceid = $service['serviceid'];
-			$userid = $service['user_id'];
 
-			$values["clientid"] = $userid;
-			$values["serviceid"] = $serviceid;
-			$results = localAPI( "getclientsproducts", $values, "admin" );
-
-			if( $results && $results['result'] == 'success') {
-				$products = $results['products']['product'];
-				$pid = $products[0]['pid'];
-				$monitor = $this->isWhmcsProduct( $pid );
-//L::ii( 'product_by_order ' .   json_encode($monitor) );
-				if( $monitor ) {
-					$flds = $this->productFields( $pid );
-					$monitor_types = '';
-					
-					if( $flds ) {
-						$website_field_id = $monitorType_id = 0;
-						for($j=0; $j<count($flds); $j++){
-							if( $flds[$j]['fieldname'] == MONITIS_FIELD_WEBSITE ) { 
-								$website_field_id = $flds[$j]['id'];
-								$service["web_site"] = $flds[$j]['value'];
-							}
-							if( $flds[$j]['fieldname'] == MONITIS_FIELD_MONITOR) {
-								$monitor_types = $flds[$j]['fieldoptions'];
-								$monitorType_id = $flds[$j]['id'];
-								$service["monitor_type"] = $flds[$j]['value'];
-							}
-						}
-						if( $website_field_id > 0 && $monitorType_id > 0 ) {
-							$service["pid"] = $pid;
-							$service["monitor_types"] = $monitor_types;
-							return $service;
-					
-						} else return null;
-					} else return null;
-				} else return null;
-
-			} else return null;
-		} else return null;
-	}
-*/
 	public function createMonitor( & $product ) {
 		
 		$monitor = null;
@@ -79,6 +33,7 @@ class servicesClass extends WHMCS_product_db {
 				
 				$publicKey = $resp['data'];
 				$values = array(
+					'server_id' => $product['serverid'], 
 					'product_id' => $product['pid'], 
 					'type' => $product["product_type"], 
 					'monitor_id' => $monitor_id,
@@ -90,11 +45,13 @@ class servicesClass extends WHMCS_product_db {
 				);
 				if( !$mon_monitor ) {
 					insert_query('mod_monitis_product_monitor', $values);
+					MonitisApiHelper::addServerAvailable( $product['serverid'] );
+					
 					$result["status"] = 'ok';
 					$result["msg"] = 'success';
 				} else {
-					$result["status"] = 'ok';
-					$result["msg"] = 'already exist';
+					$result["status"] = 'warning';
+					$result["msg"] = 'This monitor already exists.';
 				}
 			} else {
 				$result["status"] = 'error';
@@ -108,15 +65,12 @@ class servicesClass extends WHMCS_product_db {
 		}
 		return $result;
 	}
-	//public function createMonitor( $product ) {
-	//	return $this->addToWhmcs( $product );
-	//}
 	
 	public function deactiveMonitorByOrder( $orderid ) {
 		$this->_deactiveMonitorByOrder($orderid);
 	}
 	
-	public function product_by_order( $orderid, $iOrder ) {
+	public function product_by_order( $orderid, $iOrder, $adminuser ) {
 
 		$info = array();
 		
@@ -131,7 +85,7 @@ class servicesClass extends WHMCS_product_db {
 				 $info['ordernum'] = $order["ordernum"];
 				 $info['user_id'] = $order["userid"];
 				 $items = $order['lineitems']['lineitem'];
-				 
+//_dump($items);
 				 for( $i=0; $i<count($items); $i++ ) {
 					$item = $items[$i];
 					$order_type = $item['type'];	// addon / product
@@ -141,11 +95,13 @@ class servicesClass extends WHMCS_product_db {
 					if( $order_type == 'addon' ) {
 			
 						$service = $this->addonService($orderid);
+//_dump($service);
 						$addonid = $service['addonid'];
 						$mon = $this->isMonAddon($addonid);
 						if( $mon ) {
 							$type = $mon['type'];
 							$info['monitor_type'] = $type;
+							$info['serverid'] = $service['serverid'];
 							$info['pid'] = $addonid;
 							$info['product_type'] = 'addon';
 
@@ -184,9 +140,8 @@ _logActivity("product_by_order: addon **** orderid = $orderid  addonid -- $addon
 						$serviceid = $item['relid'];
 
 						$values = array( "serviceid"=> $serviceid, "clientid" => $info['user_id'] );
-						$prdcts = localAPI( "getclientsproducts", $values, "admin" );
 						
-
+						$prdcts = localAPI( "getclientsproducts", $values, $adminuser );
 
 						if( $prdcts && $prdcts['result'] == 'success' && $prdcts['products']['product'] ) {
 							$products = $prdcts['products']['product'];
@@ -215,6 +170,7 @@ _logActivity("product_by_order: product **** orderid = $orderid  pid -- $pid");
 									}
 									if( $website_field_id > 0 && $monitorType_id > 0 ) {
 										$info["pid"] = $pid;
+										$info["serverid"] = $product['serverid'];
 										$info["monitor_types"] = $monitor_types;
 										$info["product_type"] = 'product';
 										return $info;

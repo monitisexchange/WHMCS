@@ -154,6 +154,9 @@ class serversListTab {
 			
 			$server = $this->whmcs_all_servers[$i];
 			$ext = $this->__monitor( $server['id'], $this->whmcs_ext );
+			
+			$this->whmcs_all_servers[$i]['available'] = $ext['available'];
+
 			if( $ext && $ext['ping'] ) {
 				$monitors['ping'] = $ext['ping'];
 			}
@@ -175,7 +178,7 @@ class serversListTab {
 			if($monitors && count($monitors) > 0)
 				$this->whmcs_all_servers[$i]['monitors'] = $monitors;
 		}
-//_dump( $this->whmcs_all_servers );		
+
 	}
 	public function init( $opts) {
 		$oWhmcs = new WHMCS_class( MONITIS_CLIENT_ID );
@@ -185,9 +188,10 @@ class serversListTab {
 			$this->total = $this->whmcs_all_servers[0]['total'];
 			
 			$allSrvrsIds = $this->_idsList( $this->whmcs_all_servers, 'id' );
+
 			$srvrsIds = implode(',', $allSrvrsIds);
 			$this->whmcs_ext = $oWhmcs->servers_list_ext( $srvrsIds );
-				
+//_dump( $this->whmcs_ext );
 			if( $this->whmcs_ext ) {
 				$this->extSnapShots();
 				$this->whmcs_int = $oWhmcs->servers_list_int( $srvrsIds);
@@ -201,6 +205,7 @@ class serversListTab {
 				$this->init_all_servers();
 			}
 		}
+
 		return $this->whmcs_all_servers;
 	}
 	public function getTotal() {

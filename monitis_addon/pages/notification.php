@@ -1,7 +1,7 @@
 <?php
 $oWHMCS = new WHMCS_class(MONITIS_CLIENT_ID);
 $monitiAdminList1 = MonitisApi::getContacts();
-
+ 
 
 $action = monitisPost('action');
 if ($action) {
@@ -50,6 +50,7 @@ for ($i = 0; $i < count($adminList); $i++) {
         }
     }
 }
+
 ?>
 
 <table class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3" style="text-align: left;">

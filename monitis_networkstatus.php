@@ -11,6 +11,7 @@ $breadcrumbnav = '<a href="index.php">'.$_LANG['globalsystemname'].'</a>';
 $breadcrumbnav .= ' > <a href="services.php">Web and Design Services</a>'; 
 initialiseClientArea($pagetitle,$pageicon,$breadcrumbnav);
 
+logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus php page");
 
 $smartyvalues["variablename"] = $value; 
 

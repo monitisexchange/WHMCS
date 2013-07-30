@@ -74,18 +74,25 @@ function hook_monitis_AcceptOrder($vars) {
 	require_once 'lib/services.class.php';
 _logActivity("HOOK AcceptOrder: orderid = $orderid ");
 	//m_log( $vars, 'AcceptOrder', 'order');
-
-	$oService = new servicesClass();
 	
-	$values = array( "id"=> $orderid  );		// status: Pending, Active, Fraud, Cancelled
-	$iOrder = localAPI( "getorders", $values, "admin");
+_logActivity("HOOK AcceptOrder: _SESSION = ".json_encode($_SESSION) );
 
-	$product = $oService->product_by_order( $orderid, $iOrder );
+	$adminuser = MonitisConf::$adminuser;
+	if( empty($adminuser) ) {
+		$whmcs = new WHMCS_class();
+		$adm = $whmcs->getAdminName( 'monitis_addon', 'adminuser');
+		$adminuser = $adm['value'];
+	}
+	$oService = new servicesClass();
+	$values = array( "id"=> $orderid  );		// status: Pending, Active, Fraud, Cancelled
+	$iOrder = localAPI( "getorders", $values, $adminuser);
+
+	$product = $oService->product_by_order( $orderid, $iOrder, $adminuser );
 	if( $product ) {
 		$resp = $oService->createMonitor( $product );
 		if( $resp['status'] && $resp['status'] == 'error') {
 			$values["orderid"] = $orderid;
-			$results = localAPI("pendingorder", $values, "admin");
+			$results = localAPI("pendingorder", $values, $adminuser );
 		}
 		_logActivity("createMonitor by AcceptOrder hook: **** result = ". json_encode( $resp));
 	}
