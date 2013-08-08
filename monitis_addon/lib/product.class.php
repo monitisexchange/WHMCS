@@ -44,9 +44,11 @@ class WHMCS_product_db extends whmcs_db {
 		return $this->query( $sql );
 	}
 	
-	protected function isWhmcsProduct( $pid ) {
+	protected function productById( $pid ) {
 		$sql = 'SELECT * FROM mod_monitis_product WHERE product_id='.$pid;
-		return $this->query( $sql );
+		$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }
 	}
 	
 	
@@ -147,7 +149,7 @@ class WHMCS_product_db extends whmcs_db {
 		
 	
 	///////////////////////////////////////////
-	protected function isCustomAddon($addonid) {
+	public function addonById($addonid) {
 		$sql = 'SELECT * FROM mod_monitis_addon WHERE addon_id='.$addonid;
 		//return $this->query( $sql );
 		$vals = $this->query( $sql );
@@ -206,6 +208,15 @@ class WHMCS_product_db extends whmcs_db {
 		$vals = $this->query( $sql );
 		if( $vals ){ return $vals[0];
 		} else { return null; }
+	}
+	/////////////////////////////////////////////
+	protected function addonServicesByids($ids) {
+		$sql = 'SELECT tblhostingaddons.id as hostingaddonid, addonid, tblhostingaddons.hostingid, tblhosting.server as serverid, tblhosting.domain, tblhosting.dedicatedip
+		FROM tblhostingaddons 
+		LEFT JOIN tblhosting on (tblhosting.id = tblhostingaddons.hostingid )
+		WHERE tblhostingaddons.id in ('.$ids.')';
+		return $this->query( $sql );
+
 	}
 }
 
@@ -294,7 +305,7 @@ class productClass extends WHMCS_product_db {
 	}
 
 	public function activateProduct( $pid ) {
-		$values = array('product_id'=>$pid);
+		$values = array('product_id'=>$pid, 'status'=>'active');
 		insert_query('mod_monitis_product', $values);
 	}
 	public function deactivateProduct( $pid ) {
@@ -327,6 +338,9 @@ class productClass extends WHMCS_product_db {
 		$where = array('product_id' => $pid );
 		return update_query('mod_monitis_product', $value, $where);
 	}
+
+
+
 
   
 }

@@ -75,14 +75,16 @@ function hook_monitis_AcceptOrder($vars) {
 _logActivity("HOOK AcceptOrder: orderid = $orderid ");
 	//m_log( $vars, 'AcceptOrder', 'order');
 	
-_logActivity("HOOK AcceptOrder: _SESSION = ".json_encode($_SESSION) );
+//_logActivity("HOOK AcceptOrder: _SESSION = ".json_encode($_SESSION) );
 
-	$adminuser = MonitisConf::$adminuser;
+	$adminuser = MonitisConf::getAdminName();
+/*
 	if( empty($adminuser) ) {
 		$whmcs = new WHMCS_class();
 		$adm = $whmcs->getAdminName( 'monitis_addon', 'adminuser');
 		$adminuser = $adm['value'];
 	}
+*/
 	$oService = new servicesClass();
 	$values = array( "id"=> $orderid  );		// status: Pending, Active, Fraud, Cancelled
 	$iOrder = localAPI( "getorders", $values, $adminuser);
@@ -134,4 +136,21 @@ function hook_monitis_PendingOrder($vars) {
 	$oService->deactiveMonitorByOrder( $vars['orderid'] );
 }
 add_hook("PendingOrder",1,"hook_monitis_PendingOrder");
+
+
+
+
+function hook_monitis_ViewOrderDetailsPage($vars) {
+
+	m_log( $vars, 'ViewOrderDetailsPage', 'order');
+	return "<div>From ViewOrderDetailsPage hook</div>";
+}
+add_hook("ViewOrderDetailsPage",1,"hook_monitis_ViewOrderDetailsPage");
+
+function hook_monitis_AdminAreaHeaderOutput($vars) {
+
+	m_log( $vars, 'AdminAreaHeaderOutput', 'system');
+	//return "<div>From AdminAreaHeaderOutput hook</div>";
+}
+add_hook("AdminAreaHeaderOutput",1,"hook_monitis_AdminAreaHeaderOutput");
 

@@ -1,4 +1,32 @@
 <?php
+require_once ('../modules/addons/monitis_addon/lib/serverslisttab.class.php');
+//
+if( isset($_POST) && isset($_POST['type']) && !empty($_POST['type']) ) {
+	$action = $_POST['type'];
+	$monitorID = monitisPostInt('monitor_id');
+	$monitorType = monitisPost('monitor_type');
+	$values = monitisPostInt('values');
+	switch( $action ) {
+		case 'suspend':
+			if( $values == 0 ) 
+				$resp = MonitisApi::suspendExternal("$monitorID");
+			else
+				$resp = MonitisApi::activateExternal("$monitorID");
+//_dump($resp);
+
+		break;
+		case 'available':
+			$table = 'mod_monitis_int_monitors';
+			if( $monitorType == 'ping')
+				$table = 'mod_monitis_ext_monitors';
+			$update['available'] = $values;
+			$where = array('monitor_id' => $monitorID);
+			update_query($table, $update, $where);
+			update_query('mod_monitis_product_monitor', $update, $where);	
+		break;
+	}
+}
+
 
 $editMode = 'create';
 $serverID = monitisGetInt('server_id');
@@ -14,15 +42,14 @@ $srv_info = $oWHMCS->serverInfo( $serverID );
 $serverName = $srv_info[0]['name'];
 
 $ext_monitors = $oWHMCS->extServerMonitors($serverID);
-//$int_monitors = $oWHMCS->intServerMonitorsAll($serverID);
 $int_monitors = $oWHMCS->intAssosMonitors($serverID);
 
 
-if( !$ext_monitors && !$int_monitors  ) {
+//if( !$ext_monitors && !$int_monitors  ) {
+if( !$ext_monitors ) {
 
 	MonitisApiHelper::addAllDefault(MONITIS_CLIENT_ID, $srv_info[0] );
 	$ext_monitors = $oWHMCS->extServerMonitors($serverID);
-	//$int_monitors = $oWHMCS->intServerMonitorsAll($serverID);
 	$int_monitors = $oWHMCS->intAssosMonitors($serverID);
 	
 }
@@ -30,12 +57,20 @@ if( !$ext_monitors && !$int_monitors  ) {
 $hostname = $srv_info[0]['hostname'];
 $oInt = new internalClass(); 
 $agentInfo = $oInt->getAgentInfo( $hostname );
-//_dump( $agentInfo );
+
 //
-//$driveIds = '';
 if( $agentInfo && isset($agentInfo['status']) && $agentInfo['status'] != 'stopped' ) {
+
 	$agentKey = $agentInfo['agentKey'];
 	$agentId = $agentInfo['agentId'];
+	
+	$whmcs_drives = $oWHMCS->intMonitorsByType( $agentId, 'drive' );
+	
+_logActivity("intMonitorsByType **** agentId = $agentId<p>whmcs_drives=".json_encode($whmcs_drives)."</p>");
+_logActivity("intMonitorsByType **** agentId = $agentId<p>agentInfo=".json_encode($agentInfo)."</p>");
+
+//_dump( $agentInfo );
+	$noAssoc = $oInt->associateDrives( $whmcs_drives, $agentInfo, $serverID );
 	$isAgent = 1;
 } else 
 	$isAgent = 0;
@@ -53,6 +88,7 @@ $createModule->agentKey = $agentKey;
  
 $createModuleContent = $createModule->execute();
 
+
 ?>
 
 <div align="left">
@@ -62,17 +98,16 @@ $createModuleContent = $createModule->execute();
 </div>
 <style>
 .sectionblock {
-	/*border: 1px solid #ccc; 
-	padding: 20px 5px; 
-	margin: 2px; */
-	text-align: left;
+	text-align: center;
 }
 .sectionblock .monitor {
-	width:520px;
-	height:350px;
 	padding: 10px;
-	/*border:1px dotted red;
-	float:left;*/
+	text-align: center;
+}
+.sectionblock .monitor .btn{
+	font-size:11px;
+	line-height:14px;
+	padding: 3px 7px;
 }
 </style>
 
@@ -91,38 +126,112 @@ MonitisApp::printNotifications();
 </div>
 
 <div class="dialogTitle"><?php if($serverName!='') echo "<b>Server name:</b> $serverName"; ?></div>
-
+<script>
+function setParameters(form, type, monitor_id, monitor_type, values) {
+	form.type.value = type;
+	form.monitor_id.value = monitor_id;
+	form.monitor_type.value = monitor_type;
+	form.values.value = values;
+}
+</script>
 <section class="sectionblock">
-<form>
+<form action="" method="post" id="setMonitorForm">
 <?
-
+//m_CreateMonitorServer 
 	if( $ext_monitors ) {
+
+_logActivity("monitors tab **** ext_monitors = " . json_encode($ext_monitors) );
+		$oSrvrs = new serversListTab();
+		$pings = $oSrvrs->externalSnapShotsStatus( $ext_monitors );
+		
+		//$pings = $oSrvrs->externalSnapShots( $ext_monitors );
+//_logActivity("monitors tab **** pings = " . json_encode($pings) );
+		$ping = null;
+		if( $pings && count($pings) > 0 ) 
+			$ping = $pings[0]['status'];
+		
 		for($i=0; $i<count($ext_monitors); $i++) {
 			//echo MonitisApiHelper::embed_module($ext_monitors[$i]['monitor_id'], 'external');
-			$publickey = $ext_monitors[$i]['publickey'];
-			if( $publickey) {
-				//echo '<div class="monitor">';
-				echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 500, 350 );
-				//echo '<div><input type="button" value="Delete" onclick="" class="btn-danger"  /></div>';
-				//echo '</div>';
+			$item = $ext_monitors[$i];
+			$monitor_id = $item['monitor_id'];
+			$monitor_type = $item['monitor_type'];
+			$publickey = $item['publickey'];
+
+//$ext = MonitisApi::getExternalSnapshot($monitor_id);
+//_dump( $ext );
+			if( $ping && $publickey) {
+				echo '<figure class="monitor">';
+				echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 800, 350 );
+				echo '<div>
+				<input type="button" value="Edit" onclick="m_CreateMonitorServer.trigger('.$monitor_id.', \''.$monitor_type.'\');" class="btn" />';
+				//if( $ping ) {
+					if( $ping['status'] == 'suspended' ) {
+						echo '<input type="submit" value="Activate" 
+						onclick="setParameters(this.form, \'suspend\', '.$monitor_id.', \''.$monitor_type.'\', 1);" class="btn btn-success"  />';
+					} else {
+						echo '<input type="submit" value="Suspend" 
+						onclick="setParameters(this.form, \'suspend\', '.$monitor_id.', \''.$monitor_type.'\', 0);" class="btn btn-suspended"  />';				
+					}
+				
+				
+					if( $item['available'] > 0 ) {
+						echo '<input type="submit" value="Not available to customer" 
+						onclick="setParameters(this.form, \'available\', '.$monitor_id.', \''.$monitor_type.'\', 0);" class="btn btn-suspended"  />';
+					} else {
+						echo '<input type="submit" value="Available to customer" 
+						onclick="setParameters(this.form, \'available\', '.$monitor_id.', \''.$monitor_type.'\', 1);" class="btn btn-success"  />';
+					}
+					echo '<input type="button" value="Delete" onclick="m_CreateMonitorServer.loadMessagBox('.$monitor_id.', \''.$monitor_type.'\' );" class="btn btn-danger"  />';
+				//} else {
+
+				//}
+				echo '</div></figure>';
+			} else {
+echo "Unlink monitor $monitor_id ";			
 			}
 		}
 	}
 	if( $int_monitors ) {
-	
+//_dump( $agentInfo );
+
+		$label = 'active';
+		if( $agentInfo['status'] == 'stopped' ) {
+			$label = 'closed';
+		}
+		echo '<header style="margin:50px 0px 30px 0px"><h3>Agent: <b> '.$agentInfo['agentKey'].'</b> '.$agentInfo['status'].'</h3></header>';
+		
 		for($i=0; $i<count($int_monitors); $i++) {
 			//echo MonitisApiHelper::embed_module($ext_monitors[$i]['monitor_id'], 'external');
-			$publickey = $int_monitors[$i]['publickey'];
+			$item = $int_monitors[$i];
+			$monitor_id = $item['monitor_id'];
+			$monitor_type = $item['monitor_type'];
+			$publickey = $item['publickey'];
+			
 			if( $publickey) {
-				//echo '<div class="monitor">';
-				echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 500, 350 );
-				//echo '<div><input type="button" value="Delete" onclick="" class="btn-danger"  /></div>';
-				//echo '</div>';
+				echo '<figure class="monitor">';
+				echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 800, 350 );
+				// btn-success
+				echo '<div>
+				<input type="button" value="Edit" onclick="m_CreateMonitorServer.trigger('.$monitor_id.', \''.$monitor_type.'\');" class="btn"  />';
+				if( $item['available'] > 0 ) {
+					echo '<input type="submit" value="Not available to customer" 
+					onclick="setParameters(this.form, \'available\', '.$monitor_id.', \''.$monitor_type.'\', 0);" class="btn btn-suspended"  />';
+				} else {
+					echo '<input type="submit" value="Available to customer" 
+					onclick="setParameters(this.form, \'available\', '.$monitor_id.', \''.$monitor_type.'\', 1);" class="btn btn-success"  />';
+				}
+				echo '<input type="button" value="Delete" onclick="m_CreateMonitorServer.loadMessagBox('.$monitor_id.', \''.$monitor_type.'\' );" class="btn btn-danger"  />
+				</div>';
+				echo '</figure>';
 			}
 			
 		}
 	}
 ?>
+<input type="hidden" name="type" value="" />
+<input type="hidden" name="monitor_id" value="" />
+<input type="hidden" name="monitor_type" value="" />
+<input type="hidden" name="values" value="" />
 </form>
 </section>
 

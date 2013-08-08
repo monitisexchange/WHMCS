@@ -36,13 +36,21 @@ class MonitisApiHelper {
 
 		$resp = MonitisApi::createExternalPing( $mParams );
 
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
+		//if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
+		if ( isset( $resp['data'] ) && isset($resp['data']['testId']) ) {
 			$newID = $resp['data']['testId'];
-			
+
 			$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'external','monitorId'=>$newID) );
-			$values = array("server_id" => $server['id'], "monitor_id" => $newID, "monitor_type" => "ping", "client_id"=> $client_id, "publickey"=> $pubKey );
+			$values = array(
+				"server_id" => $server['id'],
+				"available" => MonitisConf::$settings['ping']['available'],
+				"monitor_id" => $newID,
+				"monitor_type" => "ping",
+				"client_id"=> $client_id,
+				"publickey"=> $pubKey 
+			);
 			@insert_query('mod_monitis_ext_monitors', $values);
-			self::addServerAvailable( $server['id'] );
+			//self::addServerAvailable( $server['id'] );
 
 			return true;
 		}
@@ -106,6 +114,7 @@ class MonitisApiHelper {
 			$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'cpu','monitorId'=>$cpus_monitorId) );
 			$values = array(
 				"server_id" => $server['id'],
+				"available" => MonitisConf::$settings['cpu']['available'],
 				"monitor_id" => $cpus_monitorId,
 				"agent_id" => $agentId,
 				"monitor_type" => 'cpu',
@@ -113,17 +122,17 @@ class MonitisApiHelper {
 				"publickey"=> $pubKey
 			);
 			insert_query('mod_monitis_int_monitors', $values);
-			self::addServerAvailable( $server['id'] );
+			//self::addServerAvailable( $server['id'] );
 			return true;
 		}
 		return false;
 	}
-	
+/*
 	static function addServerAvailable($server_id ) {
 		$whmcs = new WHMCS_class(MONITIS_CLIENT_ID);
 		$whmcs->addServerAvailable( $server_id, MonitisConf::$serverAvailable );
 	}
-	
+*/
 	/////////////
 	static function addMemory($agentInfo, $memory ) {
 
@@ -185,6 +194,7 @@ class MonitisApiHelper {
 					$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'cpu','monitorId'=>$cpus_monitorId) );
 					$values = array(
 						"server_id" => $server['id'],
+						"available" => MonitisConf::$settings['cpu']['available'],
 						"monitor_id" => $cpus_monitorId,
 						"agent_id" => $agentInfo['agentId'],
 						"monitor_type" => 'cpu',
@@ -192,7 +202,7 @@ class MonitisApiHelper {
 						"publickey"=>$pubKey
 					);
 					insert_query('mod_monitis_int_monitors', $values);
-					self::addServerAvailable( $server['id'] );
+					//self::addServerAvailable( $server['id'] );
 				}
 			}
 			// memory
@@ -209,6 +219,7 @@ class MonitisApiHelper {
 					$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'memory','monitorId'=>$memory_monitorId) );
 					$values = array(
 						"server_id" => $server['id'],
+						"available" => MonitisConf::$settings['memory']['available'],
 						"monitor_id" => $memory_monitorId,
 						"agent_id" => $agentInfo['agentId'],
 						"monitor_type" => 'memory',
@@ -216,25 +227,23 @@ class MonitisApiHelper {
 						"publickey"=>$pubKey
 					);
 					insert_query('mod_monitis_int_monitors', $values);
-					self::addServerAvailable( $server['id'] );
+					//self::addServerAvailable( $server['id'] );
 				}
 			}
 		}
 	}
-		
-	static function addDefaultWeb( $product ) {
-		
+	
+	static function addDefaultWeb( $product, $monitorsettings ) {
+		// $monitorsettings = MonitisConf::$settings[$monitor_type];
 		$monitor_type = $product['monitor_type'];
 		$url = $product['web_site'];
 		
 		//$name = $product['ordernum'] . '_'.$monitor_type;
 		$name = $url . '_'.$monitor_type;
 
-		$interval = MonitisConf::$settings[$monitor_type]['interval'];
-		$timeout = MonitisConf::$settings[$monitor_type]['timeout'];
-		$locationIDs = array_map( "intval", MonitisConf::$settings[$monitor_type]['locationIds'] );
-		//$locationIDs = array(1, 9, 10);
-		//$tag = $product['user_id'] . '_whmcs';
+		$interval = $monitorsettings['interval'];
+		$timeout = $monitorsettings['timeout'];
+		$locationIDs = array_map( "intval", $monitorsettings['locationIds'] );
 		
 		$tag = $product['tag'];
 		if (empty($url))
@@ -245,42 +254,41 @@ class MonitisApiHelper {
 			$resp = MonitisApi::createExternalHttps($name, $url, $interval, $timeout, $locationIDs, $tag);
 			
 
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
-
+		//if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
 			//$newID = $resp['data']['testId'];
 			//return array('monitor_id'=> $resp['data']['testId'], 'tag' => $tag);
 			//return $resp['data']['testId'];
-			return $resp['data'];
-		}
-		return false;
+			//return $resp['data'];
+		//}
+		return $resp;
 	}
 	////////////////////////// mod_monitis_servers 
-	static function addWebPing($product) {
-		
+	static function addWebPing($product, $pingsettings) {
+		//$pingsettings = MonitisConf::$settings['ping'];
 		$url = $product['web_site'];
 		$name = $product['ordernum'];
 
 		if ( empty($url) || empty($name) )
 			return false;
 		
-		$locationIDs = array_map( "intval", MonitisConf::$settings['ping']['locationIds'] );
+		$locationIDs = array_map( "intval", $pingsettings['locationIds'] );
 		
 		$monParams = array(
 			'type' => 'ping',
 			'name' => $url . '_ping',
 			'url' => $url,
-			'interval' => MonitisConf::$settings['ping']['interval'],
-			'timeout' => MonitisConf::$settings['ping']['timeout'],
+			'interval' => $pingsettings['interval'],
+			'timeout' => $pingsettings['timeout'],
 			'locationIds' => implode(',', $locationIDs),
 			'tag' => $product['tag']
 		);
 		$resp = MonitisApi::createExternalPing( $monParams );
 
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
+		//if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
 			//return $resp['data']['testId'];
-			return $resp['data'];
-		}
-		return false;
+			//return $resp['data'];
+		//}
+		return $resp;
 	}
 
 	static function addAllDefault($client_id, $server) {
@@ -302,13 +310,13 @@ class MonitisApiHelper {
 		}
 	}
 	
-	static function getAllAgentsSnapshot() {
+/*	static function getAllAgentsSnapshot() {
 		$linux = MonitisApi::getAgentsSnapshot('LINUX');
 		$windows = MonitisApi::getAgentsSnapshot('WINDOWS');
 		$toReturn = @array_merge($linux['agents'], $windows['agents']);
 		return $toReturn;
 	}
-	
+*/	
 	static function embed_module_by_pubkey( $publicKey, $width, $height ) {
 		return  '<script type="text/javascript">
 		monitis_embed_module_id="'.$publicKey.'";

@@ -1,9 +1,11 @@
 <?php
 $oWHMCS = new WHMCS_class(MONITIS_CLIENT_ID);
-$monitiAdminList1 = MonitisApi::getContacts();
+//$monitiAdminList1 = MonitisApi::getContacts();
  
 
 $action = monitisPost('action');
+
+
 if ($action) {
 
     switch ($action) {
@@ -37,7 +39,6 @@ if ($action) {
     }
 }
 
-
 $monitiAdminList = MonitisApi::getContacts();
 $adminList = $oWHMCS->adminList();
 
@@ -49,7 +50,7 @@ for ($i = 0; $i < count($adminList); $i++) {
             $adminList[$i]['deactive'] = 'deacitve';
         }
     }
-}
+} 
 
 ?>
 

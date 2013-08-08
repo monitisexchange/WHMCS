@@ -1,10 +1,12 @@
 <monitis_data>
 <?php
+/*
 $locations = MonitisApiHelper::getExternalLocationsGroupedByCountry();
 foreach ($locations as $key => $value) {
 	if (empty($value))
 		unset($locations[$key]);
 }
+*/
 //_dump($locations);
 
 $serverID = monitisGet('server_id');
@@ -87,7 +89,7 @@ if ($isEdit) {
 
 <div class="dialogTitle"><?php if($serverName!='') echo "<b>Server name:</b> $serverName"; ?></div>
 
-<form action="" method="post">
+<form action="" method="post" id="editMonitorForm">
 	<table class="form" width="100%" border="0" cellspacing="2" cellpadding="3">
 		<tr>
 			<td class="fieldlabel" width="30%">Monitor type</td>
@@ -157,7 +159,7 @@ if ($isEdit) {
 		<tr>
 			<td class="fieldlabel"></td>
 			<td class="fieldarea">
-				<input type="button" value="<?php echo $isEdit ? 'Save' : 'Create' ?>" onclick="javascript: m_CreateMonitorServer.submitForm();">
+				<input type="button" value="<?php echo $isEdit ? 'Save' : 'Create' ?>" onclick="javascript: m_CreateMonitorServer.submitForm('editMonitorForm');">
 			</td>
 		</tr>
 	</table>

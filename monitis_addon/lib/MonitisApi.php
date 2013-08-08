@@ -1,6 +1,8 @@
 <?php
 class MonitisApi {
-	static $endpoint = 'https://api.monitis.com/api';
+	//static $endpoint = 'https://api.monitis.com/api';
+
+	static $endpoint = 'http://173.192.34.112:8080/api';
 	//static $endpoint = 'http://prelive.monitis.com/api';
 
 	
@@ -22,13 +24,14 @@ class MonitisApi {
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			$json = curl_exec($ch);
 			$result = json_decode($json, true);
-
 			if( !isset($result['error']) && isset($result['authToken']) ) {
 				$authToken = $result['authToken'];
 				//setcookie("monitis_authtoken", $authToken, time()+(3600*20) );
 				setcookie("monitis_authtoken", $authToken, time()+3600 );
-//_logActivity("<b>from COOKIE *************** Set authToken</b><p>$authToken</p>");
-			} 
+			} else {
+				setcookie("monitis_authtoken", '', time()-3600 );
+				self::authToken();
+			}
 		}
 
 		return $authToken;
@@ -84,21 +87,21 @@ _logActivity("requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>")
 	
 	static function requestPost($action, $params) {
 		// TODO: error handling when JSON is not returned
-		
-		$params['version'] = '2';
-		$params['action'] = $action;
-		$params['apikey'] = MonitisConf::$apiKey;
 
-		
 		$authToken = self::authToken();
 		if( $authToken) {
 			$params['validation'] = 'token';
 			$params['authToken'] = $authToken;
 		} else {
-			$params['timestamp'] = date("Y-m-d H:i:s", time() );
-			$params = self::hmacSign($params);
+			//$params['timestamp'] = date("Y-m-d H:i:s", time() );
+			//$params = self::hmacSign($params);
+			self::authToken();
 		}
 		
+		$params['version'] = '2';
+		$params['action'] = $action;
+		$params['apikey'] = MonitisConf::$apiKey;
+
 		$query = http_build_query($params);
 
 		$ch = curl_init(self::$endpoint);
@@ -108,6 +111,10 @@ _logActivity("requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>")
 		$result = curl_exec($ch);
 _logActivity("requestPost **** action = <b>$action</b><p>$query</p><p>$result</p>");		
 		$json = json_decode($result, true);
+		if( $json && isset( $json['errorCode']) && $json['errorCode'] == 4 ) {
+			setcookie("monitis_authtoken", '', time()-3600 );
+			self::authToken();		
+		}
 		return $json;
 	}
 	
@@ -166,6 +173,13 @@ _logActivity("requestPost **** action = <b>$action</b><p>$query</p><p>$result</p
 		if( !empty($testId) )
 			$params['testId'] = $testId;
 		return self::requestGet('testsLastValues', $params );
+	}
+	// alternative getExternalSnapshot
+	static function externalSnapshot( $monitorIds='' ) {
+		$params = array('nocache'=>'true');
+		if( !empty($monitorIds) )
+			$params['monitorIds'] = $monitorIds;
+		return self::requestGet('teststatuses', $params );
 	}
 	
 	static function getExternalResults($monitorID, $day, $month, $year, $locationIDs = array(), $timezone = 0) {
@@ -288,30 +302,48 @@ _logActivity("requestPost **** action = <b>$action</b><p>$query</p><p>$result</p
 	
 	static function suspendExternal($ids) {
 		$params = array();
-		$params['monitorIds'] = implode(',', $ids);
-		self::requestPost('suspendExternalMonitor', $params);
+		if( is_string( $ids ) && strstr($ids, ',') )
+			$params['monitorIds'] = implode(',', $ids);
+		else
+			$params['monitorIds'] = $ids;
+		return self::requestPost('suspendExternalMonitor', $params);
 	}
 	static function activateExternal($ids) {
 		$params = array();
-		$params['monitorIds'] = implode(',', $ids);
-		self::requestPost('activateExternalMonitor', $params);
+		if( is_string( $ids ) && strstr($ids, ',') )
+			$params['monitorIds'] = implode(',', $ids);
+		else
+			$params['monitorIds'] = $ids;
+		return self::requestPost('activateExternalMonitor', $params);
 	}
 	static function deleteExternal($ids) {
 		$params = array();
-		$params['testIds'] = implode(',', $ids);
-		self::requestPost('deleteExternalMonitor', $params);
+		if( is_string( $ids ) && strstr($ids, ',') )
+			$params['testIds'] = implode(',', $ids);
+		else
+			$params['testIds'] = $ids;
+		return self::requestPost('deleteExternalMonitor', $params);
+	}
+	static function deleteInternal($ids, $mtype) {
+		$params = array('type' => $mtype);
+		if( is_string( $ids ) && strstr($ids, ',') )
+			$params['testIds'] = implode(',', $ids);
+		else
+			$params['testIds'] = $ids;
+		return self::requestPost('deleteInternalMonitors', $params);
 	}
 	
-	
+
 	////// INTERNAL MONTIORS
 	static function getInternalMonitors() {
 		return self::requestGet('internalMonitors', array());
 	}
-	static function getAgentsSnapshot($platform) {
+	
+	/*static function getAgentsSnapshot($platform) {
 		$params = array('platform' => $platform, 'nocache'=>'true');
 		//$params = array('platform' => $platform );
 		return self::requestGet('allAgentsSnapshot', $params);
-	}
+	}*/
 
 	static function getAgentInfo($agentId) {
 		$params = array(
@@ -408,7 +440,7 @@ _logActivity("requestGet **** action = <b>agents</b><p>$url</p><p>$result</p>");
 	}
 	
 	static function allAgentsSnapshot($agentIds) {
-		$params = array('agentIds' => $agentIds);
+		$params = array('agentIds' => $agentIds, 'nocache'=>'true');
 		return self::requestGet('allAgentsSnapshot', $params);
 	}
 

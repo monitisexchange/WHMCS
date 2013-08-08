@@ -5,6 +5,7 @@ define('MONITIS_PAGE_LIMIT', 20);
 define('MONITIS_CLIENT_ID', 1 );	// admin
 define('MONITIS_LOGGER', true );	
 
+
 function _dump($var) {
 	echo "<div style='border: 2px solid #ccc; padding: 3px; margin: 2px; text-align: left;'><pre>";
 	var_dump($var);

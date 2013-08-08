@@ -116,5 +116,47 @@ class internalClass {
 
 		return $fullAgentInfo;	
 	}
+	private function isDriveAssociate( $monitor_id, $whmcs_drives) {
+		for($i=0; $i<count($whmcs_drives); $i++) {
+			if( $whmcs_drives[$i]['monitor_id'] == $monitor_id)
+				return $whmcs_drives[$i];
+		}
+		return null;
+	}
+	/////////////////////////////
+	public function associateDrives( $whmcs_drives, $agentInfo, $serverID ) {
+		if( $agentInfo && isset($agentInfo['drives']) ) {
+			$agentId = $agentInfo['agentId'];
+			$monDrives = $agentInfo['drives'];
+			$ids = array();
+			for($i=0; $i<count($monDrives); $i++) {
+				$drive = $monDrives[$i];
+				if( isset($drive['id']) ) {
+					if( !$whmcs_drives || !$this->isDriveAssociate( $drive['id'], $whmcs_drives) ) {
+						$ids[] = $drive['id'];
+					} 
+				}
+			}
+			if($ids && count($ids) > 0 ) {
+			
+				for($i=0; $i<count($ids); $i++) {
+					$monitorID = $ids[$i];
+					$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'drive','monitorId'=>$monitorID) );
+
+					$values = array(
+						'server_id' => $serverID,
+						'available' => MonitisConf::$settings['drive']['available'],
+						'agent_id' => $agentId,
+						'monitor_id' => $monitorID,
+						'monitor_type' => 'drive',
+						'client_id'=> MONITIS_CLIENT_ID,
+						"publickey"=> $pubKey
+					);
+					insert_query('mod_monitis_int_monitors', $values);
+				}
+			}
+		}
+		return null;
+	}
 }
 ?>

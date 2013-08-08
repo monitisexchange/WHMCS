@@ -99,12 +99,14 @@ function monitis_addon_activate() {
 	$result = mysql_query($query);	
 	
 	// 
-	$query = "CREATE TABLE `mod_monitis_server_available` (
+	/*$query = "CREATE TABLE `mod_monitis_server_available` (
 				`server_id` INT NOT NULL,
 				`available` INT default 1,
 				PRIMARY KEY ( `server_id` )
 				);";
-	$result = mysql_query($query);
+	$result = mysql_query($query);*/
+	
+	$result = mysql_query("DROP TABLE IF EXISTS `mod_monitis_server_available` ");
 
 	MonitisConf::setupDB();
 	

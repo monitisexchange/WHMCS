@@ -168,8 +168,10 @@ $('document').ready(function(){
 			if( $monitors['drive'] ) {
 				$drive = $monitors['drive'];
 				$drive_status = 0;
+				$noassociate = 0;
 				for($d=0; $d<count( $drive ); $d++) {
-					if( $drive[$d]['status'] == 'NOK') $drive_status++;
+					if( $drive[$d]['status'] == 'OK') $drive_status++;
+					if( $drive[$d]['associate'] == 'yes') $noassociate++;
 				}
 			}
 		}	
@@ -185,24 +187,34 @@ $('document').ready(function(){
 		if ( $monitorsCount == 0) { 
 				echo '<span class="label pending">No active monitors</span>';
 		} else { 
-			if( $pings && count( $pings ) > 0 ) {
+			if( $pings != -1 && $pings && count( $pings ) > 0 ) {
+				//$status = $pings['pin';
 				$stl = '';
-				if( $pings['isSuspended'] > 0  ) {
-					$stl = 'suspended';
-				} elseif( $pings['status_ok'] > 0 ) {
+				$title = '';
+				if( $pings['associate'] == 'no' ) {
+					$stl = 'pending';
+				} elseif( $pings['status'] == 'suspended'  ) {
+					$stl = '';		// pending // suspended
+					$title = 'suspended';
+				} elseif( $pings['status'] == 'OK' ) {
 					$stl = 'active';
+					$title = 'active';
 				} else {
 					$stl = 'closed';
+					$title = 'nok';
 				}
-				echo '&nbsp;<span class="label '.$stl.'">Ping</span>';
+				echo '&nbsp;<span class="label '.$stl.'" title="'.$title.'">Ping</span>';
 			}		
-			
+
 			if( $agentStatus == 'running') {
 
+				
 				if( $cpu && count( $cpu ) > 0 ) {
 					$stl = '';
 					
-					if( $cpu['isSuspended'] > 0  ) {
+					if( $cpu['associate'] == 'no' ) {
+						$stl = 'pending';
+					} elseif( $cpu['isSuspended'] > 0  ) {
 						$stl = 'suspended';
 					} elseif( $cpu['status'] == "OK" ) {
 						$stl = 'active';
@@ -214,7 +226,9 @@ $('document').ready(function(){
 				if( $memory != -1 && $memory && count( $memory ) > 0 ) {
 					$stl = '';
 
-					if( $memory['isSuspended'] > 0  ) {
+					if( $memory['associate'] == 'no' ) {
+						$stl = 'pending';
+					} elseif( $memory['isSuspended'] > 0  ) {
 						$stl = 'suspended';
 					} elseif( $memory['status'] == "OK" ) {
 						$stl = 'active';
@@ -226,10 +240,19 @@ $('document').ready(function(){
 				if( $drive != -1 && $drive && count( $drive ) > 0 ) {
 					
 					$stl = '';
-					if( $drive_status > 0) $stl = 'closed';
-					else $stl = 'active';
+					$title = '';
+					if( $noassociate == 0) {
+						$stl = 'pending';
+						$title = 'no associate';
+					} elseif( $drive_status > 0) {
+						$stl = 'active';
+						$title = 'active';
+					} else {
+						$stl = 'closed';
+						$title = '***';
+					}
 					
-					echo '&nbsp;<lable class="label '.$stl.'" style="position:absolute;" id="drivesListId"><a class="label '.$stl.'">drive</a>';
+					echo '&nbsp;<lable title="'.$title.'" class="label '.$stl.'" style="position:absolute;" id="drivesListId"><a class="label '.$stl.'">drive</a>';
 
 					echo '<ul class="drivesList">';
 					for($d=0; $d<count( $drive ); $d++) {

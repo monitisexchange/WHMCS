@@ -49,9 +49,9 @@ switch ($type) {
 				
 				$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'external','monitorId'=>$newID) );
 				//if( $pubKey ) {
-					$values = array("server_id" => $server['id'], "monitor_id" => $newID, "monitor_type" => "ping", "client_id"=> $client_id, "publickey"=>$pubKey );
+					$values = array("server_id" => $server['id'], "available" => MonitisConf::$monitorAvailable, "monitor_id" => $newID, "monitor_type" => "ping", "client_id"=> $client_id, "publickey"=>$pubKey );
 					insert_query('mod_monitis_ext_monitors', $values);
-					MonitisApiHelper::addServerAvailable( $server['id'] );
+					//MonitisApiHelper::addServerAvailable( $server['id'] );
 					
 					MonitisApp::addMessage('Ping Monitor successfully created and associated with this server');
 				//} 
@@ -134,8 +134,6 @@ switch ($type) {
 			}
 			
 			$resp = MonitisApi::editMemoryMonitor( $params );
-//L::ii( 'editMemoryMonitor params = ' .  json_encode( $params) );
-//L::ii( 'editMemoryMonitor resp = ' .  json_encode( $resp) );
 			if( $resp && $resp['status'] == 'ok') {
 				MonitisApp::addMessage('Memory Monitor successfully updated');
 			} else {
@@ -160,9 +158,6 @@ switch ($type) {
 					$params[$key] = isset($_POST[$key]) ? intval($_POST[$key]) : $memory[$key];
 				}
 				
-//L::ii( '**********************memory params = ' .  json_encode( $params) );
-				//$memory_monitorId = MonitisApiHelper::addMemory($agentInfo, $memory );
-
 				$resp = MonitisApi::addMemoryMonitor( $params );
 				if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists' ) {
 					$memory_monitorId = $resp['data']['testId'];
@@ -171,6 +166,7 @@ switch ($type) {
 					
 					$values = array(
 						"server_id" => $server['id'],
+						"available" => MonitisConf::$monitorAvailable,
 						"monitor_id" => $memory_monitorId,
 						"agent_id" => $agentId,
 						"monitor_type" => 'memory',
@@ -178,9 +174,8 @@ switch ($type) {
 						"publickey"=> $pubKey
 					);
 					insert_query('mod_monitis_int_monitors', $values);
-					MonitisApiHelper::addServerAvailable( $server['id'] );
+					//MonitisApiHelper::addServerAvailable( $server['id'] );
 					
-//L::ii( 'create memory monitor ********************** values = ' .  json_encode( $values) );
 					MonitisApp::addMessage('Memory Monitor successfully created');
 				} else {
 					MonitisApp::addError('Create memory monitor error: ');
@@ -209,6 +204,7 @@ switch ($type) {
 						$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'drive','monitorId'=>$monitorID) );
 						$values = array(
 							'server_id' => $server['id'],
+							"available" => MonitisConf::$monitorAvailable,
 							'agent_id' => $_POST['agentId'],
 							'monitor_id' => $monitorID,
 							'monitor_type' => 'drive',
@@ -216,7 +212,7 @@ switch ($type) {
 							"publickey"=> $pubKey
 						);
 						insert_query('mod_monitis_int_monitors', $values);
-						MonitisApiHelper::addServerAvailable( $server['id'] );
+						//MonitisApiHelper::addServerAvailable( $server['id'] );
 					}
 					MonitisApp::addMessage('Drive Monitor successfully updated');
 				} else {
@@ -240,6 +236,7 @@ switch ($type) {
 						$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'drive','monitorId'=>$newID) );
 						$values = array(
 							'server_id' => $server['id'],
+							"available" => MonitisConf::$monitorAvailable,
 							'agent_id' => $_POST['agentId'],
 							'monitor_id' => $newID,
 							'monitor_type' => 'drive',
@@ -247,7 +244,7 @@ switch ($type) {
 							'publickey' => $pubKey
 						);
 						insert_query('mod_monitis_int_monitors', $values);
-						MonitisApiHelper::addServerAvailable( $server['id'] );
+						//MonitisApiHelper::addServerAvailable( $server['id'] );
 						
 						MonitisApp::addMessage('Drive Monitor successfully added');
 					} else {
@@ -256,6 +253,45 @@ switch ($type) {
 				}
 		}
 	
+	break;
+	case 'delete':
+		if( $monitorID > 0) {
+			$monitorType = monitisPost('monitorType');
+			
+			$oWhmcs = new WHMCS_class();
+			// monitors, 5 for internal ping monitors, 6 for load average monitors, 7 for CPU monitors )
+			$mtype = '';
+			switch( $monitorType) {
+				case 'ping':
+					$resp = MonitisApi::deleteExternal($monitorID);
+					if($resp['status'] == 'ok') {
+
+						// delete from tables 
+						$oWhmcs->removeExternalMonitorsById($monitorID);
+						MonitisApp::addMessage('External Monitor successfully removed');
+					} else {
+						MonitisApp::addError('Delete monitor, API request failed: '. $resp['error']);
+					}
+				break;
+				case 'cpu':
+				case 'memory':
+				case 'drive':
+					$mtype = 2;
+					if( $monitorType == 'memory') $mtype = 3;
+					if( $monitorType == 'cpu') $mtype = 7;
+					$resp = MonitisApi::deleteInternal($monitorID, $mtype);
+					if($resp['status'] == 'ok') {
+						// delete from tables 
+						$oWhmcs->removeInternalMonitorsById($monitorID);
+						MonitisApp::addMessage('Internal Monitor successfully removed');
+					} else {
+						MonitisApp::addError('Delete monitor, API request failed: '. $resp['error']);
+					}
+				break;
+			}
+
+			//echo "delete ********************************* $monitorType $monitorID <br>";
+		}
 	break;
 }
 self::render('default');

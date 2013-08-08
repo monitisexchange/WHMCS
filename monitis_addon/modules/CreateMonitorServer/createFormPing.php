@@ -69,6 +69,7 @@ if ($isEdit) {
 	$_tag = $monitor['tag'];
 	$action_type = 'edit';
 } 
+
 ?>
 <style>
 .fieldlabel {
@@ -76,7 +77,7 @@ if ($isEdit) {
 }
 </style>
 <div class="dialogTitle"><?php if($serverName!='') echo "<b>Server name:</b> $serverName"; ?></div>
-<form action="" method="post">
+<form action="" method="post" id="editMonitorForm">
 	<table class="form" width="100%" border="0" cellspacing="2" cellpadding="3">
 		<tr>
 			<td class="fieldlabel" width="30%">Monitor type</td>
@@ -116,16 +117,17 @@ if ($isEdit) {
 			<td class="fieldlabel">Check interval</td>
 			<td class="fieldarea">
 				<select name="interval">
-					<option value="1" <?php if ($isEdit && $monitor['locations'][0]['checkInterval'] == 1) echo 'selected="selected"'; ?>>1</option>
-					<option value="3" <?php if ($isEdit && $monitor['locations'][0]['checkInterval'] == 3) echo 'selected="selected"'; ?>>3</option>
-					<option value="5" <?php if ($isEdit && $monitor['locations'][0]['checkInterval'] == 5) echo 'selected="selected"'; ?>>5</option>
-					<option value="10" <?php if ($isEdit && $monitor['locations'][0]['checkInterval'] == 10) echo 'selected="selected"'; ?>>10</option>
-					<option value="15" <?php if ($isEdit && $monitor['locations'][0]['checkInterval'] == 15) echo 'selected="selected"'; ?>>15</option>
-					<option value="20" <?php if ($isEdit && $monitor['locations'][0]['checkInterval'] == 20) echo 'selected="selected"'; ?>>20</option>
-					<option value="30" <?php if ($isEdit && $monitor['locations'][0]['checkInterval'] == 30) echo 'selected="selected"'; ?>>30</option>
-					<option value="40" <?php if ($isEdit && $monitor['locations'][0]['checkInterval'] == 40) echo 'selected="selected"'; ?>>40</option>
-					<option value="60" <?php if ($isEdit && $monitor['locations'][0]['checkInterval'] == 60) echo 'selected="selected"'; ?>>60</option>
-				</select> min.
+					<?
+					$aInterval = explode(',', MonitisConf::$checkInterval);
+					for($i=0; $i<count($aInterval); $i++) {
+						if($isEdit && $aInterval[$i] == $monitor['locations'][0]['checkInterval'] ) {
+					?>
+						<option value="<?=$aInterval[$i]?>" selected="selected" ><?=$aInterval[$i]?></option>
+					<?	} else { ?>
+						<option value="<?=$aInterval[$i]?>"><?=$aInterval[$i]?></option>
+					<?	}
+					}?>
+					</select>&nbsp;min.			
 			</td>
 		</tr>
 		<tr>
@@ -178,7 +180,7 @@ if ($isEdit) {
 		<tr>
 			<td class="fieldlabel"></td>
 			<td class="fieldarea">
-				<input type="button" value="<?php echo $isEdit ? 'Save' : 'Create' ?>" onclick="javascript: m_CreateMonitorServer.submitForm();">
+				<input type="button" value="<?php echo $isEdit ? 'Save' : 'Create' ?>" onclick="javascript: m_CreateMonitorServer.submitForm('editMonitorForm');">
 			</td>
 		</tr>
 	</table>

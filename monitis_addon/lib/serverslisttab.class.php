@@ -132,30 +132,41 @@ class serversListTab {
 		// get pings monitors ids
 		$ping_Ids = $this->_idsList( $this->whmcs_ext, 'monitor_id' );
 		$pingIds = implode(',', $ping_Ids);
-		$extShots = MonitisApi::getExternalSnapshot( $pingIds );
-		/////////
-		$pings = array();
+		
+		$extShots = MonitisApi::externalSnapshot( $pingIds );		// existing pings in the monitis 5
+//_dump($extShots);
+
+		for( $i=0; $i<count($this->whmcs_ext); $i++) {
+			
+			$info = $this->extStatus( $this->whmcs_ext[$i]['monitor_id'], $extShots );
+			$this->whmcs_ext[$i]['ping'] = $info;
+		}
+		
+/*		$pings = array();
 		for( $i=0; $i<count($extShots); $i++) {
+		
 			$data = $extShots[$i]['data'];
 			for( $j=0; $j<count($data); $j++) {
 				$info = $this->checkMonitor( $data[$j]['id'], $pings, $data[$j]);
 				$this->setPingInfo( $data[$j]['id'], $info );
 			}
+			
 		}
-		return $pings;
+		return $pings;*/
 	}
 
 	
 	private function init_all_servers() {
-	
+
 		for( $i=0; $i<count($this->whmcs_all_servers); $i++) {
 			//$this->whmcs_all_servers[$i]['monitors'] = array();
 			$monitors  = array();
 			
 			$server = $this->whmcs_all_servers[$i];
+//echo "************ init_all_servers ***** serverId = ".$server['id']." <br>";
+//_dump( $server );
 			$ext = $this->__monitor( $server['id'], $this->whmcs_ext );
-			
-			$this->whmcs_all_servers[$i]['available'] = $ext['available'];
+//_dump( $ext );
 
 			if( $ext && $ext['ping'] ) {
 				$monitors['ping'] = $ext['ping'];
@@ -186,30 +197,81 @@ class serversListTab {
 		$this->whmcs_all_servers = $oWhmcs->all_servers( $opts );
 		if( $this->whmcs_all_servers ) {
 			$this->total = $this->whmcs_all_servers[0]['total'];
-			
+
 			$allSrvrsIds = $this->_idsList( $this->whmcs_all_servers, 'id' );
 
+			// init external monitors
 			$srvrsIds = implode(',', $allSrvrsIds);
 			$this->whmcs_ext = $oWhmcs->servers_list_ext( $srvrsIds );
+
 //_dump( $this->whmcs_ext );
 			if( $this->whmcs_ext ) {
 				$this->extSnapShots();
-				$this->whmcs_int = $oWhmcs->servers_list_int( $srvrsIds);
-				
-				if( $this->whmcs_int ) {
-					$agents = $this->getAgents();
-					$agentIds = implode(',', $agents );
-					$this->allAgents = MonitisApi::allAgentsSnapshot($agentIds);
-//L::ii( 'allAgents| allAgents allAgents  ' .  json_encode($this->allAgents) );	
-				}
-				$this->init_all_servers();
+				//$this->externalSnapShotsStatus( $this->whmcs_ext );
 			}
+//_logActivity("whmcs_all_servers ****<b>servers_list_ext</b>" . json_encode($this->whmcs_ext));
+			// init internal monitors
+			$this->whmcs_int = $oWhmcs->servers_list_int( $srvrsIds);
+			if( $this->whmcs_int ) {
+				$agents = $this->getAgents();
+				$agentIds = implode(',', $agents );
+				$this->allAgents = MonitisApi::allAgentsSnapshot($agentIds);
+			}
+			$this->init_all_servers();
 		}
 
 		return $this->whmcs_all_servers;
 	}
 	public function getTotal() {
 		return $this->total;
+	}
+	
+	///////////////////// for one server
+	public function externalSnapShots( $whmcs_ext ) {
+	
+		// get pings monitors ids
+		$ping_Ids = $this->_idsList( $whmcs_ext, 'monitor_id' );
+		$pingIds = implode(',', $ping_Ids);
+		$extShots = MonitisApi::getExternalSnapshot( $pingIds );
+		/////////
+		
+		$pings = array();
+		for( $i=0; $i<count($extShots); $i++) {
+			$data = $extShots[$i]['data'];
+			for( $j=0; $j<count($data); $j++) {
+				$info = $this->checkMonitor( $data[$j]['id'], $pings, $data[$j]);
+				$this->setPingInfo( $data[$j]['id'], $info );
+			}
+		}
+		return $pings;
+	}
+	////////////////////////////////////////////// 
+	private function extStatus( $monitor_id, $extShots ) {
+		
+		for( $i=0; $i<count($extShots); $i++) {
+			if( $extShots[$i]['id'] == $monitor_id ) {
+				//$this->whmcs_ext[$i]['ping'] = $info;
+				return $extShots[$i];
+			}
+		}
+		return null;
+	}
+	public function externalSnapShotsStatus( $whmcs_ext ) {
+		// get pings monitors ids
+		$ping_Ids = $this->_idsList( $whmcs_ext, 'monitor_id' );
+		$pingIds = implode(',', $ping_Ids);
+		//$extShots = MonitisApi::getExternalSnapshot( $pingIds );
+		$extShots = MonitisApi::externalSnapshot( $pingIds );
+
+		/////////
+//_dump($whmcs_ext);	
+		for( $i=0; $i<count($whmcs_ext); $i++) {
+			
+			$info = $this->extStatus( $whmcs_ext[$i]['monitor_id'], $extShots );
+			$whmcs_ext[$i]['status'] = $info;
+		}
+//_dump($whmcs_ext);	
+		return $whmcs_ext;
 	}
 }
 ?>

@@ -1,4 +1,17 @@
 <?php
+define('MONITIS_CPU_MONITOR_PROPS_TPL', '{
+	"LINUX":{"usedMax":"n","kernelMax":"n","idleMin":"n","ioWaitMax":"n","niceMax":"n"},
+	"WINDOWS":{"usedMax":"n","kernelMax":"n"},
+	"OPENSOLARIS":{"usedMax":"n","kernelMax":"n"}
+}');
+
+define('MONITIS_MEMORY_MONITOR_PROPS_TPL', '{
+	"LINUX":{"freeLimit":"n","freeSwapLimit":"n","bufferedLimit":"n","cachedLimit":"n"},
+	"WINDOWS":{"freeLimit":"n","freeSwapLimit":"n","freeVirtualLimit":"n"},
+	"OPENSOLARIS":{"freeLimit":"n","freeSwapLimit":"n"}
+}');
+
+
 $isNewAcc = monitisGetInt('isNewAcc');
 $locations = MonitisApiHelper::getExternalLocationsGroupedByCountry();
 foreach ($locations as $key => $value) {
@@ -7,6 +20,8 @@ foreach ($locations as $key => $value) {
 }
 
 $newAgentPlatform = MonitisConf::$newAgentPlatform;
+$monitorAvailable = MonitisConf::$monitorAvailable;
+$maxLocations = MonitisConf::$maxLocations;
 
 $old_ping =  MonitisConf::$settings['ping'];
 $old_cpu =  MonitisConf::$settings['cpu'][$newAgentPlatform];
@@ -15,8 +30,11 @@ $old_drive = MonitisConf::$settings['drive'];
 
 $locationIds = $old_ping['locationIds'];
 
+ 
+//_dump($tpl);
 
 if (monitisPost('saveConfig')) {
+	
 	$saveNewServerMonitors = isset($_POST['newServerMonitors']) ? $_POST['newServerMonitors'] : array();
 	$saveNewServerMonitors = implode(',', $saveNewServerMonitors);
 	
@@ -35,47 +53,68 @@ if (monitisPost('saveConfig')) {
 	$new = json_encode(MonitisConf::$settings);
 	$newsets = json_decode($new, true);
 
+	// PING monitor settings
 	$newsets['ping'] = array(
 		'interval'	=>	isset($_POST['interval']) ? intval($_POST['interval']) : $old_ping['interval'],
 		'timeout'	=>	isset($_POST['timeout']) ? intval($_POST['timeout']) : $old_ping['timeout'],
 		'locationIds'	=>	$locationIds //isset($_POST['locationIds']) ? explode(',', $_POST['locationIds']) : $old_ping['locationIds']
 	);
+	$newsets['ping']['available'] = (!isset($_POST['available_ping']) ) ? 0 : 1;
 	
-
 	
-	foreach( $newsets['cpu'][$platform] as $key=>$val ) {
+	// CPU monitor settings
+	$tpl = json_decode( MONITIS_CPU_MONITOR_PROPS_TPL, true);
+	foreach( $tpl[$platform] as $key=>$val ) {
 		$newsets['cpu'][$platform][$key] = isset($_POST[$key]) ? intval($_POST[$key]) : $old_cpu[$key];
 	}
+	$newsets['cpu']['available'] = (!isset($_POST['available_cpu']) ) ? 0 : 1;
 	
-//_dump( $newsets['cpu'] );
-
-	foreach( $newsets['memory'][$platform] as $key=>$val ) {
+	
+	
+	// MEMORY monitor settings
+	$tpl = json_decode( MONITIS_MEMORY_MONITOR_PROPS_TPL, true);
+	foreach( $tpl[$platform] as $key=>$val ) {
 		$newsets['memory'][$platform][$key] = isset($_POST[$key]) ? intval($_POST[$key]) : $old_memory[$key];
 	}
+	$newsets['memory']['available'] = (!isset($_POST['available_memory']) ) ? 0 : 1;
 	
-	
+	// DRIVE monitor settings
 	$newsets['drive'] = array(
 		'freeLimit'	=>	isset($_POST['freeLimit_drive']) ? intval($_POST['freeLimit_drive']) : $old_drive['freeLimit']
 	);
+	$newsets['drive']['available'] = (!isset($_POST['available_drive']) ) ? 0 : 1;
+	
+	
+	//$monitorAvailable = (!isset($_POST['monitorAvailable']) ) ? 0 : $_POST['monitorAvailable'];
+	//$newsets['available'] = $monitorAvailable;
+	
+	//$maxLocations = (!isset($_POST['max_locations']) ) ? 0 : $_POST['max_locations'];
+	//$newsets['max_locations'] = $maxLocations;
+//_dump($newsets);
 	
 	$newsets_json = json_encode($newsets);
-	$oldsets_json = json_encode(MonitisConf::$settings);
+	//$oldsets_json = json_encode(MonitisConf::$settings);
 	$result = array();
+	
 
-	if( $newsets_json != $oldsets_json ) {
-		$result['settings'] = $newsets_json;
-	}
+
+	//if( $newsets_json != $oldsets_json ) {
+	$result['settings'] = $newsets_json;
+	//}
+	//$result['monitorAvailable'] = $monitorAvailable;
+
 	
 	if ($saveNewServerMonitors != MonitisConf::$newServerMonitors) {
-		//MonitisConf::update('newServerMonitors', $saveNewServerMonitors);
 		$result['newServerMonitors'] = $saveNewServerMonitors;
-		//MonitisConf::update_settings( MONITIS_CLIENT_ID, array('newServerMonitors' => $saveNewServerMonitors ) );
 	}
 	
-	if( $result && count($result) > 0) {
+//	if( $result && count($result) > 0) {
 //_dump($result);
-		MonitisConf::update_settings( MONITIS_CLIENT_ID, $result );
-	}
+
+	MonitisConf::update_settings( MONITIS_CLIENT_ID, $result );
+	
+	
+//	}
 	
 	if ($isNewAcc)
 		MonitisApp::redirect(MONITIS_APP_URL . '&monitis_page=syncExistingServers');
@@ -144,6 +183,10 @@ $(document).ready(function(){
 <center>
 	<form action="" method="post">
 		<table class="form" width="100%" cellspacing=2 cellpadding=3>
+			
+			<!-- tr><th class="title">Available to customer:&nbsp;&nbsp;<input type="checkbox" name="monitorAvailable" value="1" <? if($monitorAvailable > 0) echo 'checked=checked' ?> /></th></tr>
+			<tr><th class="title">Maximum locations:&nbsp;&nbsp;<input type="text" name="max_locations" value="<?=$maxLocations?>" size="5" /></th></tr -->
+
 			<tr>
 				<td class="fieldarea11" style="text-align:center;">	
 					<table class="form monitisDataporps" border=0 width="100%">
@@ -154,11 +197,32 @@ $(document).ready(function(){
 							<td colspan="3" class="subtitle">Ping</td>
 						</tr>
 						<tr><td>
-						<div id="Ping_settings_id" <?php if( !$isPing ) echo 'style="display:none"'; ?>>
+						<div id="Ping_settings_id">
 						<table   bgcolor="#ffffff" width="100%">
-							<tr><td class="fieldlabel">Automate:</td><td  class="fieldarea"><input type="checkbox" name="newServerMonitors[]" value="ping" <?php if(in_array('ping', $newServerMonitors)) echo 'checked=checked'; ?> divid="Ping_settings_id" class="monitortypeswitcher"  /></td></tr>
-							<tr><td class="fieldlabel">Interval:</td><td class="fieldarea"><input type="text" size="15" name="interval" value="<?php echo MonitisConf::$settings['ping']['interval'] ?>" /></td></tr>
-							<tr><td class="fieldlabel">Timeout:</td><td class="fieldarea"><input type="text" size="15" name="timeout" value="<?php echo MonitisConf::$settings['ping']['timeout'] ?>" /></td></tr>
+							<tr><td class="fieldlabel">Automate:</td><td  class="fieldarea">
+								<input type="checkbox" name="newServerMonitors[]" value="ping" <?php if(in_array('ping', $newServerMonitors)) echo 'checked=checked'; ?> divid="Ping_settings_id" class="monitortypeswitcher"  />
+							</td></tr>
+							
+							<tr><td class="fieldlabel">Available to customer:</td><td class="fieldarea">
+								<input type="checkbox" name="available_ping" value="ping" <?php if(in_array('ping', $newServerMonitors) && MonitisConf::$settings['ping']['available'] > 0 ) echo 'checked=checked'; ?> class="monitortypeswitcher"  />
+							</td></tr>
+							
+							<tr><td class="fieldlabel">Interval:</td><td class="fieldarea">
+							<select name="interval">
+								<?
+								$aInterval = explode(',', MonitisConf::$checkInterval);
+								for($i=0; $i<count($aInterval); $i++) {
+									if($aInterval[$i] == MonitisConf::$settings['ping']['interval'] ) {
+								?>
+									<option value="<?=$aInterval[$i]?>" selected ><?=$aInterval[$i]?></option>
+								<?	} else { ?>
+									<option value="<?=$aInterval[$i]?>"><?=$aInterval[$i]?></option>
+								<?	}
+								}?>
+								</select>&nbsp;min.
+								<!-- input type="text" size="15" name="interval" value="<?php echo MonitisConf::$settings['ping']['interval'] ?>" / -->
+							</td></tr>
+							<tr><td class="fieldlabel">Timeout:</td><td class="fieldarea"><input type="text" size="15" name="timeout" value="<?php echo MonitisConf::$settings['ping']['timeout'] ?>" />&nbsp;ms. &nbsp;(1-5000)</td></tr>
 <tr>
 <td class="fieldlabel">Check locations:</td>
 <td class="fieldarea">
@@ -219,7 +283,13 @@ if( $newAgentPlatform == 'LINUX' ) {
 ?>
 						<tr>
 						<td width="33%" valign="top"><div id="CPU_settings_id" ><table bgcolor="#ffffff" width="100%">
-							<tr><td class="fieldlabel" width="50%">Automate:</td><td  class="fieldarea"><input type="checkbox" name="newServerMonitors[]" value="cpu" <?php if( $isCPU ) echo 'checked=checked'; ?> divid="CPU_settings_id" class="monitortypeswitcher"  /></td></tr>
+							<tr><td class="fieldlabel" width="50%">Automate:</td><td  class="fieldarea"><input type="checkbox" name="newServerMonitors[]" value="cpu" <?php if( $isCPU ) echo 'checked=checked'; ?> class="monitortypeswitcher"  /></td></tr>
+							
+							<tr><td class="fieldlabel">Available to customer:</td><td class="fieldarea">
+								<input type="checkbox" name="available_cpu" value="cpu" <?php if(in_array('cpu', $newServerMonitors) && MonitisConf::$settings['cpu']['available'] > 0 ) echo 'checked=checked'; ?> class="monitortypeswitcher"  />
+							</td></tr>
+					
+
 							<tr><td class="fieldlabel" width="50%">User Max:</td><td class="fieldarea" width="50%"><input type="text" size="5" name="usedMax" value="<?=$cpu['usedMax']?>" /></td></tr>
 							<tr><td class="fieldlabel">Kernel Max:</td><td class="fieldarea"><input type="text" size="5" name="kernelMax" value="<?=$cpu['kernelMax']?>" /></td></tr>
 							<tr><td class="fieldlabel">Min allowed value for idle:</td><td class="fieldarea"><input type="text" size="5" name="idleMin" value="<?=$cpu['idleMin']?>" /></td></tr>
@@ -227,14 +297,23 @@ if( $newAgentPlatform == 'LINUX' ) {
 							<tr><td class="fieldlabel">Max allowed value for nice:</td><td class="fieldarea"><input type="text" size="5" name="niceMax" value="<?=$cpu['niceMax']?>" /></td></tr>
 						</table></div></td>
 						<td width="33%" valign="top"><div id="Memory_settings_id" ><table bgcolor="#ffffff" width="100%">
-							<tr><td class="fieldlabel" width="50%">Automate:</td><td  class="fieldarea"><input type="checkbox" name="newServerMonitors[]" value="memory" <?php if( $isMemory ) echo 'checked=checked'; ?> divid="Memory_settings_id" class="monitortypeswitcher"  /></td></tr>
+							<tr><td class="fieldlabel" width="50%">Automate:</td><td  class="fieldarea"><input type="checkbox" name="newServerMonitors[]" value="memory" <?php if( $isMemory ) echo 'checked=checked'; ?> class="monitortypeswitcher"  /></td></tr>
+							<tr><td class="fieldlabel">Available to customer:</td><td class="fieldarea">
+								<input type="checkbox" name="available_memory" value="memory" <?php if(in_array('memory', $newServerMonitors) && MonitisConf::$settings['memory']['available'] > 0 ) echo 'checked=checked'; ?> class="monitortypeswitcher"  />
+							</td></tr>
+						
+							
 							<tr><td class="fieldlabel" width="50%">Free memory limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit" value="<?=$memory['freeLimit']?>" />&nbsp;MB</td></tr>
 							<tr><td class="fieldlabel">Free swap limit:</td><td class="fieldarea"><input type="text" size="5" name="freeSwapLimit" value="<?=$memory['freeSwapLimit']?>" />&nbsp;MB</td></tr>
 							<tr><td class="fieldlabel">Buffered limit:</td><td class="fieldarea"><input type="text" size="5" name="bufferedLimit" value="<?=$memory['bufferedLimit']?>" />&nbsp;MB</td></tr>
 							<tr><td class="fieldlabel">Cached memory limit:</td><td class="fieldarea"><input type="text" size="5" name="cachedLimit" value="<?=$memory['cachedLimit'] ?>" />&nbsp;MB</td></tr>
 							<tr><td class="fieldlabel">&nbsp;</td><td class="fieldarea">&nbsp;</td></tr>
 						</table></div></td>
-						<td width="33%" valign="top"><div id="Memory_settings_id" ><table bgcolor="#ffffff" width="100%">
+						<td width="33%" valign="top"><div id="Drive_settings_id" ><table bgcolor="#ffffff" width="100%">
+							<tr><td class="fieldlabel">Available to customer:</td><td class="fieldarea">
+								<input type="checkbox" name="available_drive" value="drive" <?php if( MonitisConf::$settings['drive']['available'] > 0 ) echo 'checked=checked'; ?> class="monitortypeswitcher"  />
+							</td></tr>
+						
 							<tr><td class="fieldlabel" width="50%">Free memory limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit_drive" value="<?=$drive['freeLimit']?>" />&nbsp;GB</td></tr>
 							<tr><td class="fieldlabel">&nbsp;</td><td class="fieldarea">&nbsp;</td></tr>
 						</table></div></td>

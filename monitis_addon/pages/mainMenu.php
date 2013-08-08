@@ -40,6 +40,9 @@ $("#contentarea").find('h1').css({
 		</li>
                   <li class="tab  <?php if ($pageName == 'productsTest') echo 'tabselected'; ?>">
 			<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=productsTest">ProductsTest</a>
+		</li>
+ 		<li class="tab  <?php if ($pageName == 'addonsTest') echo 'tabselected'; ?>">
+			<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=addonsTest">AddonsTest</a>
 		</li -->
 	</ul>
 </div>
