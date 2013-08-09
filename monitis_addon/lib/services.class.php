@@ -22,11 +22,11 @@ class servicesClass extends WHMCS_product_db {
 			$settings = null;
 			if( !empty( $product["settings"] ) ) {
 				$settings = json_decode( $product['settings'], true );
-				if( $monitor_type != 'ping')
-					$settings['timeout'] = intval( $settings['timeout'] / 1000 );
+				//if( $monitor_type != 'ping')
+				$settings = $settings[$monitor_type];
 			} else {
 				$settings = MonitisConf::$settings[$monitor_type];
-				$settings['available'] = MonitisConf::$settings['available'];
+				//$settings['available'] = MonitisConf::$settings['available'];
 			}
 			
 			if($monitor_type == 'ping') {

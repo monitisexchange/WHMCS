@@ -18,7 +18,7 @@ $serverName = $ipaddress = $hostname = '';
 $whmcs_cpus = null;
 if($serverID > 0){
 
-	$oWHMCS = new WHMCS_class( MONITIS_CLIENT_ID );
+	$oWHMCS = new WHMCS_class();
 	
 	$srv_info = $oWHMCS->serverInfo( $serverID );
 	$server = $srv_info[0];

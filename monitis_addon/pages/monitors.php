@@ -42,35 +42,33 @@ $srv_info = $oWHMCS->serverInfo( $serverID );
 $serverName = $srv_info[0]['name'];
 
 $ext_monitors = $oWHMCS->extServerMonitors($serverID);
+if( !$ext_monitors ) {
+	//MonitisApiHelper::addAllDefault(MONITIS_CLIENT_ID, $srv_info[0] );
+	if( MonitisConf::$settings['ping']['autocreate'] > 0 )
+		MonitisApiHelper::addDefaultPing(MONITIS_CLIENT_ID, $srv_info[0] );	
+	$ext_monitors = $oWHMCS->extServerMonitors($serverID);
+	//$int_monitors = $oWHMCS->intAssosMonitors($serverID);
+}
+
 $int_monitors = $oWHMCS->intAssosMonitors($serverID);
 
+//_dump($int_monitors);
 
-//if( !$ext_monitors && !$int_monitors  ) {
-if( !$ext_monitors ) {
-
-	MonitisApiHelper::addAllDefault(MONITIS_CLIENT_ID, $srv_info[0] );
-	$ext_monitors = $oWHMCS->extServerMonitors($serverID);
-	$int_monitors = $oWHMCS->intAssosMonitors($serverID);
-	
-}
 
 $hostname = $srv_info[0]['hostname'];
 $oInt = new internalClass(); 
 $agentInfo = $oInt->getAgentInfo( $hostname );
 
 //
-if( $agentInfo && isset($agentInfo['status']) && $agentInfo['status'] != 'stopped' ) {
-
+//if( $agentInfo && isset($agentInfo['status']) && $agentInfo['status'] != 'stopped' ) {
+if( $agentInfo && MonitisConf::$settings['drive']['autolink'] > 0 ) {
 	$agentKey = $agentInfo['agentKey'];
 	$agentId = $agentInfo['agentId'];
-	
 	$whmcs_drives = $oWHMCS->intMonitorsByType( $agentId, 'drive' );
-	
-_logActivity("intMonitorsByType **** agentId = $agentId<p>whmcs_drives=".json_encode($whmcs_drives)."</p>");
-_logActivity("intMonitorsByType **** agentId = $agentId<p>agentInfo=".json_encode($agentInfo)."</p>");
-
-//_dump( $agentInfo );
+//_logActivity("intMonitorsByType **** agentId = $agentId<p>whmcs_drives=".json_encode($whmcs_drives)."</p>");
+//_logActivity("intMonitorsByType **** agentId = $agentId<p>agentInfo=".json_encode($agentInfo)."</p>");
 	$noAssoc = $oInt->associateDrives( $whmcs_drives, $agentInfo, $serverID );
+	$int_monitors = $oWHMCS->intAssosMonitors($serverID);
 	$isAgent = 1;
 } else 
 	$isAgent = 0;
@@ -119,13 +117,22 @@ if (count($ext_monitors) < 1 && count($int_monitors)) {
 }
 MonitisApp::printNotifications();
 //_dump($ext_monitors);
+
+$arentName = '';
+if( $int_monitors ) {
+	$arentName = $agentInfo['agentKey'];
+}
 ?>
 
 <div style="text-align: right;">
 	<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=servers">&#8592; Back to servers list</a>
 </div>
 
-<div class="dialogTitle"><?php if($serverName!='') echo "<b>Server name:</b> $serverName"; ?></div>
+<div class="dialogTitle"><?php if($serverName!='') echo "Server <b>$serverName</b>"; ?>
+<?php if($arentName!='') echo ", server agent ".$agentInfo['status']." </b>" ?>
+</div>
+
+
 <script>
 function setParameters(form, type, monitor_id, monitor_type, values) {
 	form.type.value = type;
@@ -187,10 +194,12 @@ _logActivity("monitors tab **** ext_monitors = " . json_encode($ext_monitors) );
 				//}
 				echo '</div></figure>';
 			} else {
+				//$oWHMCS->removeExternalMonitorsById($monitor_id);
 echo "Unlink monitor $monitor_id ";			
 			}
 		}
 	}
+	
 	if( $int_monitors ) {
 //_dump( $agentInfo );
 
@@ -198,7 +207,6 @@ echo "Unlink monitor $monitor_id ";
 		if( $agentInfo['status'] == 'stopped' ) {
 			$label = 'closed';
 		}
-		echo '<header style="margin:50px 0px 30px 0px"><h3>Agent: <b> '.$agentInfo['agentKey'].'</b> '.$agentInfo['status'].'</h3></header>';
 		
 		for($i=0; $i<count($int_monitors); $i++) {
 			//echo MonitisApiHelper::embed_module($ext_monitors[$i]['monitor_id'], 'external');

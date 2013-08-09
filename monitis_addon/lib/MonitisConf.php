@@ -1,26 +1,41 @@
 <?php
 class MonitisConf {
 	private static $configs = array('apiKey', 'secretKey', 'newServerMonitors');
-	//private static $default_settings = '{"ping":{"interval":1,"timeout":1000,"locationIds":[1,9,10]},"cpu":{"LINUX":{"usedMax":90,"kernelMax":90,"idleMin":0,"ioWaitMax":90,"niceMax":90},"WINDOWS":{"usedMax":100,"kernelMax":90},"OPENSOLARIS":{"usedMax":90,"kernelMax":90}},"memory":{"LINUX":{"freeLimit":2000,"freeSwapLimit":1000,"bufferedLimit":3000,"cachedLimit":3000},"WINDOWS":{"freeLimit":2000,"freeSwapLimit":1000,"freeVirtualLimit":3000},"OPENSOLARIS":{"freeLimit":2000,"freeSwapLimit":1000}},"drive":{"freeLimit":30},"http":{"interval":1,"timeout":10,"locationIds":[1,9,10]},"https":{"interval":1,"timeout":10,"locationIds":[1,9,10]},"available":1,"max_locations":5}';
-
 	private static $default_settings = '{
-		"ping":{"interval":1,"timeout":1000,"locationIds":[1,9,10],"available":1},
+		"ping":{
+			"interval":1,"timeout":1000,"locationIds":[1,9,10],
+			"available":1,
+			"autocreate":1,
+			"autolink":1
+		},
 		"cpu":{
 			"LINUX":{"usedMax":90,"kernelMax":90,"idleMin":0,"ioWaitMax":90,"niceMax":90},
 			"WINDOWS":{"usedMax":100,"kernelMax":90},
 			"OPENSOLARIS":{"usedMax":90,"kernelMax":90},
-			"available":1
+			"available":0,
+			"autocreate":0,
+			"autolink":0
 		},	
 		"memory":{
 			"LINUX":{"freeLimit":2000,"freeSwapLimit":1000,"bufferedLimit":3000,"cachedLimit":3000},
 			"WINDOWS":{"freeLimit":2000,"freeSwapLimit":1000,"freeVirtualLimit":3000},
 			"OPENSOLARIS":{"freeLimit":2000,"freeSwapLimit":1000},
-			"available":1
+			"available":0,
+			"autocreate":0,
+			"autolink":0
 		},	
-		"drive":{"freeLimit":30,"available":1},
+		"drive":{"freeLimit":30,
+			"available":0,
+			"autocreate":0,
+			"autolink":0
+		},
+		"http":{"interval":1,"timeout":10,"locationIds":[1,9,10],
+			"available":1
+		},
+		"https":{"interval":1,"timeout":10,"locationIds":[1,9,10],
+			"available":1
+		},
 		
-		"http":{"interval":1,"timeout":10,"locationIds":[1,9,10]},
-		"https":{"interval":1,"timeout":10,"locationIds":[1,9,10]},
 		"available":1,
 		"max_locations":5
 	}';
@@ -30,9 +45,8 @@ class MonitisConf {
 	
 	static $checkInterval = '1,3,5,10,15,20,30,40,60';
 	
-
-	static $monitorAvailable = 1;
-	static $maxLocations = 3;
+	//static $monitorAvailable = 1;
+	//static $maxLocations = 3;
 	
 	static $newServerMonitors = 'ping,http'; //
 	static $newAgentPlatform = 'LINUX'; //
@@ -55,35 +69,14 @@ class MonitisConf {
 			update_query('mod_monitis_client', $update, $where);
 		}
 	}
-	static function update_settings($client_id, $vals) {
-		$update = array();
-		if( $vals ) {
-			if( isset($vals['newServerMonitors']) ) {
-				self::$newServerMonitors = $vals['newServerMonitors'];
-				$update['newServerMonitors'] = $vals['newServerMonitors'];
-			}
-			//if( isset($vals['monitorAvailable']) ) {
-			//	self::$monitorAvailable = $vals['monitorAvailable'];
-			//	$update['available'] = $vals['monitorAvailable'];
-			//}
-			if( isset($vals['settings']) ) {
-				self::$settings =json_decode($vals['settings'], true);
-				$update['settings'] = $vals['settings'];
-				
-				//self::$monitorAvailable = self::$settings['available'];
-				//self::$maxLocations = self::$settings['max_locations'];
-			}
-			if( $update && count($update) > 0) {
-				$where = array('client_id' => $client_id);
-				update_query('mod_monitis_client', $update, $where);		
-			}
+	static function update_settings($client_id, $settings_json) {
+		
+		if( isset($settings_json) ) {
+			self::$settings = json_decode($settings_json, true);
+			$update = array('settings' => $settings_json);
+			$where = array('client_id' => $client_id);
+			update_query('mod_monitis_client', $update, $where);
 		}
-	}
-	
-	static function settingsByType( $type ) {
-		self::$settings[$type]["available"] = self::$monitorAvailable;
-		self::$settings[$type]["max_locations"] = self::$maxLocations;
-		return self::$settings[$type];
 	}
 	
 	static function getAdminName() {
@@ -92,24 +85,26 @@ class MonitisConf {
 		return $adm['value'];
 	}
 	
+	static function activeMonitorTypes() {
+		$sets = self::$settings;
+		$arr = array();
+		if( $sets['ping']['autocreate'] > 0 ) $arr[] = 'ping';
+		if( $sets['cpu']['autocreate'] > 0 ) $arr[] = 'cpu';
+		if( $sets['memory']['autocreate'] > 0 ) $arr[] = 'memory';
+		return $arr;
+	}
+	
 	static function load_config() {
 	
-		$res = mysql_query('SELECT * FROM mod_monitis_client WHERE client_id=' . MONITIS_CLIENT_ID);
+		//$res = mysql_query('SELECT * FROM mod_monitis_client WHERE client_id=' . MONITIS_CLIENT_ID);
+		$res = mysql_query('SELECT * FROM mod_monitis_client');
 		if( $res && mysql_num_rows($res) > 0 ) {
-			//$row = mysql_fetch_assoc($res);
 			while ($row = mysql_fetch_assoc($res)) {
 				self::$apiKey = $row['apiKey'];
 				self::$secretKey = $row['secretKey'];
-				self::$newServerMonitors = $row['newServerMonitors'];
-				self::$monitorAvailable = $row['available'];
+				//self::$newServerMonitors = $row['newServerMonitors'];
 				self::$settings = json_decode($row['settings'], true);
-				
-				self::$monitorAvailable = self::$settings['available'];
-				self::$maxLocations = self::$settings['max_locations'];
 			}
-			//$oWhmcs = new WHMCS_class($client_id);
-			//$row = $oWhmcs->clientInfo();
-
 			return true;
 		} else 
 			return false;
@@ -120,9 +115,8 @@ class MonitisConf {
 			'client_id' => MONITIS_CLIENT_ID,
 			'apiKey' => self::$apiKey,
 			'secretKey' => self::$secretKey,
-			'settings' => self::$default_settings,
-			//'available' => self::$monitorAvailable,
-			'newServerMonitors' => 	'ping'			//self::$newServerMonitors
+			'settings' => self::$default_settings
+			//'newServerMonitors' => 	'ping'			//self::$newServerMonitors
 		);
 		self::$settings =json_decode(self::$default_settings, true);
 		insert_query('mod_monitis_client', $values);

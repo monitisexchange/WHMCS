@@ -52,7 +52,7 @@ $addonId = monitisPostInt('addonId');
 
 if ($action && $addonId > 0) {
 
-    if ($_POST) {
+  /*  if ($_POST) {
 
         $post = array();
         foreach ($_POST as $key => $val) {
@@ -73,7 +73,43 @@ if ($action && $addonId > 0) {
 
         $new_setting = json_encode($set);
     }
+*/
+        if ($_POST) {
 
+        $post = array();
+        foreach ($_POST as $key => $val) {
+            if (!empty($key)) {
+                $post[$key] = $val;
+            }
+        }
+
+        $loc = json_decode('[' . str_replace(array("[", "]"), "", $post["locationIDs" . $addonId]) . ']', true);
+        $timeout = monitisPostInt("timeout" . $addonId);
+        if ($timeout > 5000) {
+            $timeout = 5000;
+        }
+
+
+        $set = MonitisConf::$settings;
+
+        $allTypes = explode(",", MONITIS_MONITOR_TYPES);
+        for ($i = 0; $i < count($allTypes); $i++) {
+
+            if ($allTypes[$i] != 'ping') {
+                $set[$allTypes[$i]]['timeout'] = intval($timeout / 1000);
+            } else {
+                $set[$allTypes[$i]]['timeout'] = $timeout;
+            }
+
+            $set[$allTypes[$i]]['interval'] = $post["interval" . $addonId];
+            //$set[$allTypes[$i]]['timeout']=$timeout;
+            $set[$allTypes[$i]]['locationIds'] = $loc;
+            $set['max_locations'] = (!$post["max_locations" . $addonId]) ? 0 : $post["max_locations" . $addonId];
+        }
+
+        $new_setting = json_encode($set);
+    }
+    
     $monitor_type = monitisPost('monitor_type');
     switch ($action) {
         case 'activate':
@@ -142,14 +178,16 @@ $addons = $oAddon->addonsList();
         for ($i = 0; $i < count($addons); $i++) {
             $addonId = $addons[$i]['id'];
             $type = $allTypes[0];
-
-            if (isset($addons[$i]["monitor"]) && $addons[$i]["monitor"] && !empty($addons[$i]["monitor"]["settings"])) {
+            
+			if (isset($addons[$i]["monitor"]) && $addons[$i]["monitor"]) {
                 $type = $addons[$i]["monitor"]["type"];
 
-                $settings1 = json_decode($addons[$i]["monitor"]["settings"], true);
+                $settings = json_decode($addons[$i]["monitor"]["settings"], true);
             } else {
-                $settings1 = MonitisConf::settingsByType('ping');
+                $settings = MonitisConf::$settings;;
+               
             }
+            
             ?>
             <tr>
                 <td>&nbsp;</td>
@@ -165,8 +203,8 @@ $addons = $oAddon->addonsList();
         <?
         //$monitor = $addons[$i]['monitor'];
         $loaction = '';
-        if (!empty($settings1['locationIds']))
-            $loaction = json_encode($settings1['locationIds']);
+        if (!empty($settings['ping']['locationIds']))
+            $loaction = json_encode($settings['ping']['locationIds']);
         for ($a = 0; $a < count($allTypes); $a++) {
             $monitor_type = $allTypes[$a];
             $prefix = $addonId;
@@ -182,7 +220,7 @@ $addons = $oAddon->addonsList();
                                             <td class="fieldlabel">Interval:</td>
                                             <td><select name="interval<?= $prefix ?>">
 										
-									<?	$newInterval = $settings1['interval'];
+									<?	$newInterval = $settings['ping']['interval'];
 
 										$aInterval = explode(',', MonitisConf::$checkInterval);
 										for ($int = 0; $int < count($aInterval); $int++) {
@@ -200,19 +238,19 @@ $addons = $oAddon->addonsList();
                                         <tr>
                                             <td class="fieldlabel">Timeout:</td>
                                             <td>
-                                                <input type="text" size="15" name="timeout<?= $prefix ?>" id="timeout" value="<?= $settings1['timeout'] ?>"/>ms.
+                                                <input type="text" size="15" name="timeout<?= $prefix ?>" id="timeout" value="<?= $settings['ping']['timeout'] ?>"/>ms.
                                             </td>
                                         </tr>
                                         <tr>
                                             <td class="fieldlabel">Max locations:</td>
                                             <td>
-                                                <input type="text" size="15" id="max_locations<?= $prefix ?>"  name="max_locations<?= $prefix ?>" value="<?= $settings1['max_locations'] ?>" />
+                                                <input type="text" size="15" id="max_locations<?= $prefix ?>"  name="max_locations<?= $prefix ?>" value="<?= $settings['max_locations'] ?>" />
                                             </td>
                                         </tr>
                                         <tr class="monitisMultiselect">
                                             <td class="fieldlabel" >Check locations:</td>
                                             <td>
-                                                <span class="monitisMultiselectText" id="locationsize<?= $prefix ?>" ><?php echo sizeof($settings1['locationIds']) . '  ' . "locations"; ?></span>
+                                                <span class="monitisMultiselectText" id="locationsize<?= $prefix ?>" ><?php echo sizeof($settings['ping']['locationIds']) . '  ' . "locations"; ?></span>
                                                 <input type="button" id="selectTrigger<?= $prefix ?>" class="monitisMultiselectTrigger" value="Select" element_prefix="<?= $prefix ?>" locations="<?= $loaction ?>" />
                                                 <input type="hidden" name="locationIDs<?= $prefix ?>" id="locationIDs<?= $prefix ?>" value="<?= $loaction ?> " />
                                                 <div class="monitisMultiselectInputs" id="monitisMultiselectInputs<?= $prefix ?>" ></div>
@@ -273,7 +311,7 @@ $addons = $oAddon->addonsList();
 				}
 			},
 			close: function() {
-				updateInput(prefix);
+				$(this).remove();
 			}
 		});
 

@@ -16,7 +16,8 @@
 		MonitisApp::redirect(MONITIS_APP_URL . '&monitis_page=servers');
 	}
 	
-	$newCreateMonitorsText = explode(',', MonitisConf::$newServerMonitors);
+	//$newCreateMonitorsText = explode(',', MonitisConf::$newServerMonitors);
+	$newCreateMonitorsText = MonitisConf::activeMonitorTypes();
 	$newCreateMonitorsText = array_map(function($v){ return ucfirst($v); }, $newCreateMonitorsText);
 	$newCreateMonitorsText = implode(', ', $newCreateMonitorsText);
 ?>

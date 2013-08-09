@@ -53,7 +53,7 @@ add_hook("ServerAdd", 1, "hook_monitis_ServerAdd");
 function hook_monitis_ServerDelete($vars) {
 	require_once 'MonitisApp.php';
 	$server_id = $vars['serverid'];
-	$oWhmcs = new WHMCS_class( MONITIS_CLIENT_ID );
+	$oWhmcs = new WHMCS_class();
 	$oWhmcs->removeMonitorsByServersId($server_id);
 	//_dump($vars);
 }
@@ -139,7 +139,7 @@ add_hook("PendingOrder",1,"hook_monitis_PendingOrder");
 
 
 
-
+/*
 function hook_monitis_ViewOrderDetailsPage($vars) {
 
 	m_log( $vars, 'ViewOrderDetailsPage', 'order');
@@ -153,4 +153,4 @@ function hook_monitis_AdminAreaHeaderOutput($vars) {
 	//return "<div>From AdminAreaHeaderOutput hook</div>";
 }
 add_hook("AdminAreaHeaderOutput",1,"hook_monitis_AdminAreaHeaderOutput");
-
+*/

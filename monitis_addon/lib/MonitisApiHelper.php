@@ -26,7 +26,8 @@ class MonitisApiHelper {
 		$resp = MonitisApi::editExternalPing( $mParams );
 
 		//$resp = MonitisApi::createExternalPing( $mParams );
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
+		//if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
+		if ( isset( $resp['data'] ) && isset($resp['data']['testId']) ) {
 			return true;
 		}
 		return false;
@@ -40,18 +41,19 @@ class MonitisApiHelper {
 		if ( isset( $resp['data'] ) && isset($resp['data']['testId']) ) {
 			$newID = $resp['data']['testId'];
 
-			$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'external','monitorId'=>$newID) );
-			$values = array(
-				"server_id" => $server['id'],
-				"available" => MonitisConf::$settings['ping']['available'],
-				"monitor_id" => $newID,
-				"monitor_type" => "ping",
-				"client_id"=> $client_id,
-				"publickey"=> $pubKey 
-			);
-			@insert_query('mod_monitis_ext_monitors', $values);
-			//self::addServerAvailable( $server['id'] );
-
+			if( MonitisConf::$settings['ping']['autolink'] > 0 ) {
+				$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'external','monitorId'=>$newID) );
+				$values = array(
+					"server_id" => $server['id'],
+					"available" => MonitisConf::$settings['ping']['available'],
+					"monitor_id" => $newID,
+					"monitor_type" => "ping",
+					"client_id"=> $client_id,
+					"publickey"=> $pubKey 
+				);
+				@insert_query('mod_monitis_ext_monitors', $values);
+				//self::addServerAvailable( $server['id'] );
+			}
 			return true;
 		}
 		return false;
@@ -97,7 +99,8 @@ class MonitisApiHelper {
 		
 		$resp = MonitisApi::addCPUMonitor( $params );
 
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
+		//if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
+		if ( isset( $resp['data'] ) && isset($resp['data']['testId']) ) {
 			return $resp['data']['testId'];
 		}
 		return 0;
@@ -148,7 +151,8 @@ class MonitisApiHelper {
 		}
 		
 		$resp = MonitisApi::addMemoryMonitor( $params );
-		if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
+		//if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
+		if ( isset( $resp['data'] ) && isset($resp['data']['testId']) ) {
 			return $resp['data']['testId'];
 		}
 		return 0;
@@ -163,14 +167,15 @@ class MonitisApiHelper {
 		return 0;
 	}
 	
-	static function addDefaultAgents($client_id, $server, $mTypes) {
+	static function addDefaultAgents($client_id, $server ) {
 
 		$hostname=$server['hostname'];
 		$agents = MonitisApi::getAgent( $hostname );
 		$agentKey = $agents[0]['key'];
 		$platform = $agents[0]['platform'];
 		$agentId = $agents[0]['id'];
-		$monitorTypes = explode(',', MonitisConf::$newServerMonitors);
+		//$monitorTypes = explode(',', MonitisConf::$newServerMonitors);
+		//MonitisConf::$settings['cpu']['autocreate'];
 		
 		if( strtolower($agentKey) == strtolower($hostname) ) {
 			$agentInfo = array(
@@ -182,7 +187,8 @@ class MonitisApiHelper {
 
 			$intMonitors = MonitisApi::getInternalMonitors();
 			// CPU
-			if( in_array('cpu', $monitorTypes ) ) {
+			//if( in_array('cpu', $monitorTypes ) ) {
+			if( MonitisConf::$settings['cpu']['autocreate'] > 0 ) {
 				$cpus_monitorId = 0;
 				if( isset( $intMonitors['cpus'] ) ) {
 					$cpus_monitorId = self::monitorIdByAgentId( $intMonitors['cpus'], $agentId );
@@ -190,7 +196,7 @@ class MonitisApiHelper {
 				if( $cpus_monitorId == 0 ) {
 					$cpus_monitorId = self::addCPU($agentInfo, MonitisConf::$settings['cpu'] );
 				} 
-				if( $cpus_monitorId > 0 ) {
+				if( $cpus_monitorId > 0 && MonitisConf::$settings['cpu']['autolink'] > 0 ) {
 					$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'cpu','monitorId'=>$cpus_monitorId) );
 					$values = array(
 						"server_id" => $server['id'],
@@ -206,7 +212,8 @@ class MonitisApiHelper {
 				}
 			}
 			// memory
-			if( in_array('memory', $monitorTypes ) ) { 
+			//if( in_array('memory', $monitorTypes ) ) { 
+			if( MonitisConf::$settings['memory']['autocreate'] > 0 ) {
 				$memory_monitorId = 0;
 				if( isset( $intMonitors['memories'] ) ) {
 					$memory_monitorId = self::monitorIdByAgentId( $intMonitors['memories'], $agentId );
@@ -215,7 +222,7 @@ class MonitisApiHelper {
 				if( $memory_monitorId == 0 ) {
 					$memory_monitorId = self::addMemory($agentInfo, MonitisConf::$settings['memory'] );
 				} 
-				if( $memory_monitorId > 0 ) {
+				if( $memory_monitorId > 0 && MonitisConf::$settings['memory']['autolink'] > 0 ) {
 					$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'memory','monitorId'=>$memory_monitorId) );
 					$values = array(
 						"server_id" => $server['id'],
@@ -292,8 +299,13 @@ class MonitisApiHelper {
 	}
 
 	static function addAllDefault($client_id, $server) {
-		$monitorTypes = explode(',', MonitisConf::$newServerMonitors);
+	
+		if( MonitisConf::$settings['ping']['autocreate'] > 0 )
+			self::addDefaultPing($client_id, $server);
+			
+		self::addDefaultAgents($client_id, $server );
 		
+		/*$monitorTypes = explode(',', MonitisConf::$newServerMonitors);
 		foreach ($monitorTypes as $type) {
 			switch ($type) {
 				case 'ping':
@@ -307,7 +319,7 @@ class MonitisApiHelper {
 					self::addDefaultHttps($server);
 					break;
 			}
-		}
+		}*/
 	}
 	
 /*	static function getAllAgentsSnapshot() {

@@ -22,7 +22,7 @@ $monitorType = 'drive';
 $serverName = $ipaddress = $hostname = '';
 $agentPlatform = MonitisConf::$newAgentPlatform;
 
-$oWHMCS = new WHMCS_class( MONITIS_CLIENT_ID );
+$oWHMCS = new WHMCS_class();
 $whmcs_drives = null;
 if($serverID > 0){
 	$srv_info = $oWHMCS->serverInfo( $serverID );

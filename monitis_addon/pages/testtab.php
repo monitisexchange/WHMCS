@@ -56,7 +56,13 @@ _dump( $resp );
 			
 MonitisApp::printNotifications();
 */
-			
+
+$array = array('lastname');
+$comma_separated = implode(",", $array);
+
+echo $comma_separated; // lastname,email,phone
+
+
 //$aOrders = array();
 //$arr = ordersList( $aOrders, 0, 25 );
 //ordersList( $aOrders, 25, 25 );
@@ -65,14 +71,15 @@ MonitisApp::printNotifications();
 //_db_table ( 'tblhostingaddons' );
 //_db_table ( 'tblhosting' );
 
-//_db_table ( 'mod_monitis_client' );
-_db_table ( 'mod_monitis_addon' );
+_db_table ( 'mod_monitis_client' );
+
 //_db_table ( 'tblhosting' );
-//_db_table ( 'mod_monitis_int_monitors' );
-//_db_table ( 'mod_monitis_ext_monitors' );
+
+_db_table ( 'mod_monitis_ext_monitors' );
+_db_table ( 'mod_monitis_int_monitors' );
 //_db_table ( 'mod_monitis_product_monitor' );
 _db_table ( 'mod_monitis_product' );
-
+_db_table ( 'mod_monitis_addon' );
 //_db_table ( 'tblorders' );
 
 

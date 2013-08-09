@@ -192,7 +192,7 @@ class serversListTab {
 
 	}
 	public function init( $opts) {
-		$oWhmcs = new WHMCS_class( MONITIS_CLIENT_ID );
+		$oWhmcs = new WHMCS_class();
 		
 		$this->whmcs_all_servers = $oWhmcs->all_servers( $opts );
 		if( $this->whmcs_all_servers ) {
@@ -260,6 +260,7 @@ class serversListTab {
 		// get pings monitors ids
 		$ping_Ids = $this->_idsList( $whmcs_ext, 'monitor_id' );
 		$pingIds = implode(',', $ping_Ids);
+
 		//$extShots = MonitisApi::getExternalSnapshot( $pingIds );
 		$extShots = MonitisApi::externalSnapshot( $pingIds );
 

@@ -22,7 +22,7 @@ $serverName = $ipaddress = $hostname = '';
 $monitorType = 'ping';
 if($serverID > 0){
 
-	$oWHMCS = new WHMCS_class( MONITIS_CLIENT_ID );
+	$oWHMCS = new WHMCS_class();
 	$mExt = $oWHMCS->extServerMonitors( $serverID );
 
 	if( $mExt) {

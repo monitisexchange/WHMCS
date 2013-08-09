@@ -64,12 +64,20 @@ function monitis_addon_activate() {
 				PRIMARY KEY ( `addon_id` )
 				);";
 	$result = mysql_query($query);
-		
+/*
 	$query = "CREATE TABLE `mod_monitis_client` (
 				`client_id` INT,
 				`apiKey` VARCHAR( 255 ) NOT NULL,
 				`secretKey` VARCHAR( 255 ) NOT NULL,
 				`newServerMonitors` VARCHAR( 255 ),
+				`settings`  TEXT NOT NULL,
+				PRIMARY KEY ( `client_id` )
+				);";
+*/
+	$query = "CREATE TABLE `mod_monitis_client` (
+				`client_id` INT,
+				`apiKey` VARCHAR( 255 ) NOT NULL,
+				`secretKey` VARCHAR( 255 ) NOT NULL,
 				`settings`  TEXT NOT NULL,
 				PRIMARY KEY ( `client_id` )
 				);";
@@ -97,14 +105,6 @@ function monitis_addon_activate() {
 				PRIMARY KEY ( `monitor_id` )
 				);";
 	$result = mysql_query($query);	
-	
-	// 
-	/*$query = "CREATE TABLE `mod_monitis_server_available` (
-				`server_id` INT NOT NULL,
-				`available` INT default 1,
-				PRIMARY KEY ( `server_id` )
-				);";
-	$result = mysql_query($query);*/
 	
 	$result = mysql_query("DROP TABLE IF EXISTS `mod_monitis_server_available` ");
 

@@ -19,7 +19,7 @@ $monitorType = 'memory';
 $serverName = $ipaddress = $hostname = '';
 if($serverID > 0){
 
-	$oWHMCS = new WHMCS_class( MONITIS_CLIENT_ID );
+	$oWHMCS = new WHMCS_class();
 	//$mInt = $oWHMCS->intServerMonitors( $serverID, $monitorType );
 	$srv_info = $oWHMCS->serverInfo( $serverID );
 	$server = $srv_info[0];

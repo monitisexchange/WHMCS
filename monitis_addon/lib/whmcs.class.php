@@ -45,11 +45,12 @@ class WHMCS_class extends whmcs_db {
 	private $client_id = null;
 	
 	public function __construct ( $client_id=1 ) {
-		$this->client_id = $client_id;
+		$this->client_id = MONITIS_CLIENT_ID;
 	}
 	
 	public function clientInfo() {
-		$sql = 'SELECT * FROM mod_monitis_client WHERE client_id=' . $this->client_id;
+		//$sql = 'SELECT * FROM mod_monitis_client WHERE client_id=' . $this->client_id;
+		$sql = 'SELECT * FROM mod_monitis_client';
 		$val = $this->query( $sql );
 		if($val)	return $val[0];
 		else return null;
