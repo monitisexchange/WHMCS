@@ -330,6 +330,11 @@ class MonitisApiHelper {
 	}
 */	
 	static function embed_module_by_pubkey( $publicKey, $width, $height ) {
+	
+		//$endpoint = 'https://api.monitis.com';
+
+		$endpoint = 'http://173.192.34.112:8080';
+	
 		return  '<script type="text/javascript">
 		monitis_embed_module_id="'.$publicKey.'";
 		monitis_embed_module_width="'.$width.'";
@@ -340,11 +345,15 @@ class MonitisApiHelper {
 		monitis_embed_module_datePeriod="0";
 		monitis_embed_module_view="1";
 		</script>
-		<script type="text/javascript" src="https://api.monitis.com/sharedModule/shareModule.js"></script>
+		<script type="text/javascript" src="'.$endpoint.'/sharedModule/shareModule.js"></script>
 		<noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
 	}
 	
+	
 	static function embed_module($monitor_id, $monitor_type) {
+		//$endpoint = 'https://api.monitis.com';
+		$endpoint = 'http://173.192.34.112:8080';
+		
 		$params = array('moduleType'=>$monitor_type,'monitorId'=>$monitor_id);
 		$resp = MonitisApi::getWidget($params);
 		$publicKey = $resp['data'];
@@ -359,7 +368,7 @@ class MonitisApiHelper {
 		monitis_embed_module_datePeriod="0";
 		monitis_embed_module_view="1";
 		</script>
-		<script type="text/javascript" src="https://api.monitis.com/sharedModule/shareModule.js"></script>
+		<script type="text/javascript" src="'.$endpoint.'/sharedModule/shareModule.js"></script>
 		<noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
 	}	
 
