@@ -36,7 +36,7 @@ if($serverID > 0){
 //_dump($mExt);
 
 		$mExt['client_id'] = MONITIS_CLIENT_ID;
-		MonitisApiHelper::addAllDefault(MONITIS_CLIENT_ID, $mExt[0] );
+		//MonitisApiHelper::addAllDefault(MONITIS_CLIENT_ID, $mExt[0] );	// ??????????
 		$mExt = $oWHMCS->extServerMonitors( $serverID );
 //_dump($mExt);
 		$serverName = $mExt[0]['name'];

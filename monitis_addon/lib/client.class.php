@@ -10,16 +10,23 @@ class monitisclientClass extends WHMCS_class {
 		//$adminuser = "chadmin";
 		$values["clientid"] = $client_id;
 		$prdcts = localAPI($command,$values,$adminuser);
-logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus client_serversIds getclientsproducts prdcts = ". json_encode($prdcts));
+		
+//logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus client_serversIds getclientsproducts prdcts = ". json_encode($prdcts));
 		if( $prdcts && $prdcts["result"] == 'success' && $prdcts["products"]["product"] ) {
 			$products = $prdcts["products"]["product"];
 			$srvrs = array();
-logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus client_serversIds products = ". json_encode($products));
+//logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus client_serversIds products = ". json_encode($products));
 			if( $products ) {
 				for( $i=0; $i<count( $products ); $i++) {
 					$product = $products[$i];
 					if( $product["status"] == 'Active' && $product["serverid"] > 0) {
-						$srvrs[] = intval($product["serverid"]);
+						//$srvrs[] = intval($product["serverid"]);
+						$srvrs[] = array(
+							'serverid'=> intval($product["serverid"]),
+							'pid'=> intval($product["pid"]),
+							'name'=> $product["name"],
+							'groupname'=> $product["groupname"]
+						);
 					}
 				}
 				if( count($srvrs) > 0 ) {
@@ -43,62 +50,84 @@ logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus client_serversIds pr
 		}
 		return $result;
 	}
-	
+/*
 	private function client_setInternal( $server_id, & $int ) {
 		
 		$pubkeys = array();
 		for( $i=0; $i<count($int); $i++ ) {
 			if( $int[$i]["server_id"] == $server_id ) {
-				//return $int[$i];
 				$pubkeys[] = $int[$i]["publickey"];
 			}
 		}
 		return $pubkeys;
 	}
-	
+*/
+	private function getMonitor( $server_id, & $arr ) {
+		
+		$monitors = array();
+		for( $i=0; $i<count($arr); $i++ ) {
+			if( $arr[$i]["server_id"] == $server_id ) {
+				$monitors[] = $arr[$i];
+			}
+		}
+		return $monitors;
+	}	
+	private function _idsList( & $list, $fieldName ){
+		$ids = array();
+		if( count($list) > 0 ) {
+			$cnt = count($list);
+			for($i=0; $i<$cnt;$i++) {
+				if( empty($fieldName) )
+					$ids[] = $list[$i];
+				else
+					$ids[] = $list[$i][$fieldName];
+			}
+			$ids = array_unique($ids); 
+		}
+		return $ids;
+	}
+
 	public function clientMonitors( $client_id, $adminuser ) {
 	
-		$servers = $this->client_serversIds( $client_id, $adminuser );
-logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus client_serversIds servers = ". json_encode($servers));
+		$srvrs = $this->client_serversIds( $client_id, $adminuser );
+
+logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus client_serversIds srvrs = ". json_encode($srvrs));
 		$result = array();
-		if( $servers && $servers["status"] == 'ok' && count($servers["data"]) > 0 ) {
-			$srvrsIds = implode(',', $servers["data"]);
-			$ext = $this->servers_ext($srvrsIds);
-			$int = $this->servers_int($srvrsIds);
-logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus client_serversIds ext = ". json_encode($ext));
-			if( $ext && count($ext) > 0 ) {
-				if( count($int) > 0 ) {
-					for( $i=0; $i<count($ext); $i++ ) {
-						$ext[$i]["internals"] = $this->client_setInternal( $ext[$i]["server_id"], $int );
+
+		if( $srvrs && $srvrs["status"] == 'ok' && count($srvrs["data"]) > 0 ) {
+
+			$all_srvrs = $srvrs["data"];
+			$serdersIds = $this->_idsList( $all_srvrs, 'serverid' );
+			$srvrsIds = implode(',', $serdersIds);
+			
+			$ext = $this->servers_ext($srvrsIds, 1 );	// 1 - availble
+			$int = $this->servers_int($srvrsIds, 1 );
+
+			if( $ext || $int) {
+				for( $s=0; $s<count($all_srvrs); $s++) {
+					$serverid = $all_srvrs[$s]['serverid'];
+					if( $ext && count($ext) > 0 ) {
+						$extMon = $this->getMonitor( $serverid, $ext );
+						$all_srvrs[$s]['external'] = $extMon;
+					}
+					if( $int && count($int) > 0 ) {
+						$intMon = $this->getMonitor( $serverid, $int );
+						$all_srvrs[$s]['internal'] = $intMon;
 					}
 				}
 				$result["status"] = 'ok';
-				$result["data"] = $ext;
+				$result["data"] = $all_srvrs;
 			} else {
 				$result["status"] = 'error';
 				$result["msg"] = 'No monitors for the active products, or they are not available';
 			}
-
-			//return $ext;
+//_dump($all_srvrs);
 		} else {
 			$result["status"] = 'error';
-			$result["msg"] = $servers["msg"];
+			$result["msg"] = $srvrs["msg"];
 		}
+
 		return $result;
-	}
-	
-	public function embed_module( $publicKey ) {
-		return '<script type="text/javascript">
-		monitis_embed_module_id="'.$publicKey.'";
-		monitis_embed_module_width="770";
-		monitis_embed_module_height="350";
-		monitis_embed_module_readonlyChart ="false";
-		monitis_embed_module_readonlyDateRange="false";
-		monitis_embed_module_datePeriod="0";
-		monitis_embed_module_view="1";
-		</script>
-		<script type="text/javascript" src="https://api.monitis.com/sharedModule/shareModule.js"></script>
-		<noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
 	}
 }
 ?>

@@ -6,7 +6,8 @@ class MonitisConf {
 			"interval":1,"timeout":1000,"locationIds":[1,9,10],
 			"available":1,
 			"autocreate":1,
-			"autolink":1
+			"autolink":1,
+			"suspendmsg":"Monitor suspended"
 		},
 		"cpu":{
 			"LINUX":{"usedMax":90,"kernelMax":90,"idleMin":0,"ioWaitMax":90,"niceMax":90},
@@ -14,7 +15,8 @@ class MonitisConf {
 			"OPENSOLARIS":{"usedMax":90,"kernelMax":90},
 			"available":0,
 			"autocreate":0,
-			"autolink":0
+			"autolink":0,
+			"suspendmsg":"Monitor suspended"
 		},	
 		"memory":{
 			"LINUX":{"freeLimit":2000,"freeSwapLimit":1000,"bufferedLimit":3000,"cachedLimit":3000},
@@ -22,12 +24,14 @@ class MonitisConf {
 			"OPENSOLARIS":{"freeLimit":2000,"freeSwapLimit":1000},
 			"available":0,
 			"autocreate":0,
-			"autolink":0
+			"autolink":0,
+			"suspendmsg":"Monitor suspended"
 		},	
 		"drive":{"freeLimit":30,
 			"available":0,
 			"autocreate":0,
-			"autolink":0
+			"autolink":0,
+			"suspendmsg":"Monitor suspended"
 		},
 		"http":{"interval":1,"timeout":10,"locationIds":[1,9,10],
 			"available":1
@@ -35,11 +39,12 @@ class MonitisConf {
 		"https":{"interval":1,"timeout":10,"locationIds":[1,9,10],
 			"available":1
 		},
-		
 		"available":1,
 		"max_locations":5
 	}';
 	
+	
+	// suspended monitor message
 	static $apiKey = '';
 	static $secretKey = '';
 	

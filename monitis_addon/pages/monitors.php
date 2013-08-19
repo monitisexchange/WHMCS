@@ -37,41 +37,47 @@ if ($serverID == 0)
 //////////////////////////////////////
 $isAgent = 0;
 
-$oWHMCS = new WHMCS_class( MONITIS_CLIENT_ID );
+$oWHMCS = new WHMCS_class();
 $srv_info = $oWHMCS->serverInfo( $serverID );
-$serverName = $srv_info[0]['name'];
 
-$ext_monitors = $oWHMCS->extServerMonitors($serverID);
-if( !$ext_monitors ) {
-	//MonitisApiHelper::addAllDefault(MONITIS_CLIENT_ID, $srv_info[0] );
-	if( MonitisConf::$settings['ping']['autocreate'] > 0 )
-		MonitisApiHelper::addDefaultPing(MONITIS_CLIENT_ID, $srv_info[0] );	
-	$ext_monitors = $oWHMCS->extServerMonitors($serverID);
-	//$int_monitors = $oWHMCS->intAssosMonitors($serverID);
-}
+$serverObj = $srv_info[0];
+$serverName = $serverObj['name'];
 
+$ext_monitors = $oWHMCS->extMonitorsByServerId($serverID);
 $int_monitors = $oWHMCS->intAssosMonitors($serverID);
+$whmcs = array("ext"=>$ext_monitors, "int"=>$int_monitors);
 
-//_dump($int_monitors);
+$resp = MonitisApiHelper::addAllDefault(MONITIS_CLIENT_ID, $serverObj, $whmcs );
 
+//echo "************** ".json_encode($resp)."<br>";
 
-$hostname = $srv_info[0]['hostname'];
+$ext_monitors = $oWHMCS->extMonitorsByServerId($serverID);
+$int_monitors = $oWHMCS->intAssosMonitors($serverID);
+/*
+if( !$ext_monitors ) {
+	if( MonitisConf::$settings['ping']['autocreate'] > 0 ) {
+		$resp = MonitisApiHelper::addDefaultPing(MONITIS_CLIENT_ID, $serverObj );
+	}
+	$ext_monitors = $oWHMCS->extMonitorsByServerId($serverID);
+}
+//$resp = MonitisApiHelper::addDefaultAgents(MONITIS_CLIENT_ID, $serverObj );
+//echo "************** internal ".json_encode($resp)."<br>";
+*/
+
+$hostname = $serverObj['hostname'];
 $oInt = new internalClass(); 
 $agentInfo = $oInt->getAgentInfo( $hostname );
-
-//
 //if( $agentInfo && isset($agentInfo['status']) && $agentInfo['status'] != 'stopped' ) {
-if( $agentInfo && MonitisConf::$settings['drive']['autolink'] > 0 ) {
+if( $agentInfo ) {
 	$agentKey = $agentInfo['agentKey'];
 	$agentId = $agentInfo['agentId'];
-	$whmcs_drives = $oWHMCS->intMonitorsByType( $agentId, 'drive' );
-//_logActivity("intMonitorsByType **** agentId = $agentId<p>whmcs_drives=".json_encode($whmcs_drives)."</p>");
-//_logActivity("intMonitorsByType **** agentId = $agentId<p>agentInfo=".json_encode($agentInfo)."</p>");
-	$noAssoc = $oInt->associateDrives( $whmcs_drives, $agentInfo, $serverID );
-	$int_monitors = $oWHMCS->intAssosMonitors($serverID);
+	//$whmcs_drives = $oWHMCS->intMonitorsByType( $agentId, 'drive' );
+	//$resp = $oInt->associateDrives( $whmcs_drives, $agentInfo, $serverID );
 	$isAgent = 1;
 } else 
 	$isAgent = 0;
+	
+//$int_monitors = $oWHMCS->intAssosMonitors($serverID);
 
 $createModule = MonitisApp::getModule('CreateMonitorServer');
 $createModule->linkText = "Create / modify monitor for this server";
@@ -168,7 +174,8 @@ _logActivity("monitors tab **** ext_monitors = " . json_encode($ext_monitors) );
 //_dump( $ext );
 			if( $ping && $publickey) {
 				echo '<figure class="monitor">';
-				echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 800, 350 );
+				//echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 800, 350 );
+				echo monitis_embed_module( $publickey, 800, 350 );
 				echo '<div>
 				<input type="button" value="Edit" onclick="m_CreateMonitorServer.trigger('.$monitor_id.', \''.$monitor_type.'\');" class="btn" />';
 				//if( $ping ) {
@@ -217,7 +224,8 @@ echo "Unlink monitor $monitor_id ";
 			
 			if( $publickey) {
 				echo '<figure class="monitor">';
-				echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 800, 350 );
+				//echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 800, 350 );
+				echo monitis_embed_module( $publickey, 800, 350 );
 				// btn-success
 				echo '<div>
 				<input type="button" value="Edit" onclick="m_CreateMonitorServer.trigger('.$monitor_id.', \''.$monitor_type.'\');" class="btn"  />';

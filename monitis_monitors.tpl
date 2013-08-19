@@ -23,9 +23,9 @@
 
 {/if}
 {php}
-//require_once('modules/addons/monitis_addon/lib/whmcs.class.php');
-//require_once('modules/addons/monitis_addon/lib/product.class.php');
-//require_once('modules/addons/monitis_addon/lib/services.class.php');
+
+require_once('modules/addons/monitis_addon/config.php');
+require_once('modules/addons/monitis_addon/lib/functions.php');
 $userid = $this->_tpl_vars['clientsdetails']['userid'];
 //echo "************ userid = $userid";
 
@@ -37,21 +37,8 @@ $count = mysql_num_rows($result);
 
 echo "<section>";
 while($data = mysql_fetch_array($result)) {
-//echo " ***$count *** <pre>";
-//var_dump($data);
-//echo "</pre>";
-			$publicKey = $data['publickey'];
-	echo '<script type="text/javascript">
-	monitis_embed_module_id="'.$publicKey.'";
-	monitis_embed_module_width="770";
-	monitis_embed_module_height="350";
-	monitis_embed_module_readonlyChart ="false";
-	monitis_embed_module_readonlyDateRange="false";
-	monitis_embed_module_datePeriod="0";
-	monitis_embed_module_view="1";
-	</script>
-	<script type="text/javascript" src="https://api.monitis.com/sharedModule/shareModule.js"></script>
-	<noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
+	$publicKey = $data['publickey'];
+	echo monitis_embed_module( $publicKey, 770, 350 );
 
 }
 echo "</section>";

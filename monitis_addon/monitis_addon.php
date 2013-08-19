@@ -51,6 +51,8 @@ function monitis_addon_activate() {
 	$query = "CREATE TABLE `mod_monitis_product` (
 				`product_id` INT NOT NULL,
 				`settings`  TEXT,
+				`order_behavior` TEXT,
+				`notification_rule` TEXT,
 				`status` varchar(50),
 				PRIMARY KEY ( `product_id` )
 				);";
@@ -60,20 +62,13 @@ function monitis_addon_activate() {
 				`addon_id` INT NOT NULL,
 				`type` varchar(50),
 				`settings`  TEXT,
+				`order_behavior` TEXT,
+				`notification_rule` TEXT,
 				`status` varchar(50) default 'active',
 				PRIMARY KEY ( `addon_id` )
 				);";
 	$result = mysql_query($query);
-/*
-	$query = "CREATE TABLE `mod_monitis_client` (
-				`client_id` INT,
-				`apiKey` VARCHAR( 255 ) NOT NULL,
-				`secretKey` VARCHAR( 255 ) NOT NULL,
-				`newServerMonitors` VARCHAR( 255 ),
-				`settings`  TEXT NOT NULL,
-				PRIMARY KEY ( `client_id` )
-				);";
-*/
+
 	$query = "CREATE TABLE `mod_monitis_client` (
 				`client_id` INT,
 				`apiKey` VARCHAR( 255 ) NOT NULL,
@@ -105,8 +100,15 @@ function monitis_addon_activate() {
 				PRIMARY KEY ( `monitor_id` )
 				);";
 	$result = mysql_query($query);	
+
+	$query = "CREATE TABLE `mod_monitis_contact_group` (
+				`group_id` INT NOT NULL,
+				`notification_rule` TEXT,
+				PRIMARY KEY ( `group_id` )
+				);";
+	$result = mysql_query($query);	
 	
-	$result = mysql_query("DROP TABLE IF EXISTS `mod_monitis_server_available` ");
+	//$result = mysql_query("DROP TABLE IF EXISTS `mod_monitis_server_available` ");
 
 	MonitisConf::setupDB();
 	
@@ -119,13 +121,14 @@ function monitis_addon_deactivate() {
 
 	$query = "DROP TABLE  `mod_monitis_client`, `mod_monitis_ext_monitors`, `mod_monitis_int_monitors`";
 	$result = mysql_query($query);
-	$query = "DROP TABLE `mod_monitis_product`, `mod_monitis_product_monitor`, `mod_monitis_addon`, `mod_monitis_server_available`";
+	$query = "DROP TABLE `mod_monitis_product`, `mod_monitis_product_monitor`, `mod_monitis_addon`, `mod_monitis_contact_group`";
 	$result = mysql_query($query);
 	
 	return array('status'=>'success','description'=>'Monitis addon deactivation successful');
 }
 
 function monitis_addon_output($vars) {
+//	logActivity("MONITIS ADMIN LOG *************** <b>monitis_addon_output</b>  vars = ". json_encode($vars));
 	MonitisRouter::route();
 }
 

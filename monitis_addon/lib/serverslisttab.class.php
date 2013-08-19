@@ -50,15 +50,29 @@ class serversListTab {
 
 				$agnt = $agents[$i];
 				$memory = null;
+				$cpu = null;
+
+				if( isset($agnt['cpu']) ) {
+					$status_associate = 'no';
+					if( $this->_isWhmcsMonitor( 'monitor_id', $agnt['cpu']['id'], $this->whmcs_int ) ) 
+						$status_associate = 'yes';
+					$cpu = array( 'id'=>$agnt['cpu']['id'], 'status'=>$agnt['cpu']['status'], 'associate'=> $status_associate );
+				}
+//_dump($agnt['memory']);
+
 				if( isset($agnt['memory']) ) {
-					$memory = array( 'id'=>$agnt['memory']['id'], 'status'=>$agnt['memory']['status'] );
+					$status_associate = 'no';
+					if( $this->_isWhmcsMonitor( 'monitor_id', $agnt['memory']['id'], $this->whmcs_int ) ) 
+						$status_associate = 'yes';
+					$memory = array( 'id'=>$agnt['memory']['id'], 'status'=>$agnt['memory']['status'], 'associate'=> $status_associate );
 				}
 				
 				$info = array(
 					'status'=>$agnt['status'],
-					'cpu' => array( 'id'=>$agnt['cpu']['id'], 'status'=>$agnt['cpu']['status'] ),
+					'cpu' => $cpu,
 					'memory' => $memory
 				);
+				
 				if( isset($agnt['drives'] ) ) {
 					$drives = $agnt['drives'];
 					$info['drive'] = array();
@@ -155,7 +169,6 @@ class serversListTab {
 		return $pings;*/
 	}
 
-	
 	private function init_all_servers() {
 
 		for( $i=0; $i<count($this->whmcs_all_servers); $i++) {
@@ -171,18 +184,18 @@ class serversListTab {
 			if( $ext && $ext['ping'] ) {
 				$monitors['ping'] = $ext['ping'];
 			}
-
 			if( $this->whmcs_int ) {
 				$int = $this->__monitor( $server['id'], $this->whmcs_int );
 				if( $int && isset($int['agent_id']) ) {
 
 					$info = $this->getInternalMonitors( $int['agent_id'] );
+
 					if( $info ) {
 						$this->whmcs_all_servers[$i]['agent_id'] = $int['agent_id'];
 						$this->whmcs_all_servers[$i]['agent_status'] = $info['status'];
 						$monitors['cpu'] = $info['cpu'];
-						$monitors['memory'] = $info['memory'];
 						$monitors['drive'] = $info['drive'];
+						$monitors['memory'] = $info['memory'];
 					}
 				}
 			}
@@ -211,7 +224,10 @@ class serversListTab {
 			}
 //_logActivity("whmcs_all_servers ****<b>servers_list_ext</b>" . json_encode($this->whmcs_ext));
 			// init internal monitors
+
 			$this->whmcs_int = $oWhmcs->servers_list_int( $srvrsIds);
+//echo "************************** $srvrsIds<br>";
+//_dump( $this->whmcs_int );
 			if( $this->whmcs_int ) {
 				$agents = $this->getAgents();
 				$agentIds = implode(',', $agents );

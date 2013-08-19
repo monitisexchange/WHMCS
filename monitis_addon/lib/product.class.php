@@ -1,14 +1,9 @@
 <?
-define('MONITIS_FIELD_WEBSITE', 'URL/IP');
-define('MONITIS_FIELD_MONITOR', 'Monitor type');
-define('MONITIS_MONITOR_TYPES', 'http,https,ping');
 
 class WHMCS_product_db extends whmcs_db {
 	private $client_id = null;
 	
-	public function __construct ( ) {
-		//$this->client_id = $client_id;
-	}
+	public function __construct ( ) {}
 
 	protected function getFields( $pids) {
 		$sql = 'SELECT * FROM tblcustomfields  WHERE relid in ('.$pids.')';
@@ -37,8 +32,7 @@ class WHMCS_product_db extends whmcs_db {
 		$sql = 'DELETE FROM tblcustomfields WHERE id in ('.$pids.')';
 		return $this->query_del( $sql );
 	}
-//$clientSQL = "SELECT * FROM `tblclients`, `tblcustomfields`, ` tblcustomfieldsvalues` 
-//WHERE `tblcustomfields.id` = '1' AND `tblcustomfieldsvalues.fieldid` = '1' AND `tblcustomfieldsvalues.value` != ''";
+
 	protected function products() {
 		$sql = 'SELECT * FROM mod_monitis_product';
 		return $this->query( $sql );
@@ -74,16 +68,25 @@ class WHMCS_product_db extends whmcs_db {
 		if( $vals ){ return $vals[0];
 		} else { return null; }
 	}
-
-
-	protected function serviceByOrderId($orderid) {
 /*
-		$sql = 'SELECT ordernum, tblorders.userid as user_id, ipaddress, tblorders.status as orderstatus,
-		orderid, tblhosting.id as serviceid, domain, domainstatus
-		FROM tblorders
-		LEFT JOIN tblhosting on (tblhosting.orderid = tblorders.id )
-		WHERE tblorders.id='.$orderid;
+	protected function productMonitorByOrder($user_id, $orderid) {
+		$sql = 'SELECT * FROM mod_monitis_product_monitor 
+		WHERE user_id='.$user_id.' AND orderid='.$orderid;
+		$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }
+	}
 */
+	protected function monitorByOrderId( $orderid ) {
+		$sql = 'SELECT * FROM mod_monitis_product_monitor 
+		WHERE orderid='.$orderid;
+		$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }
+	}
+	
+	protected function serviceByOrderId($orderid) {
+
 		$sql = 'SELECT ordernum, tblorders.userid as user_id, tblorders.status as orderstatus,
 		orderid, tblhosting.id as serviceid
 		FROM tblorders
@@ -97,7 +100,6 @@ class WHMCS_product_db extends whmcs_db {
 	
 	protected function serviceById($serviceid) {
 		$sql = 'SELECT * FROM tblhosting WHERE id='.$serviceid;
-		//return $this->query( $sql );
 		$vals = $this->query( $sql );
 		if( $vals ){ return $vals[0];
 		} else { return null; }
@@ -105,7 +107,6 @@ class WHMCS_product_db extends whmcs_db {
 
 	protected function addonServiceByOrderId($orderid) {
 		$sql = 'SELECT * FROM tblhostingaddons WHERE orderid='.$orderid;
-		//return $this->query( $sql );
 		$vals = $this->query( $sql );
 		if( $vals ){ return $vals[0];
 		} else { return null; }
@@ -116,16 +117,13 @@ class WHMCS_product_db extends whmcs_db {
 		FROM tblhostingaddons 
 		LEFT JOIN tblhosting on (tblhosting.id = tblhostingaddons.hostingid )
 		WHERE tblhostingaddons.orderid='.$orderid;
-		//return $this->query( $sql );
 		$vals = $this->query( $sql );
 		if( $vals ){ return $vals[0];
 		} else { return null; }
 	}
 	
 	protected function orderById($orderid) {
-		//$sql = 'SELECT id, ordernum, userid, status, ipaddress FROM tblorders WHERE id='.$orderid;
 		$sql = 'SELECT id, ordernum, userid, status FROM tblorders WHERE id='.$orderid;
-		//return $this->query( $sql );
 		$vals = $this->query( $sql );
 		if( $vals ){ return $vals[0];
 		} else { return null; }
@@ -137,9 +135,6 @@ class WHMCS_product_db extends whmcs_db {
 			LEFT JOIN tblorders on ( tblorders.id = tblhosting.orderid ) 
 			WHERE tblhosting.id='.$serviceid;
 		return $this->query( $sql );
-		//$vals = $this->query( $sql );
-		//if( $vals ){ return $vals[0];
-		//} else { return null; }
 	}
 	
 	protected function _deactiveMonitorByOrder($orderid) {
@@ -151,7 +146,6 @@ class WHMCS_product_db extends whmcs_db {
 	///////////////////////////////////////////
 	public function addonById($addonid) {
 		$sql = 'SELECT * FROM mod_monitis_addon WHERE addon_id='.$addonid;
-		//return $this->query( $sql );
 		$vals = $this->query( $sql );
 		if( $vals ){ return $vals[0];
 		} else { return null; }
@@ -164,9 +158,6 @@ class WHMCS_product_db extends whmcs_db {
 			LEFT JOIN tblorders on ( tblorders.id = tblhostingaddons.orderid ) 
 			WHERE tblhostingaddons.addonid='.$addonid;
 		return $this->query( $sql );
-	//	$vals = $this->query( $sql );
-	//	if( $vals ){ return $vals[0];
-	//	} else { return null; }
 	}
 
 	protected function addonServiceById( $serviceid ) {
@@ -190,21 +181,11 @@ class WHMCS_product_db extends whmcs_db {
 		WHERE hostingid='.$serviceid.' AND tblhostingaddons.status="Active"';
 		//WHERE hostingid='.$serviceid;
 		return $this->query( $sql );
-	/*	$vals = $this->query( $sql );
-		if( $vals ){ return $vals[0];
-		} else { return null; }*/
 	}
 	
 	protected function isMonAddon($addonid) {
 	
 		$sql = 'SELECT * FROM mod_monitis_addon WHERE addon_id='.$addonid;
-		
-/*		$sql = 'SELECT tblhostingaddons.addonid, mod_monitis_addon.settings, mod_monitis_addon.type 
-		FROM tblhostingaddons 
-		LEFT JOIN mod_monitis_addon on ( mod_monitis_addon.addon_id = tblhostingaddons.addonid ) 
-		WHERE hostingid='.$serviceid.' AND tblhostingaddons.status="Active"';*/
-		//WHERE hostingid='.$serviceid;
-		//return $this->query( $sql );
 		$vals = $this->query( $sql );
 		if( $vals ){ return $vals[0];
 		} else { return null; }
@@ -216,7 +197,6 @@ class WHMCS_product_db extends whmcs_db {
 		LEFT JOIN tblhosting on (tblhosting.id = tblhostingaddons.hostingid )
 		WHERE tblhostingaddons.id in ('.$ids.')';
 		return $this->query( $sql );
-
 	}
 }
 
@@ -256,17 +236,13 @@ class productClass extends WHMCS_product_db {
 	}	
 	public function getproducts() {
 
-
 		$products = $this->allProducts();
 		$whmcsProducts = $this->products();
 
 		if( $products ) {
 			$pIds = $this->_idsList( $products, 'id' );
 			$pIds_str = implode(",", $pIds);
-			//$fields = $oWHMCS->getFields($pIds_str);
 			$fields = $this->getFields($pIds_str);
-//echo "****** tblcustomfields <br>";
-//_dump( $fields );
 			for($i=0; $i<count($products); $i++) {
 				
 				$productId = $products[$i]['id'];
@@ -291,14 +267,17 @@ class productClass extends WHMCS_product_db {
 				if( $whmcsItem ) {
 					$products[$i]['isWhmcsItem'] = true;
 					$products[$i]['settings'] = $whmcsItem['settings'];
+					$products[$i]['order_behavior'] = $whmcsItem['order_behavior'];
+                                        $products[$i]['notification_rule'] = $whmcsItem['notification_rule'];
 				} else {
 					$products[$i]['isWhmcsItem'] = false;
 					$products[$i]['settings'] = '';
+					$products[$i]['order_behavior'] = '';
+                                        $products[$i]['notification_rule'] = '';
+                                                     
 				}
 				$products[$i]['customfields'] = $flds;
-
 			}
-//_dump( $products );			
 			return $products;
 		}
 		return null;
@@ -308,11 +287,11 @@ class productClass extends WHMCS_product_db {
 		$values = array('product_id'=>$pid, 'status'=>'active');
 		insert_query('mod_monitis_product', $values);
 	}
+	
 	public function deactivateProduct( $pid ) {
 
 		$this->deleteProduct( $pid );	
 	}
-	
 
 	public function updateField( $field_id, $values ) {
 		$where = array('id' => $field_id );
@@ -323,27 +302,18 @@ class productClass extends WHMCS_product_db {
 		$website_update = $settings['website'];
 		$where = array('id' => $website_id );
 		update_query('tblcustomfields',$website_update,$where);
-		
-//echo "****** website_update <br>";
-//_dump( $website_update );
-//_dump( $where );
+
 		$monType_update = $settings['monitor_type'];
 		$where = array('id' => $monType_id );
 		update_query('tblcustomfields', $monType_update, $where);		
 	}
 	
-        public function updateProductSettings( $pid,  $settings ) {
+     public function updateProductSettings( $pid,  $settings, $order_behavior, $notification_rule='' ) {
 				
-		$value = array( 'settings' => $settings);
+		$value = array( 'settings' => $settings, 'order_behavior'=>$order_behavior, 'notification_rule'=>$notification_rule);
 		$where = array('product_id' => $pid );
 		return update_query('mod_monitis_product', $value, $where);
 	}
-
-
-
-
-  
 }
-
 
 ?>

@@ -30,8 +30,6 @@ $old_drive = MonitisConf::$settings['drive'];
 
 $locationIds = $old_ping['locationIds'];
 
-//_dump($tpl);
-
 if (monitisPost('saveConfig')) {
 	
 	if( isset($_POST['locationIDs']) && !empty( $_POST['locationIDs']) ) {
@@ -69,16 +67,19 @@ if (monitisPost('saveConfig')) {
 	$newsets['drive'] = array(
 		'freeLimit'	=>	isset($_POST['freeLimit_drive']) ? intval($_POST['freeLimit_drive']) : $old_drive['freeLimit']
 	);
-	//$newsets['drive']['autocreate'] = (!isset($_POST['autocreate_drive']) ) ? 0 : 1;
+	/*//$newsets['drive']['autocreate'] = (!isset($_POST['autocreate_drive']) ) ? 0 : 1;
 	$newsets['drive']['autolink'] = (!isset($_POST['autolink_drive']) ) ? 0 : 1;
 	$newsets['drive']['available'] = (!isset($_POST['available_drive']) ) ? 0 : 1;
+	$newsets['drive']['suspendmsg'] = (!isset($_POST['suspendmsg_drive']) ) ? 0 : 1;*/
 	
-	$mtypes = array('ping','cpu','memory');
-	$mprops = array('autocreate','autolink','available');
-	
+	$mtypes = array('ping','cpu','memory','drive');
+	$mprops = array('autocreate','autolink','available','suspendmsg');
 	for($i=0; $i<count($mtypes); $i++){
 		for($p=0; $p<count($mprops); $p++){
-			$newsets[$mtypes[$i]][$mprops[$p]] = (!isset($_POST[$mprops[$p].'_'.$mtypes[$i]]) ) ? 0 : 1;
+			if( $mprops[$p] == 'suspendmsg' )
+				$newsets[$mtypes[$i]][$mprops[$p]] = (!isset($_POST[$mprops[$p].'_'.$mtypes[$i]]) ) ? 'Monitor suspended' : $_POST[$mprops[$p].'_'.$mtypes[$i]];
+			else
+				$newsets[$mtypes[$i]][$mprops[$p]] = (!isset($_POST[$mprops[$p].'_'.$mtypes[$i]]) ) ? 0 : 1;
 		}
 	}
 	
@@ -96,12 +97,12 @@ if (monitisPost('saveConfig')) {
 }
 
 $ping = MonitisConf::$settings['ping'];
-
 $cpu = MonitisConf::$settings['cpu'][$newAgentPlatform];
 $memory = MonitisConf::$settings['memory'][$newAgentPlatform];
 $drive = MonitisConf::$settings['drive'];
 
 
+//_dump($ping);
 MonitisApp::printNotifications(); 
 ?>
 <style>
@@ -160,16 +161,14 @@ $(document).ready(function(){
 
 						<table   bgcolor="#ffffff" width="100%">
 							<tr><td class="fieldlabel">Automate monitor creation:</td><td  class="fieldarea">
-								<input type="checkbox" name="autocreate_ping" value="ping" <?php if( $ping['autocreate'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher"  />
-							</td></tr>
+								<input type="checkbox" name="autocreate_ping" value="ping" <?php if( $ping['autocreate'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher" /></td></tr>
 							<tr><td class="fieldlabel">Link monitor:</td><td  class="fieldarea">
-								<input type="checkbox" name="autolink_ping" value="ping" <?php if( $ping['autolink'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher"  />
-							</td></tr>
-							
+								<input type="checkbox" name="autolink_ping" value="ping" <?php if( $ping['autolink'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher" /></td></tr>
 							<tr><td class="fieldlabel">Available to customer:</td><td class="fieldarea">
-								<input type="checkbox" name="available_ping" value="ping" <?php if( $ping['available'] > 0 ) echo 'checked=checked'; ?> class="monitortypeswitcher"  />
-							</td></tr>
-							
+								<input type="checkbox" name="available_ping" value="ping" <?php if( $ping['available'] > 0 ) echo 'checked=checked'; ?> class="monitortypeswitcher" /></td></tr>
+							<tr><td class="fieldlabel">Suspended monitor message:</td><td class="fieldarea">
+								<input type="text" name="suspendmsg_ping" value="<?=$ping['suspendmsg']?>" class="monitortypeswitcher" size="30" /></td></tr>
+								
 							<tr><td>&nbsp;</td><td class="fieldlabel"><hr /></td></tr>
 							
 							<tr><td class="fieldlabel">Interval:</td><td class="fieldarea">
@@ -250,6 +249,9 @@ if( $newAgentPlatform == 'LINUX' ) {
 							<tr><td class="fieldlabel">Available to customer:</td><td class="fieldarea">
 								<input type="checkbox" name="available_cpu" value="cpu" <? if( MonitisConf::$settings['cpu']['available'] > 0 ) echo 'checked=checked'; ?> class="monitortypeswitcher" /></td></tr>
 							
+							<tr><td class="fieldlabel">Suspended monitor message:</td><td class="fieldarea">
+								<input type="text" name="suspendmsg_cpu" value="<?=MonitisConf::$settings['cpu']['suspendmsg']?>" class="monitortypeswitcher" size="30" /></td></tr>
+							
 							<tr><td>&nbsp;</td><td class="fieldlabel"><hr /></td></tr>
 							
 							<tr><td class="fieldlabel" width="50%">User Max:</td><td class="fieldarea" width="50%"><input type="text" size="5" name="usedMax" value="<?=$cpu['usedMax']?>" /></td></tr>
@@ -268,6 +270,9 @@ if( $newAgentPlatform == 'LINUX' ) {
 							<tr><td class="fieldlabel">Available to customer:</td><td class="fieldarea">
 								<input type="checkbox" name="available_memory" value="memory" <?php if( MonitisConf::$settings['memory']['available'] > 0 ) echo 'checked=checked'; ?> class="monitortypeswitcher"  />
 							</td></tr>
+							<tr><td class="fieldlabel">Suspended monitor message:</td><td class="fieldarea">
+								<input type="text" name="suspendmsg_memory" value="<?=MonitisConf::$settings['memory']['suspendmsg']?>" class="monitortypeswitcher" size="30" /></td></tr>
+								
 							<tr><td>&nbsp;</td><td class="fieldlabel"><hr /></td></tr>
 							<tr><td class="fieldlabel" width="50%">Free memory limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit" value="<?=$memory['freeLimit']?>" />&nbsp;MB</td></tr>
 							<tr><td class="fieldlabel">Free swap limit:</td><td class="fieldarea"><input type="text" size="5" name="freeSwapLimit" value="<?=$memory['freeSwapLimit']?>" />&nbsp;MB</td></tr>
@@ -286,6 +291,9 @@ if( $newAgentPlatform == 'LINUX' ) {
 							<tr><td class="fieldlabel">Available to customer:</td><td class="fieldarea">
 								<input type="checkbox" name="available_drive" value="drive" <?php if( $drive['available'] > 0 ) echo 'checked=checked'; ?> class="monitortypeswitcher"  />
 							</td></tr>
+							<tr><td class="fieldlabel">Suspended monitor message:</td><td class="fieldarea">
+								<input type="text" name="suspendmsg_drive" value="<?=$drive['suspendmsg']?>" class="monitortypeswitcher" size="30" /></td></tr>
+
 							<tr><td>&nbsp;</td><td class="fieldlabel"><hr /></td></tr>
 							<tr><td class="fieldlabel" width="50%">Free memory limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit_drive" value="<?=$drive['freeLimit']?>" />&nbsp;GB</td></tr>
 							<tr><td class="fieldlabel">&nbsp;</td><td class="fieldarea">&nbsp;</td></tr>

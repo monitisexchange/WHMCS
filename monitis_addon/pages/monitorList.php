@@ -5,10 +5,10 @@ function monitis_embed_externalSnapshot( $monitor_type, $ext_ids ) {
 	$params = array('moduleType'=>$monitor_type);
 	$resp = MonitisApi::getWidget($params);
 	//$arr = json_decode($resp, true);
-	
-	$publicKey = $resp['data'];
+	if( $resp && isset($resp['data']) ) {
+	//$publicKey = $resp['data'];
 	return '<script type="text/javascript">
-monitis_embed_module_id="'.$publicKey.'"
+monitis_embed_module_id="'.$resp['data'].'"
 monitis_embed_module_width="500";
 monitis_embed_module_height="350";
 monitis_embed_module_readonly="false";
@@ -17,6 +17,9 @@ monitis_embed_module_monitorIds="'.$ext_ids.'"; /*filter results by testIds*/
 </script>
 <script type="text/javascript" src="https://api.monitis.com/sharedModule/shareModule.js"></script>
 <noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
+	} else {
+		return '<div style="width:500px;text-align:center">No data to display</div>';
+	}
 }
 
 /////////////////
@@ -25,11 +28,10 @@ function monitis_embed_internalSnapshot( $monitor_type, $ids ) {
 	$params = array('moduleType'=>$monitor_type);
 	$resp = MonitisApi::getWidget($params);
 	//$arr = json_decode($resp, true);
-	
-	$publicKey = $resp['data'];
-	
+	if( $resp && isset($resp['data']) ) {
+	//$publicKey = $resp['data'];
 	return '<script type="text/javascript">
-monitis_embed_module_id="'.$publicKey.'";
+monitis_embed_module_id="'.$resp['data'].'";
 monitis_embed_module_width="500";
 monitis_embed_module_height="350";
 monitis_embed_module_readonly="false";
@@ -37,7 +39,9 @@ monitis_embed_module_monitorIds="'.$ids.'"; /*filter results by testIds*/
 </script>
 <script type="text/javascript" src="https://api.monitis.com/sharedModule/shareModule.js"></script>
 <noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
-	
+	} else {
+		return '<div style="width:500px;text-align:center">No data to display</div>';
+	}
 }
 
 class monitisSnapshotsClass {

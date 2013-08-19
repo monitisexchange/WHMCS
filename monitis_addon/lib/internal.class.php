@@ -125,6 +125,8 @@ class internalClass {
 	}
 	/////////////////////////////
 	public function associateDrives( $whmcs_drives, $agentInfo, $serverID ) {
+	
+		$result = array("status"=>"error","msg"=>"No agent or agent is stopped");
 		if( $agentInfo && isset($agentInfo['drives']) ) {
 			$agentId = $agentInfo['agentId'];
 			$monDrives = $agentInfo['drives'];
@@ -137,9 +139,10 @@ class internalClass {
 					} 
 				}
 			}
-			if($ids && count($ids) > 0 ) {
+			$cnt = count($ids);
+			if($ids && $cnt > 0 ) {
 			
-				for($i=0; $i<count($ids); $i++) {
+				for($i=0; $i<$cnt; $i++) {
 					$monitorID = $ids[$i];
 					$pubKey = MonitisApi::monitorPublicKey( array('moduleType'=>'drive','monitorId'=>$monitorID) );
 
@@ -153,10 +156,16 @@ class internalClass {
 						"publickey"=> $pubKey
 					);
 					insert_query('mod_monitis_int_monitors', $values);
+					
 				}
+				$result["status"] = 'ok';
+				$result["msg"] = 'Add '.$cnt.' drive(s)';
+			} else {
+				$result["status"] = 'warning'; 
+				$result["msg"] = 'No drive monitor for add';
 			}
 		}
-		return null;
+		return $result;
 	}
 }
 ?>

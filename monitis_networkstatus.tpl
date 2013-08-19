@@ -24,6 +24,8 @@
 {/if}
 
 {php}
+require_once('modules/addons/monitis_addon/config.php');
+require_once('modules/addons/monitis_addon/lib/functions.php');
 require_once('modules/addons/monitis_addon/lib/whmcs.class.php');
 require_once('modules/addons/monitis_addon/lib/client.class.php');
 
@@ -44,27 +46,32 @@ if( isset($userid) && $userid > 0) {
 	$monitors = $oClient->clientMonitors( $userid, $adminuser );
 
 	logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus monitors = ". json_encode($monitors));
-
+	
 	if( $monitors && $monitors["status"] == 'ok') {
 		echo '<section class="monitis_monitors">';
 		$mons = $monitors["data"];
 		for( $i=0; $i<count($mons); $i++){
 			$item = $mons[$i];
-			echo '<h3>'.$item["name"].'</h3><figure>';
-	logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus publickey = ".$item["publickey"]);
-			echo $oClient->embed_module( $item["publickey"] );
-			$int = $item["internals"];
+			echo '<h3>'.$item["groupname"].' - '.$item["name"].'</h3><figure>';
+			if( isset($item['external']) && count($item['external']) > 0 ) {
+logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus publickey = ".$item['external'][0]['publickey']);
+				echo monitis_embed_module( $item['external'][0]['publickey'], 770, 350 );
+			}
+
+			$int = $item["internal"];
 			if( isset($int) && count($int) > 0 ){
 				for( $j=0; $j<count($int); $j++){
-					echo $oClient->embed_module( $int[$j] );
+logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus publickey = ".$int[$j]['publickey'] );
+					echo monitis_embed_module( $int[$j]['publickey'], 770, 350 );
 				}
 			}
 			echo "</figure>";
 		}
 		echo "</section>";
 	} else {
-		echo '<div>'.$monitors["msg"].'</div>';
+			echo '<div>'.$monitors["msg"].'</div>';
 	}
+
 }
 {/php}
 

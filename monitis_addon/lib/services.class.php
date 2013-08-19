@@ -13,6 +13,7 @@ class servicesClass extends WHMCS_product_db {
 		$product["tag"] = $product['user_id'] . '_whmcs';
 		$result = array(
 			"status" => 'ok',
+			"monitor_id" => 0,
 			"monitor_type" => $monitor_type
 		);
 		
@@ -66,6 +67,7 @@ class servicesClass extends WHMCS_product_db {
 						//MonitisApiHelper::addServerAvailable( $product['serverid'] );
 						
 						$result["status"] = 'ok';
+						$result["monitor_id"] = $monitor_id;
 						$result["msg"] = 'Monitor successfully created';
 					} else {
 						$result["status"] = 'warning';
@@ -127,7 +129,8 @@ class servicesClass extends WHMCS_product_db {
 							$type = $monitor['type'];
 							$info['monitor_type'] = $type;
 							$info['settings'] = $monitor['settings'];
-
+							$info['order_behavior'] = $monitor['order_behavior'];
+							
 							$info['serverid'] = $service['serverid'];
 							$info['pid'] = $addonid;
 							$info['product_type'] = 'addon';
@@ -181,6 +184,7 @@ _logActivity("product_by_order: addon **** orderid = $orderid  addonid -- $addon
 _logActivity("product_by_order: product **** orderid = $orderid  pid -- $pid");
 							if( $monitor ) {
 								$info['settings'] = $monitor['settings'];
+								$info['order_behavior'] = $monitor['order_behavior'];
 								$flds = $this->productFields( $pid );
 								$monitor_types = '';
 								if( $flds ) {
@@ -360,7 +364,12 @@ _logActivity("product_by_order: product **** orderid = $orderid  pid -- $pid");
 		}
 		return $all;
 	}
-
+	
+/*	public function productMonitor( $product ) {
+		return $this->productMonitorByOrder( $product['user_id'], $product['orderid']);
+	}
+*/
+	
 	public function automateAddMonitorsByAddonid( $addonid=0) {
 		
 		$adminuser = MonitisConf::getAdminName();
@@ -377,5 +386,45 @@ _logActivity("createMonitor by AcceptOrder hook: **** result = ". json_encode( $
 			}
 		}
 
+	}
+	/////////////////////////////
+	
+	public function productMonitorByOrderId( $orderid ) {
+		$monitor = $this->monitorByOrderId( $orderid );
+		if( $monitor ) {
+			if( $monitor['type'] == 'addon' ) {
+				$product = $this->addonById($monitor['product_id']);
+			} else {
+				$product = $this->productById($monitor['product_id']);
+			}
+			if( $product ) {
+				if( isset($product['order_behavior']) && !empty($product['order_behavior']) ) {
+					$product['order_behavior'] = json_decode( $product['order_behavior'], true);
+				}
+				$monitor["product"] = $product;
+				return $monitor;
+				
+			} else return null;
+		} else return null;
+	}
+	//
+	public function noActiveOrder( $orderid ) {
+		
+		$productMonitor = $this->productMonitorByOrderId( $orderid );
+		if( $productMonitor ) {
+			$order_behavior = $productMonitor['product']['order_behavior'];
+			$action = $order_behavior['active'];
+			$monitor_id = $productMonitor['monitor_id'];
+			switch($action) {
+				case 'suspend':
+					$resp = MonitisApi::suspendExternal( $monitor_id );		// $productMonitor["monitor_id"]
+				break;		
+				case 'delete':
+					$this->deactiveMonitorByOrder( $orderid );
+				break;
+
+			}
+		_dump($productMonitor);
+	}	
 	}
 }

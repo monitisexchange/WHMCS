@@ -2,9 +2,9 @@
 class MonitisApi {
 	//static $endpoint = 'https://api.monitis.com/api';
 
-	static $endpoint = 'http://173.192.34.112:8080/api';
+	//static $endpoint = 'http://173.192.34.112:8080/api';
 	//static $endpoint = 'http://prelive.monitis.com/api';
-
+	static $endpoint = MONITISAPIURL;
 	
 	static function authToken() {
 		//$resp = self::requestGet('authToken', array());
@@ -403,10 +403,12 @@ _logActivity("requestPost **** action = <b>$action</b><p>$query</p><p>$result</p
 	static function getAgent( $agentKey ) {
 		$params = array(
 			'keyRegExp'=>$agentKey
+			//,'nocache'=>true
 		);
 		return self::requestGet('agents', $params);
 	}
 */
+
 	static function getAgent( $agentKey ) {
 
 		//$params['version'] = '2';
@@ -423,6 +425,7 @@ _logActivity("requestGet **** action = <b>agents</b><p>$url</p><p>$result</p>");
 		$json = json_decode($result, true);
 		return $json;
 	}
+
 	//static function getAgentSnapshot($agentKey, $types) {
 	static function getAgentSnapshot( $agentKey='' ) {
 		$params = array( 'nocache'=>'true' );
@@ -467,6 +470,11 @@ _logActivity("requestGet **** action = <b>agents</b><p>$url</p><p>$result</p>");
        
 	static function getContactGroupList() {         
            return self::requestGet('contactGroupList', array());
+	}
+        
+        static function getContactsByGroupID($contactGroupId) {   
+            $params['contactGroupId']=$contactGroupId;
+           return self::requestGet('contactsListByContactGroup', $params);
 	}
 
 	static function editContactGroup($oldName, $newName) {     

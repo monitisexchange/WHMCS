@@ -5,22 +5,25 @@ $oSrvrs = new serversListTab();
 if ( isset( $_POST['create_NewMonitors']) && $_POST['create_NewMonitors'] > 0 ) {
 	if( isset( $_POST['serverId']) ) {
 		$servers = array_map( "intval", $_POST['serverId'] );
-
 		
 		$srv_ids = $oSrvrs->_idsList( $servers, '' );
 		$srv_ids_str = implode(",", $srv_ids);
 
 		$oWhmcs = new WHMCS_class( MONITIS_CLIENT_ID );
 		$srvs = $oWhmcs->servers_list($srv_ids_str);
-		$ext = $oWhmcs->servers_list_ext($srv_ids_str);
-
-		for($i=0; $i<count($srvs); $i++) {
 		
-			if( !$oSrvrs->isMonitor( $srvs[$i]['id'], $ext) ) {
-				$rep = MonitisApiHelper::addAllDefault( MONITIS_CLIENT_ID, $srvs[$i] );
+		$ext = $oWhmcs->servers_list_ext($srv_ids_str);
+		$int = $oWhmcs->servers_list_int($srv_ids_str);
+		$whmcs = array( 'ext'=>$ext, 'int'=>$int );
+		for($i=0; $i<count($srvs); $i++) {
+			$resp = MonitisApiHelper::addAllDefault( MONITIS_CLIENT_ID, $srvs[$i], $whmcs );
+			
+//echo "******** ". $srvs[$i][name]." ****** ".json_encode($resp)."<br>";
+		/*	if( !$oSrvrs->isMonitor( $srvs[$i]['id'], $ext) ) {
+				$resp = MonitisApiHelper::addAllDefault( MONITIS_CLIENT_ID, $srvs[$i] );
 			} else {
 				MonitisApp::addWarning("Server {$srvs[$i][name]} has a monitor.");
-			}
+			}*/
 		}
 	} else {
 		MonitisApp::addWarning("The server is not selected.");
@@ -249,7 +252,7 @@ $('document').ready(function(){
 						$title = 'active';
 					} else {
 						$stl = 'closed';
-						$title = '***';
+						$title = 'NOK';
 					}
 					
 					echo '&nbsp;<lable title="'.$title.'" class="label '.$stl.'" style="position:absolute;" id="drivesListId"><a class="label '.$stl.'">drive</a>';

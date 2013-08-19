@@ -7,50 +7,14 @@ $addonId = monitisGetInt('addonid');
 $adminuser = MonitisConf::getAdminName();
 $oSrv = new servicesClass();
 $products = $oSrv->addonOrdersList( $addonId, $adminuser );
-
-/*
-if( $products && count($products) > 0) {
-
-	for($i=0; $i<count($products); $i++) {
-		$resp = $oSrv->createMonitor( $products[$i] );
-		$prdct = $resp["product"]["fullInfo"];
-		
-		
-		$str = '<table class="automate" border=0>
-		<tr><th>Order:</th><td>'. $resp["product"]["orderid"].' - '.$resp["product"]["ordernum"].'</td></tr>
-		<tr><th>Client:</th><td>'.$prdct["client"].'</td></tr>
-		<tr><th>Monitor type:</th><td>'.$resp["monitor_type"].'</td></tr>
-		<tr><th>Domain:</th><td>'. $prdct["domain"].'</td></tr>
-		<tr><th>Dedicated ip:</th><td>'. $prdct["dedicatedip"].'</td></tr>
-		<tr><th>Status:</th><td>'.$resp["msg"].'</td></tr>
-		</table>';
-		if( $resp["status"] == 'ok' )
-			MonitisApp::addMessage( $str );
-		elseif( $resp["status"] == 'error' )
-			MonitisApp::addError( $str );
-		else
-			MonitisApp::addWarning( $str );
-
-	}
-} else {
-	//MonitisApp::addWarning( 'You have not product with this addon for monitoring' );
-}
-//MonitisApp::printNotifications();
-*/
 ?>
 <style>
 .datatable td {
 	padding-left: 20px;
-	/*margin-top:20px;
-	text-align: center;*/
 }
 .datatable .msg{
 	font-weight:bold;
 	color:#000000;
-	/*line-height:14px;
-	padding: 3px 7px;
-	font-size:11px;
-	*/
 }
 </style>
 
