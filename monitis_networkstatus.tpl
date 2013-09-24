@@ -24,26 +24,18 @@
 {/if}
 
 {php}
-require_once('modules/addons/monitis_addon/config.php');
-require_once('modules/addons/monitis_addon/lib/functions.php');
-require_once('modules/addons/monitis_addon/lib/whmcs.class.php');
+require_once('modules/addons/monitis_addon/MonitisApp.php');
 require_once('modules/addons/monitis_addon/lib/client.class.php');
-
 $userid = $this->_tpl_vars['clientsdetails']['userid'];
 //echo "************ userid = $userid";
 
 
 if( isset($userid) && $userid > 0) {
-
-	$whmcs = new WHMCS_class();
-	$adm = $whmcs->getAdminName( 'monitis_addon', 'adminuser');
-
-	$adminuser = $adm['value'];
 		
 	logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus userid = $userid");
 
-	$oClient = new monitisclientClass();
-	$monitors = $oClient->clientMonitors( $userid, $adminuser );
+	$oClient = new monitisClientClass();
+	$monitors = $oClient->userNetworkStatus( $userid );
 
 	logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus monitors = ". json_encode($monitors));
 	
@@ -72,6 +64,8 @@ logActivity("MONITIS CLIENT LOG ***** monitis_networkstatus publickey = ".$int[$
 			echo '<div>'.$monitors["msg"].'</div>';
 	}
 
+} else {
+	echo '<div>Please, relogin!</div>';
 }
 {/php}
 
