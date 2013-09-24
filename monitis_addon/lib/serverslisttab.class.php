@@ -155,6 +155,7 @@ class serversListTab {
 			$info = $this->extStatus( $this->whmcs_ext[$i]['monitor_id'], $extShots );
 			$this->whmcs_ext[$i]['ping'] = $info;
 		}
+//_dump($this->whmcs_ext);
 		
 /*		$pings = array();
 		for( $i=0; $i<count($extShots); $i++) {

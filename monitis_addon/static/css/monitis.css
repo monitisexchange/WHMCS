@@ -95,11 +95,10 @@ input.monitisFormError {
 .fieldlabel {
 	font-weight:bold;
 }
+
 .section_block {
 	border: 1px solid #ccc; 
 	padding: 20px 5px; 
 	margin: 2px; 
 	text-align: left;
 }
-
-

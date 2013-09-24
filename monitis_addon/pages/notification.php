@@ -1,99 +1,89 @@
 <?php
-$oWHMCS = new WHMCS_class(MONITIS_CLIENT_ID);
-//$monitiAdminList1 = MonitisApi::getContacts();
- 
 
-$action = monitisPost('action');
-
+$oWHMCS = new notificationsClass();
+$action = monitisPost('actiontype');
 
 if ($action) {
 
-    switch ($action) {
-        case 'activate':
-            $id = isset($_POST["id"]) ? $_POST["id"] : '';
-            $account = isset($_POST["email"]) ? $_POST["email"] : '';
-
-            if ($id != '') {
-                $adminList_test = $oWHMCS->adminList_test($id);
-                $contact = json_decode($adminList_test, true);
-
-                foreach ($contact as $arr) {
-
-                    MonitisApi::addContactToGroup($arr['firstname'], $arr['lastname'], $account);
-                }
-            }
-            break;
-        case 'deactivate':
-            $account = isset($_POST["email"]) ? $_POST["email"] : '';
-            if ($account != '') {
-                foreach ($monitiAdminList1 as $data) {
-                    if ($data['contactAccount'] === $account) {
-                        $contactId = $data['contactId'];
-                        $contactType = $data['contactType'];
-
-                        MonitisApi::deleteContact($contactId, $account, $contactType);
-                    }
-                }
-            }
-            break;
-    }
+    switch ($action) {      
+           
+       case 'addGroup':
+              $new_group = isset($_POST["new_group"]) ? $_POST["new_group"] : '';
+            
+            if($new_group){
+                 $resp=MonitisApi::addContactGroup(1, $new_group); 
+                
+               if($resp["error"]){
+                    MonitisApp::addWarning("The group with this name already exists");              
+               }                
+            }else{
+                 MonitisApp::addWarning("Enter group name");
+            }             
+            break; 
+       case 'Delete':
+             $group_name = isset($_POST["group_name"]) ? $_POST["group_name"] : '';
+             if($group_name){
+                MonitisApi::deleteContactGroup($group_name);
+             }
+             break; 
+      }
+      
 }
 
-$monitiAdminList = MonitisApi::getContacts();
-$adminList = $oWHMCS->adminList();
-
-for ($i = 0; $i < count($adminList); $i++) {
-    for ($j = 0; $j < count($monitiAdminList); $j++) {
-
-        if ($adminList[$i]['email'] === $monitiAdminList[$j]['contactAccount']) {
-
-            $adminList[$i]['deactive'] = 'deacitve';
-        }
-    }
-} 
+MonitisApp::printNotifications();
+$groupIds=$oWHMCS->getGruopIdList();
+$contactsByGroup = MonitisApi::getContactsByGroupID(implode(",", $groupIds));
+$whmscEmails=$oWHMCS->whmcsAdminEmailList();
 
 ?>
 
+ <form method="post" action="" >
+            <div style="float:left; height: 40px; ">
+                 <span class="fieldlabel" >Group name :</span>
+                 <span><input type="text" name="new_group" /></span>                 
+                 <span>
+                 <input type="hidden" name="actiontype" value="addGroup" >
+                 <input type="submit" name="add" value="Add Group"   />
+                 </span>
+            </div>
+  </form>
+<form method="post" action="" >
 <table class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3" style="text-align: left;">
-    <tr><th>Username</th><th>Email</th><th></th></tr>
-
-    <?php for ($i = 0; $i < count($adminList); $i++) { ?> 
-        <?php if (!$adminList[$i]['deactive']) { ?>
-            <form method="post" action="" >
-                <tr>
-                    <td>
-                        <input type="text" value="<?= $adminList[$i]['username']; ?>" name="username"  style="background:transparent; border:none;"  readonly/>
-                    </td>
-                    <td>  
-                        <input type="text" value="<?= $adminList[$i]['email']; ?>" name="email" size="70" style="background:transparent; border:none;" readonly/>
-                        <input type="hidden" name="id" value="<?= $adminList[$i]['id']; ?>" />
-                    </td> 
-
-                    <td>
-                        <input type="hidden" name="action" value="activate" />
-                        <input type="submit" value="Activate" onclick="this.form.action.value = 'activate';" class="btn-success"  />
-                    </td>
-
-                </tr>
-            </form>
-        <?php } else { ?>
-            <form method="post" action="">
-                <tr>
-                    <td>
-                        <input type="text" value="<?= $adminList[$i]['username']; ?>" name="username"  style="background:transparent; border:none;" readonly/>
-                    </td>
-                    <td>  
-                        <input type="text" value="<?= $adminList[$i]['email']; ?>" name="email" size="70" style="background:transparent; border:none;" readonly/>
-                        <input type="hidden" name="id" value="<?= $adminList[$i]['id']; ?>" />
-                    </td> 
-
-                    <td class="center">
-                        <input type="hidden" name="action" value="deactivate" />
-                        <input type="submit" value="Deactivate" onclick="this.form.action.value = 'deactivate';" class="btn-danger"  />
-                    </td>
-
-                </tr>
-            </form>
-        <?php } ?>   
-    <?php } ?>
+            <tr>
+                <th width="20%" >Contact Groups </th>
+                <th width="20%">Group Contacts</th>     
+                <th>&nbsp;</th>
+            </tr>
+     <? for($i=0; $i<count($contactsByGroup); $i++){  ?>    
+            <tr>             
+                <td><input type="text" class="group_name" name="group_name" value="<?=$contactsByGroup[$i]['contactGroupName'] ?>" readonly  /> </td>          
+                <td > 
+                   <?
+                  
+                   foreach($contactsByGroup[$i]['contacts'] as $contact ){ 
+                            if(in_array($contact['account'], $whmscEmails)){?>                         
+                             <div><?=$contact['name'] ?></div>       
+                           <? } }?>                      
+                      <? 
+                      $notWhmcsAdmins=$oWHMCS->notWhmcsAdmins($contactsByGroup[$i]['contactGroupId'] );
+                      for($j=0; $j<count($notWhmcsAdmins); $j++){ ?>
+                                 <div style="color:#669999"><?=$notWhmcsAdmins[$j] ?></div>  
+                      <? } ?>
+                </td>    
+                <td align="center" >        
+                <span><a href="<?php echo MONITIS_APP_URL ?>&monitis_page=contactGroup&group_id=<?=$contactsByGroup[$i]['contactGroupId']?>"> <input type="button" value="Edit" /></a></span>
+                <input type="hidden" name="actiontype" value="Delete" />
+                <span><input type="submit" value="Delete"  class="btn-danger"/></span>
+                
+                </td>
+            </tr>     
+     <? } ?>
+     
 </table>
+</form>
+<style>
+    .group_name{
+        border:none;
+        background:transparent;
+    }
+</style>

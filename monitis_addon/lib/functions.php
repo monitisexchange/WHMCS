@@ -26,26 +26,28 @@ _dump($vObj);
 }
 
 function m_log( $log_text, $title='', $filename=''){
-	$logPath = '/var/www/whmcs/modules/addons/monitis_addon/_logs/';
-	$file = 'log';
-	if( !empty($filename) ) $file = $filename;
-	$logFile = "$logPath$file.log";
-	$time = date ('Y-m-d H:i:s');
-	
-	$text = '';
-	if( is_array($log_text) ) {
-		//$text = json_encode($log_text);
-		$text = var_export($log_text, true);
-	} else {
-		$text = $log_text;
-	}
-	$string = "$time -|- $title -|- $text\r\n\n";
 
-	if (! $f = fopen ( $logFile, "a" )) return FALSE;
-	if (! fwrite ( $f, $string )) return FALSE;
-	fclose ( $f );
-	chmod($logFile, 0777);
-	return TRUE;
+	if( MONITIS_m_log_LOGGER ) {
+		$logPath = '/var/www/whmcs/modules/addons/monitis_addon/_logs/';
+		$file = 'log';
+		if( !empty($filename) ) $file = $filename;
+		$logFile = "$logPath$file.log";
+		$time = date ('Y-m-d H:i:s');
+		
+		$text = '';
+		if( is_array($log_text) ) {
+			//$text = json_encode($log_text);
+			$text = var_export($log_text, true);
+		} else {
+			$text = $log_text;
+		}
+		$string = "$time -|- $title -|- $text\r\n\n";
+
+		if (! $f = fopen ( $logFile, "a" )) return FALSE;
+		if (! fwrite ( $f, $string )) return FALSE;
+		fclose ( $f );
+		chmod($logFile, 0777);
+	}
 }
 
 function _logActivity($str) {
@@ -67,6 +69,7 @@ function monitisPostInt($varName, $default = 0) {
 	return isset($_POST[$varName]) ? (int)$_POST[$varName] : $default;
 }
 
+
 function monitis_embed_module( $publicKey, $width, $height ) {
 	
 
@@ -83,7 +86,29 @@ function monitis_embed_module( $publicKey, $width, $height ) {
 	monitis_embed_module_detailedMsg="Error mesaage!!!!!!!!!!!!!";
 	</script>
 	<script type="text/javascript" src="'.MONITISAPIURL_JS.'/sharedModule/shareModule.js"></script>
-	<noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
+	<noscript>...</noscript>';
+// Please enable JavaScript to see the report!
 }
+
+/*
+function groupNameByGroupId( $alertGroupId, & $groupList ) {
+	for($i=0; $i<count($groupList); $i++) {
+		if($groupList[$i]['id'] == $alertGroupId )
+			return $groupList[$i]['name'];
+	}
+	return '';
+}
+
+function groupTitleInit( $alertGroupId, & $groupList ) {
+	$max_len = 20;
+	$grouptitle = $groupname = 'no alert';
+	if($alertGroupId > 0 ) {
+		$groupname = groupNameByGroupId( $alertGroupId, $groupList  );
+		$grouptitle = (strlen($groupname) > $max_len ) ? substr($groupname, 0, $max_len) .'...' : $groupname;
+	}
+	$group = array( 'id'=>$alertGroupId, 'name'=>$groupname, 'title'=>$grouptitle );
+	return $group;
+}
+*/
 
 ?>

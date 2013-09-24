@@ -15,15 +15,15 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 			url: {
 				required: true,
 				urlNoProto: true
-			},
+			}/*,
 			timeout: {
 				required: true,
 				range: [1, 5000]
 			},
-		/*	tag: {
+			tag: {
 				required: true,
 				noSpace: true
-			},*/
+			},
 			freeLimit: {
 				number: true,
 				range: [1, 10000]
@@ -48,21 +48,21 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 			url: {
 				required: "Please provide valid test url",
 				urlNoProto: "Url must not contain protocol"
-			},
+			}/*,
 			timeout: {
 				range: "Timeout can be set from 1 to 5000 miliseconds."
 			},
-		/*	tag: {
+			tag: {
 				required: "Tag name is required",
 				noSpace: "Tag name can not contain spaces",
-			},*/
+			},
 			freeLimit: {
 				number: "Please provide numeric value",
-				range: "Free Limit can be from 1 to 100",
+				range: "Free Limit can be from 1 to 10000",
 			},
 			freeSwapLimit: {
 				number: "Please provide numeric value",
-				range: "Free Swap Limit can be from 1 to 100",
+				range: "Free Swap Limit can be from 1 to 10000",
 			}/*,
 			responseSLA: {
 				number: "Please provide numeric value",

@@ -1,64 +1,126 @@
-<?php
-require_once ('../modules/addons/monitis_addon/lib/product.class.php');
+<?
+include 'incs/servicetop.php';
 
-$order_title = json_decode(MONITIS_ORDER_BEHAVIOR_TITLE, true);
-$default_order_behavior = json_decode(MONITIS_ORDER_BEHAVIOR, true);
+$allTypes = explode(",", MONITIS_EXTERNAL_MONITOR_TYPES);
 
-$locations = MonitisApiHelper::getExternalLocationsGroupedByCountry();
-foreach ($locations as $key => $value) {
-    if (empty($value))
-        unset($locations[$key]);
+class monitisProductClass extends whmcs_db {
+
+    public function __construct() {}
+	
+	public function updateField( $field_id, $values ) {
+		$where = array('id' => $field_id );
+		update_query('tblcustomfields',$values,$where);
+	}
+	
+	public function updateProductSettings( $pid,  $settings ) {
+		$value = array( 'settings' => $settings );
+		$where = array('product_id' => $pid );
+		return update_query('mod_monitis_product', $value, $where);
+	}
+	
+	public function activateProduct( $pid, $setting ) {
+		//$values = array('product_id'=>$pid, 'is_active'=>1, 'status'=>'active');
+		$values = array('product_id'=>$pid, 'settings' => $setting, 'status'=>'active');
+		insert_query('mod_monitis_product', $values);
+	}
+
+	public function deactivateProduct( $pid ) {
+		$sql = 'DELETE FROM mod_monitis_product WHERE product_id='.$pid;
+		return $this->query_del( $sql );
+		//$value = array( 'is_active' => 0 );
+		//update_query('mod_monitis_product', $value, $where);
+	}
+
+	//////////////////////////////////////////////////
+	
+	public $monitisProducts = null;
+	protected function monitisProducts() {
+		$sql = 'SELECT * FROM mod_monitis_product';
+		return $this->query( $sql );
+	}
+	
+	public function getFieldById( $fielId) {
+		$sql = 'SELECT fieldoptions FROM tblcustomfields  WHERE id='.$fielId;
+		//return $this->query( $sql );
+		$vals = $this->query( $sql );
+		if( $vals ){ return $vals[0];
+		} else { return null; }
+	}
+	
+	public function linkProduct( $pid ) {
+		if( $this->monitisProducts ) {
+			for($i=0; $i<count($this->monitisProducts); $i++) {
+				if( $this->monitisProducts[$i]['product_id'] == $pid )
+					return $this->monitisProducts[$i];
+			}
+		}
+		return null;
+	}
+	public function getCustomfields( & $flds) {
+		$customfields = array();
+		for( $i=0; $i<count($flds); $i++) {
+			if( $flds[$i]['name'] == MONITIS_FIELD_WEBSITE ) { 
+				$customfields['website'] = $flds[$i];
+			}
+			if( $flds[$i]['name'] == MONITIS_FIELD_MONITOR) {
+				$customfields['monitortype'] = $flds[$i];
+			}
+		}
+		return $customfields;
+	}
+	public function all_Products() {
+		$command = "getproducts";
+		$adminuser = 'admin'; //MonitisConf::getAdminName();
+		$values = array();
+		$results = localAPI($command,$values,$adminuser);
+
+		if( $results && $results['result'] == "success") {
+			$products = $results['products']['product'];
+			return $products;
+		}
+		return null;
+	}
+	
+	public function getproducts() {
+		$this->monitisProducts = $this->monitisProducts();
+		return $this->all_Products();
+	}
 }
 
-$oMProduct = new productClass();
-
-
+$oMProduct = new monitisProductClass();
 $action = monitisPost('action');
-$productId = monitisPostInt('productId');
-$monitor_type = monitisPost('monitor_type');
-
-//_dump($_POST);
-if ($action && $productId > 0) {
-    if ($_POST) {
-        $post = array();
-        foreach ($_POST as $key => $val) {
-            if (!empty($key)) {
-                $post[$key] = $val;
-            }
-        }
-
-        $loc = json_decode('[' . str_replace(array("[", "]"), "", $post["locationIDs"]) . ']', true);
+if ($action ) {
+	$productId = monitisPostInt('productId');
+	$monitorTypes = monitisPost('monitor_type');
+	if (!empty($monitorTypes)) {
+		
+		$locs = explode(',', $_POST["locationIDs"]);
+		$loc = array_map("intval", $locs);
         $timeout = monitisPostInt("timeout");
         if ($timeout > 5000) {
             $timeout = 5000;
         }
 
+		$setting = json_encode(MonitisConf::$settings);
+		$setting = json_decode( $setting, true );
+		$set = $setting['http'];
+		
+		$set['timeout'] = $timeout;
+		$set['interval'] = $_POST["interval"]; 
+		$set['locationIds'] = $loc;
+		$set['locationsMax'] = (!$_POST["locationsMax"]) ? 0 : $_POST["locationsMax"];
+		
+		$set['alertGroupId'] = $_POST["alertGroupId"];
+		$rule = $_POST['alertRules'];
+		$rule = str_replace("~", '"', $rule);
+		$set["alertRules"] = json_decode( $rule, true);
 
-        $set = MonitisConf::$settings;
 
-        $allTypes = explode(",", MONITIS_MONITOR_TYPES);
-        for ($i = 0; $i < count($allTypes); $i++) {
-
-            if ($allTypes[$i] != 'ping') {
-                $set[$allTypes[$i]]['timeout'] = intval($timeout / 1000);
-            } else {
-                $set[$allTypes[$i]]['timeout'] = $timeout;
-            }
-
-            $set[$allTypes[$i]]['interval'] = $post["interval"];
-            $set[$allTypes[$i]]['locationIds'] = $loc;
-            $set['max_locations'] = (!$post["max_locations"]) ? 0 : $post["max_locations"];
-        }
-
-        $new_setting = json_encode($set);
-        $order_behavior = json_encode(array('active' => $post['active'], 'pending' => $post['pending'], 'cancelled' => $post['cancelled'], 'fraud' => $post['fraud']));
-    }
-
-    if (!empty($monitor_type)) {
+		$new_setting = json_encode($set);
 
         $website_id = monitisPostInt('website_id');
         $monType_id = monitisPostInt('monType_id');
-        $monitor_type = implode(",", $monitor_type);
+        $monitor_types = implode(",", $monitorTypes);
 
         $website_values = array(
             'type' => 'product',
@@ -76,7 +138,7 @@ if ($action && $productId > 0) {
             'fieldname' => MONITIS_FIELD_MONITOR,
             'fieldtype' => 'dropdown',
             'description' => '',
-            'fieldoptions' => $monitor_type,
+            'fieldoptions' => $monitor_types,
             'required' => 'on',
             'showorder' => 'on',
             'showinvoice' => 'on'
@@ -87,18 +149,18 @@ if ($action && $productId > 0) {
 
                 $oMProduct->updateField($website_id, $website_values);
                 $oMProduct->updateField($monType_id, $monitor_values);
-                $oMProduct->activateProduct($productId);
-                $oMProduct->updateProductSettings($productId, $new_setting, $order_behavior);
-
+                $oMProduct->activateProduct($productId, $new_setting);
                 break;
             case 'deactivate':
                 $oMProduct->deactivateProduct($productId);
                 break;
             case 'update':
-                $oMProduct->updateField($website_id, $website_values);
-                $oMProduct->updateField($monType_id, $monitor_values);
-                $oMProduct->updateProductSettings($productId, $new_setting, $order_behavior);
-
+				$oMProduct->updateField($website_id, $website_values);
+				$oMProduct->updateField($monType_id, $monitor_values);
+				//$oMProduct->updateProductSettings( $productId, $new_setting );
+				$value = array( 'settings' => $new_setting );
+				$where = array('product_id' => $productId );
+				update_query('mod_monitis_product', $value, $where);
                 break;
             case 'setMonitorType':
                 if ($website_id == 0) {
@@ -111,7 +173,7 @@ if ($action && $productId > 0) {
                 } else {
                     $oMProduct->updateField($monType_id, $monitor_values);
                 }
-                $oMProduct->activateProduct($productId);
+                $oMProduct->activateProduct($productId, $new_setting);
                 break;
         }
     } else {
@@ -120,59 +182,24 @@ if ($action && $productId > 0) {
 }
 
 $products = $oMProduct->getproducts();
+//_dump($products);
 ?>
 <?php MonitisApp::printNotifications(); ?>
-<style>
-.datatable {
-	width:100%;
-	min-width:1000px;
-}
-.datatable td {
-	overflow:hidden;
-}
-.datatable th.title{
-	text-align:left;
-	padding-left:10px;
-}
-.datatable .customfields ul{
-	list-style-type: none;
-	width:130px;
-/*	float:left;*/
-	margin: 0px;
-	padding: 2px 5px;
-}
-.datatable .customfields li{
-	padding: 3px 0px;
-	margin: auto 0px;
-}
-.datatable td {
-	overflow:hidden;
-}
-.datatable .actions div {
-	text-align:left;
-	width:150px;
-	margin-bottom: 10px;
-	padding-left:30px;
-}
-</style>
-
 
 <table class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3" style="text-align: left;">
     <tr>
         <th width="20px">&nbsp;</th>
         <th class="title" style="width:150px;">Product Name</th>
-
         <th class="title" style="width:150px;">Monitor type</th>
         <th class="title" style="width:320px;">Monitor settings</th>
-        <th class="title" style="width:250px;">Order action behavior</th>
         <th>&nbsp;</th>
     </tr>
     <?
     if ($products && count($products) > 0) {
-        $totalresults = $products[0]['total'];
-        $allTypes = explode(",", MONITIS_MONITOR_TYPES);
+		
         for ($i = 0; $i < count($products); $i++) {
-            $productId = $products[$i]['id'];
+            $product = $products[$i];
+			$productId = $product['pid'];
             ?>
             <tr>
                 <td>&nbsp;</td>
@@ -182,45 +209,33 @@ $products = $oMProduct->getproducts();
                         <table style="width:100%;min-width:1000px"cellspacing="1" cellpadding="6" border=0>
                             <tr>
                                 <?
-                                $exist = false;
                                 $types = null;
-                                $order_behavior = null;
-                                if ($products[$i]['monitorType']) {
-                                    $exist = true;
-                                    $customfields = $products[$i]['customfields'];
-                                    $website = $monType = null;
-                                    $website_id = $monType_id = 0;
+								//  product fields
+								$fields = $oMProduct->getCustomfields( $product['customfields']['customfield'] );
+								$isActive = false;
+								$isMonitisProduct = false;
+								if( $fields ) {
+                                //if ($products[$i]['monitorType']) {
+									$isMonitisProduct = true;
+									$website_id = $fields['website']['id'];
+									$monType_id = $fields['monitortype']['id'];
 
-                                    for ($j = 0; $j < count($customfields); $j++) {
-                                        if ($customfields[$j]['fieldname'] == MONITIS_FIELD_WEBSITE) {
-                                            $website = $customfields[$j];
-                                            $website_id = $customfields[$j]['id'];
-                                        }
-                                        if ($customfields[$j]['fieldname'] == MONITIS_FIELD_MONITOR) {
-                                            $monType = $customfields[$j];
-                                            $monType_id = $customfields[$j]['id'];
-                                        }
-                                    }
-                                    $types = explode(",", $monType['fieldoptions']);
-                                    //  $settings = json_decode($products[$i]['settings'], true);             
+									$monTypes = $oMProduct->getFieldById( $monType_id);
+									$types = explode(",", $monTypes['fieldoptions']);
                                 }
-
-                                if ($products[$i]['settings']) {
-                                    $settings = json_decode($products[$i]['settings'], true);
-                                    $order_behavior = json_decode($products[$i]['order_behavior'], true);
-                                } else {
-                                    $settings = MonitisConf::$settings;
-                                }
+								$monitisProduct = $oMProduct->linkProduct( $productId );
+								$settings = null;
+                                //if ($products[$i]['settings']) {
+								if( $monitisProduct && $monitisProduct['settings']) {
+                                    $settings = $monitisProduct['settings'];
+                                } 
                                 ?>
-                             
-                                <td width="150px"><ul>
+                                <td width="150px">
+									<ul>
                                 <?
-                                $loaction = json_encode($settings['ping']['locationIds']);
                                 for ($a = 0; $a < count($allTypes); $a++) {
-
                                     $monitor_type = $allTypes[$a];
                                     $prefix = $productId;
-									
 									$checked = 'checked';
 									if($types) {
 										$checked = (in_array($allTypes[$a], $types)) ? 'checked' : '';
@@ -231,90 +246,36 @@ $products = $oMProduct->getproducts();
 											<span class="type" style="clear:both;"><?php echo strtoupper($allTypes[$a]) ?> monitor</span>
 										</li>       
 								<? } ?>
-                                    </ul></td>   
-
+                                    </ul>
+								</td>   
                                 <td width="320px" >
-                                    <table width="330px" cellspacing="1" cellpadding="3" border=0>
-                                        <tr>
-                                            <td class="fieldlabel">Interval:</td>
-                                            <td><select name="interval">
-											<?
-											$aInterval = explode(',', MonitisConf::$checkInterval);
-											for ($int = 0; $int < count($aInterval); $int++) {
-												if ($aInterval[$int] == $settings['ping']['interval']) {
-													?>
-														<option value="<?= $aInterval[$int] ?>" selected ><?= $aInterval[$int] ?></option>
-													<? } else { ?>
-														<option value="<?= $aInterval[$int] ?>"><?= $aInterval[$int] ?></option>
-														<?
-													}
-												}
-                                                    ?>
-                                                </select>&nbsp;min.
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="fieldlabel">Timeout:</td>
-                                            <td><input type="text" size="15" name="timeout" id="timeout" value="<?= $settings['ping']['timeout'] ?>"/>ms.</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="fieldlabel">Max locations:</td>
-                                            <td><input type="text" size="15" id="max_locations<?= $prefix ?>"  name="max_locations" value="<?= $settings['max_locations'] ?>" /></td>
-                                        </tr>
-                                        <tr class="monitisMultiselect">
-                                            <td class="fieldlabel" >Check locations:</td>
-                                            <td>
-                                                <span class="monitisMultiselectText" id="locationsize<?= $prefix ?>" ><?php echo sizeof($settings['ping']['locationIds']) . '  ' . "locations"; ?></span>
-                                                <input type="button" id="selectTrigger<?= $prefix ?>" class="monitisMultiselectTrigger" value="Select" element_prefix="<?= $prefix ?>" locations="<?= $loaction ?>" />
-                                                <input type="hidden" name="locationIDs" id="locationIDs<?= $prefix ?>" value="<?= $loaction ?> " />
-                                                <div class="monitisMultiselectInputs" id="monitisMultiselectInputs<?= $prefix ?>" ></div>
-                                            </td>
-                                        </tr>
-                                    </table>								
-                                </td>
-                                <td width="250px">
-                                 <table cellspacing="1" cellpadding="3" width="260px">
-                                <? foreach ($default_order_behavior as $key => $val) {  ?>
-									<tr>
-										<td class="fieldlabel" style="width:100px"><?= ucfirst($key)?>:</td>
-										<td>
-											<select style="min-width:110px" name=<?= $key ?>  >
-												<? foreach ($default_order_behavior[$key] as $k => $v) {
-													$selected = ( ($order_behavior && $k == $order_behavior[$key]) || (!$order_behavior && $default_order_behavior[$key][$k] > 0 )) ? 'selected' : ''; 
-												?>    
-												<option value="<?= $k ?>" <?= $selected ?> > <?= $order_title[$k] ?></option>
-												<? } ?>
-											</select>
-										</td>
-									</tr> 
-                                <? } ?>
-								</table> 
-
+									<? /* $settings, $monitor_type, $prefix */ 
+									include 'incs/monitorprops.php'; 
+									?>
                                 </td>
                                 <td class="actions">
-                                 <? if ($exist) { ?>
-                                        <? if ($products[$i]['isWhmcsItem']) { ?>
+                                 <? if( $isMonitisProduct ) { ?>
+                                        <? if( $monitisProduct ) { ?>
                                             <input type="hidden" name="action" value="update" />
-                                            <div><input type="submit" value="Deactivate" onclick="this.form.action.value = 'deactivate'" class="btn-danger"  /></div>
-                                            <div><input type="submit" value="Update" onclick="this.form.action.value = 'update'" /></div>
+                                            <div><input type="submit" value="Deactivate" onclick="this.form.action.value='deactivate'" class="btn btn-danger" /></div>
+                                            <div><input type="submit" value="Update" onclick="this.form.action.value='update'" class="btn" /></div>
 										<? } else { ?>
                                             <div><input type="hidden" name="action" value="activate" /></div>
-                                            <div><input type="submit" value="Activate" onclick="this.form.action.value = 'activate'" class="btn-success" /></div>
+                                            <div><input type="submit" value="Activate" onclick="this.form.action.value='activate'" class="btn btn-success" /></div>
 
 										<? } ?>
-                                        <input type="hidden" name="website_id" value="<?= $website_id ?>" />
-                                        <input type="hidden" name="monType_id" value="<?= $monType_id ?>" />
-                                        <!-- input type="submit" value="Delete" onclick="this.form.action.value='delete'" / -->
+                                        <input type="hidden" name="website_id" value="<?=$website_id?>" />
+                                        <input type="hidden" name="monType_id" value="<?=$monType_id?>" />
                                  <? } else { ?>
 
                                         <div><input type="hidden" name="action" value="setMonitorType" /></div>
-                                        <div><input type="submit" value="Activate" class="btn-success" /></div>
+                                        <div><input type="submit" value="Set monitor product" class="btn" /></div>
                                  <? } ?>
                                 </td>
                        
                             </tr>
                         </table>
-                        <input type="hidden" name="productId" value="<?= $productId ?>" />
+                        <input type="hidden" name="productId" value="<?=$productId?>" />
                     </form>
                 </td>
               
@@ -324,111 +285,3 @@ $products = $oMProduct->getproducts();
 }
 ?>
 </table>
-<input type="hidden" name="saveProductConfig" value="1" />
-
-<script>
-                                var countryname = <? echo json_encode($locations); ?>;
-
-                                $(document).ready(function() {
-
-                                    $('.monitisMultiselectTrigger').click(function(event) {
-                                      var prefix = $(this).attr("element_prefix");
-                                        var loc_ids = $(this).attr("locations");
-                                        var loc = eval(loc_ids);
-                                        locationDialog(prefix, loc);
-                                    });
-                                });
-
-
-                                function initMonitisMultiselect(container, prefix) {
-
-                                    var dialog = $(container).find(".monitisMultiselectDialog").dialog({
-                                        width: 600,
-                                        autoOpen: false,
-                                        modal: true,
-                                        buttons: {
-                                            'Select': {
-                                                text: 'Select',
-                                                class: 'btn',
-                                                click: function() {
-                                                    updateInput(prefix);
-                                                    $(this).dialog("close");
-                                                }
-                                            }
-                                        },
-                                        close: function() {
-                                            $(this).remove();
-                                        }
-                                    });
-
-                                    dialog.dialog('open');
-
-                                    function updateInput(prefix) {
-                                        var selectedCount = 0;
-                                        var loc_ids = 'locationIDs' + prefix;
-                                        var locsize = 'locationsize' + prefix;
-                                        var ids = [];
-                                        var max_loc = $("#max_locations" + prefix).val();
-
-                                        $(dialog).find('input[type="checkbox"]').each(function(index) {
-                                            if ($(this).is(':checked')) {
-                                                selectedCount++;
-                                                ids.push($(this).val());
-
-                                            }
-
-                                        });
-                                        if (max_loc < selectedCount) {
-                                            ids = ids.slice(0, parseInt(max_loc));
-
-                                        }
-                                        var ids_str = ids.toString();
-                                        $('#' + loc_ids).val(ids_str);
-                                        $('#selectTrigger' + prefix).attr('locations', '[' + ids_str + ']');
-                                        if (max_loc < selectedCount) {
-                                            selectedCount = max_loc;
-                                        }
-                                        $('#' + locsize).text(selectedCount+"  locations");
-                                    }
-
-                                    updateInput(prefix);
-
-                                }
-
-                                function locationDialog(prefix, loc_ids) {
-                                    var max_loc = $("#max_locations" + prefix).val();
-                                    var str = '<div  class="monitisMultiselectDialog"><table  style="width:100%" cellpadding=10><tr><td id="maxlocationsmsgid">Maximum ' + max_loc + ' locations can be selected</td></tr><tr>';
-
-                                    for (var name in countryname) {
-                                        str += '<td style="vertical-align: top;"><div style="font-weight: bold; color: #71a9d2;">' + name + '</div><hr/>'
-
-                                        var column = countryname[name];
-                                        for (var location in column) {
-
-                                            var checked = ($.inArray(column[location].id, loc_ids) !== -1) ? "checked" : "";
-
-                                            str += ' <div><input type="checkbox" name="locationIDs[]" id="locationIDs" ' + checked + '   value="' + column[location].id + '"   > ' + column[location].fullName + '  </div>'
-
-                                        }
-                                        str += '</td>';
-                                    }
-                                    str += '</tr></table></div>';
-                                    
-
-
-                                  $('#monitisMultiselectInputs' + prefix).html(str);
-
-                                    initMonitisMultiselect('#monitisMultiselectInputs' + prefix, prefix);
-                                    
-                                    $('.monitisMultiselectDialog input[type="checkbox"]').click(function(event) {
-                                        var selectedCount = $('.monitisMultiselectDialog input[type=checkbox]:checked').size();
-                                        if (selectedCount > parseInt(max_loc)) {
-                                            event.preventDefault();
-                                            $('#maxlocationsmsgid').css('color', '#ff0000');
-                                        } else {
-                                            $('#maxlocationsmsgid').css('color', '#000000')
-                                        }
-
-                                    });
-                                }
-</script>

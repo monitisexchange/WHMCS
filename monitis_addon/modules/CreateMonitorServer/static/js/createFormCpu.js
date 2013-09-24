@@ -24,6 +24,11 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 				required: true,
 				urlNoProto: true,
 			},
+                       /* kernelmax: {
+				required: true,
+				range: [1, 100],
+			},
+                      
 			timeout: {
 				required: true,
 				range: [1, 5000],
@@ -31,8 +36,8 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 			tag: {
 				required: true,
 				noSpace: true,
-			}
-			/*,
+			},  
+			
 			uptimeSLA: {
 				number: true,
 				range: [1, 100],
@@ -52,14 +57,18 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 			url: {
 				required: "Please provide valid test url",
 				urlNoProto: "Url must not contain protocol"
+			}/*,
+                        kernelmax: {
+				range: "Kernel Max can be set from 1 to 100."
 			},
+                        
 			timeout: {
 				range: "Timeout can be set from 1 to 5000 miliseconds."
 			},
 			tag: {
 				required: "Tag name is required",
 				noSpace: "Tag name can not contain spaces",
-			}/*,
+			},
 			uptimeSLA: {
 				number: "Please provide numeric value",
 				range: "Uptime SLA can be from 1% to 100%",

@@ -5,6 +5,7 @@ class MonitisRouter {
 		
 		if ((empty(MonitisConf::$apiKey) || empty(MonitisConf::$secretKey)) && $pageName != 'monitisAccount') {
 			header('location: ' . MONITIS_APP_URL . '&monitis_page=monitisAccount');
+			//header('location: ' . MONITIS_APP_URL . '&monitis_page=settings&sub=account');
 			exit;
 		}
 		
@@ -13,7 +14,6 @@ class MonitisRouter {
 			self::renderModule($moduleName);
 			return;
 		}
-		
 		self::showPage($pageName);
 	}
 	

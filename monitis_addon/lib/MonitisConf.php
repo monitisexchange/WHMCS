@@ -2,46 +2,27 @@
 class MonitisConf {
 	private static $configs = array('apiKey', 'secretKey', 'newServerMonitors');
 	private static $default_settings = '{
-		"ping":{
-			"interval":1,"timeout":1000,"locationIds":[1,9,10],
-			"available":1,
-			"autocreate":1,
-			"autolink":1,
-			"suspendmsg":"Monitor suspended"
-		},
-		"cpu":{
-			"LINUX":{"usedMax":90,"kernelMax":90,"idleMin":0,"ioWaitMax":90,"niceMax":90},
-			"WINDOWS":{"usedMax":100,"kernelMax":90},
-			"OPENSOLARIS":{"usedMax":90,"kernelMax":90},
-			"available":0,
-			"autocreate":0,
-			"autolink":0,
-			"suspendmsg":"Monitor suspended"
-		},	
-		"memory":{
-			"LINUX":{"freeLimit":2000,"freeSwapLimit":1000,"bufferedLimit":3000,"cachedLimit":3000},
-			"WINDOWS":{"freeLimit":2000,"freeSwapLimit":1000,"freeVirtualLimit":3000},
-			"OPENSOLARIS":{"freeLimit":2000,"freeSwapLimit":1000},
-			"available":0,
-			"autocreate":0,
-			"autolink":0,
-			"suspendmsg":"Monitor suspended"
-		},	
-		"drive":{"freeLimit":30,
-			"available":0,
-			"autocreate":0,
-			"autolink":0,
-			"suspendmsg":"Monitor suspended"
-		},
-		"http":{"interval":1,"timeout":10,"locationIds":[1,9,10],
-			"available":1
-		},
-		"https":{"interval":1,"timeout":10,"locationIds":[1,9,10],
-			"available":1
-		},
-		"available":1,
-		"max_locations":5
-	}';
+"ping":{"interval":1,"timeout":1000,"locationIds":[1,9,10],
+	"available":1,"autocreate":1,"autolink":1,"suspendmsg":"Monitor suspended","locationsMax":5
+},
+"cpu":{
+	"LINUX":{"usedMax":90,"kernelMax":90,"idleMin":0,"ioWaitMax":90,"niceMax":90},
+	"WINDOWS":{"usedMax":100,"kernelMax":90},
+	"OPENSOLARIS":{"usedMax":90,"kernelMax":90},
+	"available":0,"autocreate":0,"autolink":0,"suspendmsg":"Monitor suspended"
+},
+"memory":{
+	"LINUX":{"freeLimit":2000,"freeSwapLimit":1000,"bufferedLimit":3000,"cachedLimit":3000},
+	"WINDOWS":{"freeLimit":2000,"freeSwapLimit":1000,"freeVirtualLimit":3000},
+	"OPENSOLARIS":{"freeLimit":2000,"freeSwapLimit":1000},
+	"available":0,"autocreate":0,"autolink":0,"suspendmsg":"Monitor suspended"},	
+	"drive":{"freeLimit":30,
+	"available":0,"autocreate":0,"autolink":0,"suspendmsg":"Monitor suspended"
+},
+"http":{"interval":1,"timeout":1000,"locationIds":[1,9,10],"available":1,"locationsMax":5},
+"https":{"interval":1,"timeout":1000,"locationIds":[1,9,10],"available":1,"locationsMax":5},
+"available":1,"locationsMax":5,"timezone":0
+}';
 	
 	
 	// suspended monitor message
@@ -50,17 +31,14 @@ class MonitisConf {
 	
 	static $checkInterval = '1,3,5,10,15,20,30,40,60';
 	
-	//static $monitorAvailable = 1;
-	//static $maxLocations = 3;
-	
 	static $newServerMonitors = 'ping,http'; //
 	static $newAgentPlatform = 'LINUX'; //
-	static $defaultgroup = 'WHMCS_ADMINGROUP';
+	static $defaultgroup = 'Monitoring group';
 	static $adminuser = '';
 	
 	static $settings = null;
 	
-	static function update_config($client_id, $vals) {
+	static function update_config( $vals ) {
 
 		if( $vals && isset($vals['apiKey']) && isset($vals['secretKey'])) {
 			self::$apiKey = $vals['apiKey'];
@@ -70,16 +48,27 @@ class MonitisConf {
 				'apiKey' => $vals['apiKey'],
 				'secretKey' => $vals['secretKey']
 			);
-			$where = array('client_id' => $client_id);
+			$where = array('client_id' => MONITIS_CLIENT_ID );
 			update_query('mod_monitis_client', $update, $where);
+			
+			self::$settings["timezone"] = $vals['timezone'];
+			
+			$oNot = new notificationsClass();
+			$resp = $oNot->setupContactGroups();
+			if( $resp['status'] == 'ok') {
+				$group = $oNot->defaultGroup( self::$defaultgroup );
+				self::$settings = self::setupNotificationRules( $group );
+			}
+			self::update_settings( json_encode( self::$settings ) );
+			
 		}
 	}
-	static function update_settings($client_id, $settings_json) {
+	static function update_settings( $settings_json ) {
 		
 		if( isset($settings_json) ) {
 			self::$settings = json_decode($settings_json, true);
 			$update = array('settings' => $settings_json);
-			$where = array('client_id' => $client_id);
+			$where = array('client_id' => MONITIS_CLIENT_ID );
 			update_query('mod_monitis_client', $update, $where);
 		}
 	}
@@ -115,15 +104,49 @@ class MonitisConf {
 			return false;
 	}
 	
+	static function setupNotificationRules( $group ) {
+		$sets = self::$settings; // json_decode(self::$default_settings, true);
+		$mtypes = explode(",", MONITIS_ADMIN_MONITOR_TYPES);
+		for($i=0; $i<count($mtypes); $i++){
+			$mtype = $mtypes[$i];
+
+			$sets[$mtype]['alertGroupId'] = 0;
+			$sets[$mtype]['alertRules'] = json_decode( MONITIS_NOTIFICATION_RULE, true );
+			// mml
+			//$sets[$mtype]['group'] = array('id'=>0, 'name'=>'no alert');
+			//$sets[$mtype]['notification'] = json_decode( MONITIS_NOTIFICATION_RULE, true );
+		}
+		return $sets;
+	}
+	
+	static function setupOrderBehavior() {
+		$default_order_behavior = json_decode(MONITIS_ORDER_BEHAVIOR, true);
+		$arr = array();
+		foreach ($default_order_behavior as $key => $val) {
+			$item = $default_order_behavior[$key];
+			foreach($default_order_behavior[$key] as $k => $v ) {
+				if($v > 0) {
+					$arr[$key] = $k;
+				}
+			}
+		}
+		return $arr;
+	}
+	
 	static function setupDB( ) {
+
+		$default_settings = json_decode(self::$default_settings, true);
+		$default_settings["order_behavior"] = self::setupOrderBehavior();
+
 		$values = array(
 			'client_id' => MONITIS_CLIENT_ID,
 			'apiKey' => self::$apiKey,
 			'secretKey' => self::$secretKey,
-			'settings' => self::$default_settings
-			//'newServerMonitors' => 	'ping'			//self::$newServerMonitors
+			//'settings' => self::$default_settings
+			'settings' => json_encode( $default_settings )
 		);
-		self::$settings =json_decode(self::$default_settings, true);
-		insert_query('mod_monitis_client', $values);
+		//self::$settings =json_decode(self::$default_settings, true);
+		self::$settings = $default_settings;
+		insert_query('mod_monitis_client', $values);		
 	}
 }

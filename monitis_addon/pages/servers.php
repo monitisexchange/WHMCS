@@ -193,20 +193,20 @@ $('document').ready(function(){
 			if( $pings != -1 && $pings && count( $pings ) > 0 ) {
 				//$status = $pings['pin';
 				$stl = '';
-				$title = '';
+				//$title = '';
 				if( $pings['associate'] == 'no' ) {
 					$stl = 'pending';
 				} elseif( $pings['status'] == 'suspended'  ) {
 					$stl = '';		// pending // suspended
-					$title = 'suspended';
+					//$title = 'suspended';
 				} elseif( $pings['status'] == 'OK' ) {
 					$stl = 'active';
-					$title = 'active';
+					//$title = 'active';
 				} else {
 					$stl = 'closed';
-					$title = 'nok';
+					//$title = 'nok';
 				}
-				echo '&nbsp;<span class="label '.$stl.'" title="'.$title.'">Ping</span>';
+				echo '&nbsp;<span class="label '.$stl.'" >Ping</span>';
 			}		
 
 			if( $agentStatus == 'running') {
@@ -243,19 +243,19 @@ $('document').ready(function(){
 				if( $drive != -1 && $drive && count( $drive ) > 0 ) {
 					
 					$stl = '';
-					$title = '';
+					//$title = '';
 					if( $noassociate == 0) {
 						$stl = 'pending';
-						$title = 'no associate';
+						//$title = 'no associate';
 					} elseif( $drive_status > 0) {
 						$stl = 'active';
-						$title = 'active';
+						//$title = 'active';
 					} else {
 						$stl = 'closed';
-						$title = 'NOK';
+						//$title = 'NOK';
 					}
 					
-					echo '&nbsp;<lable title="'.$title.'" class="label '.$stl.'" style="position:absolute;" id="drivesListId"><a class="label '.$stl.'">drive</a>';
+					echo '&nbsp;<lable class="label '.$stl.'" style="position:absolute;" id="drivesListId"><a class="label '.$stl.'">drive</a>';
 
 					echo '<ul class="drivesList">';
 					for($d=0; $d<count( $drive ); $d++) {

@@ -18,11 +18,14 @@ function monitisAddError($msg) {
 
 // Includes lib
 require_once 'lib/whmcs.class.php';
+require_once 'lib/notifications.class.php';
 require_once 'lib/internal.class.php';
 require_once 'lib/MonitisConf.php';
 require_once 'lib/MonitisApi.php';
 require_once 'lib/MonitisRouter.php';
 require_once 'lib/MonitisApiHelper.php';
+require_once 'lib/clientservices.class.php';
+
 
 //MonitisConf::load();
 MonitisConf::load_config();

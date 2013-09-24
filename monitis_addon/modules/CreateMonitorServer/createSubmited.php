@@ -264,13 +264,12 @@ switch ($type) {
 				case 'ping':
 					$resp = MonitisApi::deleteExternal($monitorID);
 					if($resp['status'] == 'ok') {
-
-						// delete from tables 
-						$oWhmcs->removeExternalMonitorsById($monitorID);
 						MonitisApp::addMessage('External Monitor successfully removed');
 					} else {
 						MonitisApp::addError('Delete monitor, API request failed: '. $resp['error']);
 					}
+					// delete from tables 
+					$oWhmcs->removeExternalMonitorsById($monitorID);
 				break;
 				case 'cpu':
 				case 'memory':
@@ -280,12 +279,12 @@ switch ($type) {
 					if( $monitorType == 'cpu') $mtype = 7;
 					$resp = MonitisApi::deleteInternal($monitorID, $mtype);
 					if($resp['status'] == 'ok') {
-						// delete from tables 
-						$oWhmcs->removeInternalMonitorsById($monitorID);
 						MonitisApp::addMessage('Internal Monitor successfully removed');
 					} else {
 						MonitisApp::addError('Delete monitor, API request failed: '. $resp['error']);
 					}
+					// delete from tables 
+					$oWhmcs->removeInternalMonitorsById($monitorID);
 				break;
 			}
 

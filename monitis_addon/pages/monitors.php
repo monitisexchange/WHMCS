@@ -88,10 +88,10 @@ $createModule->editMode = 'create';
 $createModule->isAgent = $isAgent;
 $createModule->agentId = $agentId;
 $createModule->agentKey = $agentKey;
+
 //$createModule->drivesList = $drivesList;
  
 $createModuleContent = $createModule->execute();
-
 
 ?>
 
@@ -150,28 +150,33 @@ function setParameters(form, type, monitor_id, monitor_type, values) {
 <section class="sectionblock">
 <form action="" method="post" id="setMonitorForm">
 <?
-//m_CreateMonitorServer 
 	if( $ext_monitors ) {
 
 _logActivity("monitors tab **** ext_monitors = " . json_encode($ext_monitors) );
 		$oSrvrs = new serversListTab();
 		$pings = $oSrvrs->externalSnapShotsStatus( $ext_monitors );
-		
-		//$pings = $oSrvrs->externalSnapShots( $ext_monitors );
-//_logActivity("monitors tab **** pings = " . json_encode($pings) );
 		$ping = null;
 		if( $pings && count($pings) > 0 ) 
 			$ping = $pings[0]['status'];
-		
+//_dump( $ping );
+                
 		for($i=0; $i<count($ext_monitors); $i++) {
+                 
 			//echo MonitisApiHelper::embed_module($ext_monitors[$i]['monitor_id'], 'external');
 			$item = $ext_monitors[$i];
 			$monitor_id = $item['monitor_id'];
 			$monitor_type = $item['monitor_type'];
 			$publickey = $item['publickey'];
-
+			
+//_dump( $item );	
+			$alertGroupId = $item['alertgroup_id'];
+                        
+			//$notif = MonitisApiHelper::getNotificationRules($monitor_id, 'external', $alertGroupId);
+                       
+			//_dump($notif);
+                        
 //$ext = MonitisApi::getExternalSnapshot($monitor_id);
-//_dump( $ext );
+//_dump( $notif );
 			if( $ping && $publickey) {
 				echo '<figure class="monitor">';
 				//echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 800, 350 );
@@ -201,8 +206,8 @@ _logActivity("monitors tab **** ext_monitors = " . json_encode($ext_monitors) );
 				//}
 				echo '</div></figure>';
 			} else {
-				//$oWHMCS->removeExternalMonitorsById($monitor_id);
-echo "Unlink monitor $monitor_id ";			
+				$oWHMCS->removeExternalMonitorsById($monitor_id);
+				echo "<div>monitor $monitor_id remove</div>";
 			}
 		}
 	}

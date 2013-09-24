@@ -135,11 +135,12 @@ class MonitisApiHelper {
 		//$name = $product['ordernum'] . '_'.$monitor_type;
 		$name = $url . '_'.$monitor_type;
 
-		$interval = $monitorsettings['interval'];
-		$timeout = $monitorsettings['timeout'];
-		$locationIDs = array_map( "intval", $monitorsettings['locationIds'] );
-		
-		$tag = $product['tag'];
+		$interval = $monitorsettings["interval"];
+		$timeout = $monitorsettings["timeout"];
+		//$locationIDs = array_map( "intval", $monitorsettings["locationIds"] );
+		$locationIDs = $monitorsettings["locationIds"];
+
+		$tag = $product["tag"];
 		if (empty($url))
 			return false;
 		if( $monitor_type == 'http')
@@ -165,17 +166,18 @@ class MonitisApiHelper {
 		if ( empty($url) || empty($name) )
 			return false;
 		
-		$locationIDs = array_map( "intval", $pingsettings['locationIds'] );
+		$locationIDs = array_map( "intval", $pingsettings["locationIds"] );
 		
 		$monParams = array(
 			'type' => 'ping',
 			'name' => $url . '_ping',
 			'url' => $url,
-			'interval' => $pingsettings['interval'],
-			'timeout' => $pingsettings['timeout'],
-			'locationIds' => implode(',', $locationIDs),
-			'tag' => $product['tag']
+			'interval' => $pingsettings["interval"],
+			'timeout' => $pingsettings["timeout"],
+			'locationIds' => implode(",", $locationIDs),
+			'tag' => $product["tag"]
 		);
+
 		$resp = MonitisApi::createExternalPing( $monParams );
 
 		//if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
@@ -449,20 +451,222 @@ class MonitisApiHelper {
 		
 _logActivity("addAllDefault ******* <b>add All Default Monitors</b><p>".json_encode($response)."</p>");
 		return $response;
-		/*$monitorTypes = explode(',', MonitisConf::$newServerMonitors);
-		foreach ($monitorTypes as $type) {
-			switch ($type) {
-				case 'ping':
-					self::addDefaultPing($client_id, $server);
-					self::addDefaultAgents($client_id, $server, $monitorTypes);
-					break;
-				case 'http':
-					self::addDefaultHttp($server);
-					break;
-				case 'https':
-					self::addDefaultHttps($server);
-					break;
+	}
+	
+	//
+	static function deleteExternalMonitor( $monitor_id ) {	
+		$resp = MonitisApi::deleteExternal( $monitor_id );
+		self::unlinkExternalMonitor( $monitor_id );
+		return $resp;
+	}
+	static function unlinkExternalMonitor( $monitor_id ) {
+		$oWhmcs = new WHMCS_class();
+		$oWhmcs->removeExternalMonitorsById( $monitor_id );
+		return array('status'=>'ok');
+	}
+	
+	//
+	static function rulesByGroupid($groupid, & $list) {
+		for($i=count($list); $i>0; $i--) {
+			if($list[$i-1]['contactGroupId'])
+				return $list[$i-1];
+		}
+		return null;
+	}
+        
+    static function getNotificationRules($monitor_id, $monitor_type, $contactGroupId ) {
+		 $params = array( 'monitorId'=> $monitor_id, 'monitorType'=>$monitor_type );
+		 if( isset($contactGroupId) ) $params['contactGroupId'] = $contactGroupId;
+		 
+		$rules = MonitisApi::getNotificationRules( $params );
+//_dump($rules);		
+		$notif = null;
+		if($rules) {
+			$rule = self::rulesByGroupid($contactGroupId, $rules );
+			if( $rule ) {
+				$notif = json_decode( MONITIS_NOTIFICATION_RULE, true );
+				$period = $rule["period"];
+				$notif['period']['always']['value'] = 0;
+				$notif['period']['specifiedTime']['value'] = 0;
+				$notif['period']['specifiedDays']['value'] = 0;
+				$notif['continuousAlerts'] = $rule["continuousAlerts"];
+				$notif['notifyBackup'] = $rule["notifyBackup"];
+				$notif['failureCount'] = $rule["failureCount"];
+				
+				if($period == 'always') {
+					$notif['period']['always']['value'] = 1;
+				} elseif($period == 'specifiedTime') {
+					$notif['period']['specifiedTime']['value'] = 1;
+					
+					$params = $notif['period']['specifiedTime']['params'];
+					$params['timeFrom'] = $rule["timeFrom"];
+					$params['timeTo'] = $rule["timeTo"];
+					
+				} elseif($period == 'specifiedDays') {
+					$notif['period']['specifiedDays']['value'] = 1;
+					$params = $notif['period']['specifiedDays']['params'];
+					$params['weekdayFrom']['day'] = $rule["weekdayFrom"];
+					$params['weekdayFrom']['time'] = $rule["timeFrom"];
+					$params['weekdayTo']['day'] = $rule["weekdayTo"];
+					$params['weekdayTo']['time'] = $rule["timeTo"];
+				}
 			}
-		}*/
+		}
+//_dump($notif);
+		return $notif;
+	}
+        
+     
+     static function getNotificationRules_new($monitor_id, $monitor_type, $contactGroupId ) {
+		 $params = array( 'monitorId'=> $monitor_id, 'monitorType'=>$monitor_type );	
+		 $rule = end(MonitisApi::getNotificationRules( $params ));                 
+                
+//_dump($rules);		
+		$notif = null;
+		if($rule) {
+			
+				$notif = json_decode( MONITIS_NOTIFICATION_RULE, true );
+				$period = $rule["period"];
+				$notif['period']['always']['value'] = 0;
+				$notif['period']['specifiedTime']['value'] = 0;
+				$notif['period']['specifiedDays']['value'] = 0;
+				$notif['continuousAlerts'] = $rule["continuousAlerts"];
+				$notif['notifyBackup'] = $rule["notifyBackup"];
+				$notif['failureCount'] = $rule["failureCount"];
+				
+				if($period == 'always') {
+					$notif['period']['always']['value'] = 1;
+				} elseif($period == 'specifiedTime') {
+					$notif['period']['specifiedTime']['value'] = 1;
+					
+					$params = $notif['period']['specifiedTime']['params'];
+					$params['timeFrom'] = $rule["timeFrom"];
+					$params['timeTo'] = $rule["timeTo"];
+					
+				} elseif($period == 'specifiedDays') {
+					$notif['period']['specifiedDays']['value'] = 1;
+					$params = $notif['period']['specifiedDays']['params'];
+					$params['weekdayFrom']['day'] = $rule["weekdayFrom"];
+					$params['weekdayFrom']['time'] = $rule["timeFrom"];
+					$params['weekdayTo']['day'] = $rule["weekdayTo"];
+					$params['weekdayTo']['time'] = $rule["timeTo"];
+				}
+			
+		}
+//_dump($notif);
+		return $notif;
+	}
+        
+	
+	static function addNotificationRule( $monitor_id, $monitor_type, $alertGroupId, $alertRules ) {
+		$result = array();
+		if( $alertGroupId > 0 ) {
+			$periodObj = $alertRules['period'];
+                        
+                     //_dump($periodObj);
+			$info = array(
+				'monitorId'=>$monitor_id,
+				'monitorType'=>$monitor_type,
+				'groupId'=>$alertGroupId
+			);
+			$period = '';
+			foreach( $periodObj as $key=>$val) {
+				if( $periodObj[$key]['value'] > 0) $period = $key; 
+			}
+			$info['period'] = $period;
+
+			if( $period == 'specifiedTime') {
+					$params = $periodObj[$period]["params"];
+					$info["timeFrom"] = $params["timeFrom"];
+					$info["timeTo"] = $params["timeTo"];
+			} elseif(specifiedDays) {
+					$params = $periodObj[$period]["params"];
+					$info["weekdayFrom"] = $params["weekdayFrom"]["day"];
+					$info["weekdayTo"] = $params["weekdayTo"]["day"];
+		
+					$info["timeFrom"] = $params["weekdayFrom"]["time"];
+					$info["timeTo"] = $params["weekdayTo"]["time"];
+			}
+			$info["notifyBackup"] = $alertRules["notifyBackup"];
+			$info["continuousAlerts"] = $alertRules["continuousAlerts"];
+			$info["failureCount"] = $alertRules["failureCount"];
+			
+//_dump( $info );
+
+			$resp = MonitisApi::addNotificationRule($info);
+			if( $resp['status'] == 'ok') {
+				$result['status'] = 'ok';
+				$result['msg'] = 'A notification has been successfully set';
+//_dump( $info );
+
+			} else {
+				$result['status'] = 'error';
+				$result['msg'] = $resp['error'];
+			}
+//_dump( $resp );
+
+		} else {
+			$result['status'] = 'error';
+			$result['msg'] = 'Notification is not set';
+		}
+		return $result; 
+	}
+	
+	static function deleteNotificationRule( $monitor_id, $monitor_type, $group_id, $notification ) {
+	
+		$params = array( 
+		//'contactIds'=> 
+		'monitorId'=> $monitor_id, 
+		'monitorType'=>$monitor_type 
+		);
+		
+		return MonitisApi::deleteNotificationRule($params);
+	}
+	
+    //////////////////////////////Contact Group///////////////////////   
+        
+        
+	static function getGroupById($group_id){
+		$allGroups=  MonitisApi::getContactGroupList();            
+		for($i=0; $i<count($allGroups); $i++){
+			if($allGroups[$i]["id"]==$group_id){                  
+			   return $allGroups[$i];
+			}               
+		}
+		return null;
+	}
+        
+	static function getContactsEmailByGroup($groupIds){
+		$allGroups =  MonitisApi::getContactsByGroupID($groupIds);
+		$array=array();
+		for($i=0; $i<count($allGroups); $i++){               
+			foreach($allGroups[$i]['contacts']  as $contact){
+				$array[] = $contact["account"]; 
+			}
+		}
+		return $array;
+	}
+	
+	static function groupNameByGroupId( $alertGroupId, & $groupList ) {
+		for($i=0; $i<count($groupList); $i++) {
+			if($groupList[$i]['id'] == $alertGroupId )
+				return $groupList[$i]['name'];
+		}
+		return '';
+	}
+
+	static function alertGroupById( $alertGroupId, & $groupList ) {
+		$max_len = 20;
+		$grouptitle = $groupname = 'no alert';
+		if($alertGroupId > 0 ) {
+			if( !isset($groupList) || !$groupList ) {
+				$groupList = MonitisApi::getContactGroupList();
+			}
+			$groupname = self::groupNameByGroupId( $alertGroupId, $groupList  );
+			$grouptitle = (strlen($groupname) > $max_len ) ? substr($groupname, 0, $max_len) .'...' : $groupname;
+		}
+		return  array( 'id'=>$alertGroupId, 'name'=>$groupname, 'title'=>$grouptitle );
 	}
 }
+        
+        

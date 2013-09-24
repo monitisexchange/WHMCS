@@ -25,12 +25,15 @@ class MonitisApi {
 			$json = curl_exec($ch);
 			$result = json_decode($json, true);
 			if( !isset($result['error']) && isset($result['authToken']) ) {
+_logActivity("<b>from COOKIE *************** Get authToken</b><p>$json</p>");
 				$authToken = $result['authToken'];
 				//setcookie("monitis_authtoken", $authToken, time()+(3600*20) );
 				setcookie("monitis_authtoken", $authToken, time()+3600 );
 			} else {
+_logActivity("<b>from COOKIE *************** Reset authToken</b><p></p>");
 				setcookie("monitis_authtoken", '', time()-3600 );
 				self::authToken();
+				return null;
 			}
 		}
 
@@ -87,15 +90,14 @@ _logActivity("requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>")
 	
 	static function requestPost($action, $params) {
 		// TODO: error handling when JSON is not returned
-
+		
+		$params['validation'] = 'token';
 		$authToken = self::authToken();
 		if( $authToken) {
-			$params['validation'] = 'token';
 			$params['authToken'] = $authToken;
 		} else {
-			//$params['timestamp'] = date("Y-m-d H:i:s", time() );
-			//$params = self::hmacSign($params);
-			self::authToken();
+			$authToken = self::authToken();
+			$params['authToken'] = $authToken;
 		}
 		
 		$params['version'] = '2';
@@ -113,7 +115,8 @@ _logActivity("requestPost **** action = <b>$action</b><p>$query</p><p>$result</p
 		$json = json_decode($result, true);
 		if( $json && isset( $json['errorCode']) && $json['errorCode'] == 4 ) {
 			setcookie("monitis_authtoken", '', time()-3600 );
-			self::authToken();		
+			//self::authToken();	
+			return null;
 		}
 		return $json;
 	}
@@ -421,7 +424,7 @@ _logActivity("requestPost **** action = <b>$action</b><p>$query</p><p>$result</p
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		$result = curl_exec($ch);
 
-_logActivity("requestGet **** action = <b>agents</b><p>$url</p><p>$result</p>");
+//_logActivity("requestGet **** action = <b>agents</b><p>$url</p><p>$result</p>");
 		$json = json_decode($result, true);
 		return $json;
 	}
@@ -448,24 +451,12 @@ _logActivity("requestGet **** action = <b>agents</b><p>$url</p><p>$result</p>");
 	}
 
 	////ContactGroups//////////////////// 
-	static function addContactGroup($active, $groupName) {
-               
+        
+	static function addContactGroup($active, $groupName) {               
 		$params['active'] = $active;
 		$params['groupName']=$groupName;
-		$contactList=getContactGroupList();
-
-		foreach($contactList as $group){
-			foreach($group as $cell){
-				if($cell['name']!=$groupName){
-				  $resp = self::requestPost('addContactGroup', $params);  
-				}
-			}
-		}
-                
-		if ($resp['status'] == 'ok')
-			return true;
-		else
-			return false;
+		return self::requestPost('addContactGroup', $params);	               
+		
 	}
        
 	static function getContactGroupList() {         
@@ -474,41 +465,41 @@ _logActivity("requestGet **** action = <b>agents</b><p>$url</p><p>$result</p>");
         
         static function getContactsByGroupID($contactGroupId) {   
             $params['contactGroupId']=$contactGroupId;
-           return self::requestGet('contactsListByContactGroup', $params);
+            return self::requestGet('contactsList', $params);
+         
 	}
 
 	static function editContactGroup($oldName, $newName) {     
            $params['oldName']=$oldName;
            $params['newName']=$newName;
-           $resp = self::requestPost('editContactGroup', $params);
-            
-		if ($resp['status'] == 'ok')
-			return true;
-		else
-			return false;
+           return self::requestPost('editContactGroup', $params);            
+		
 	}
         
 	static function deleteContactGroup($groupName) {     
            $params['groupName']=$groupName;
-           self::requestPost('deleteContactGroup', $params);            
+           return  self::requestPost('deleteContactGroup', $params);            
 	}
 
  //////////////Assign contact to group////////////////
-	static function addContactToGroup($firstName, $lastName, $account, $contactType=1, $timezone=0) {
-             
-		$params['firstName']=$firstName;
-		$params['lastName'] =$lastName;
-		$params['account']=$account;
-		$params['contactType']=$contactType;
-		$params['timezone']=$timezone;
-		$params['group'] = MonitisConf::$defaultgroup;
-		$resp = self::requestPost('addContact', $params);  
-		if ($resp['status'] == 'ok')
-			return true;
-		else
-			return false;
+
+	static function getNotificationRules( $params ) {
+		 return self::requestGet('getNotificationRules', $params);  
 	}
 
+	static function addNotificationRule($params) {
+		 return self::requestPost('addNotificationRule', $params);  
+	}
+	
+	static function deleteNotificationRule($params) {
+		 return self::requestPost('deleteNotificationRule', $params);  
+	}
+
+	static function addContactToGroup($contact) {          
+		return self::requestPost('addContact', $contact);  
+		
+	}  
+        
 	static function getContacts() { 
            return self::requestGet('contactsList', array());
 	}
@@ -517,12 +508,14 @@ _logActivity("requestGet **** action = <b>agents</b><p>$url</p><p>$result</p>");
 		$params['contactId']=$contactId;
 		$params['account']=$account;
 		$params['contactType']= $contactType;
-		$resp =  self::requestPost('deleteContact', $params);
-			if ($resp['status'] == 'ok')
-			return true;
-		else
-			return false;
+		return self::requestPost('deleteContact', $params);		   
+               
 	}
+        static function editContact($contactId, $groupIds ){
+                $params['contactId']=$contactId;
+		$params['groupIds']= $groupIds;
+		return self::requestPost('editContact', $params);
+        }
 
  
 }

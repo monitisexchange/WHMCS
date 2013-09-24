@@ -97,19 +97,20 @@ class WHMCS_class extends whmcs_db {
 		 } else return null;
 	}
 	
+	
 	public function ext_monitors() {
 		$sql = 'SELECT id, name, ipaddress, hostname, monitor_id, monitor_type
 				FROM mod_monitis_ext_monitors 
-				LEFT JOIN tblservers ON tblservers.id=mod_monitis_ext_monitors.server_id 
-				WHERE client_id='.$this->client_id;
+				LEFT JOIN tblservers ON tblservers.id=mod_monitis_ext_monitors.server_id'; 
+			//	WHERE client_id='.$this->client_id;
 		return $this->query( $sql );
 	}
 	
 	public function int_monitors() {
 		$sql = 'SELECT id, name, ipaddress, hostname, monitor_id, monitor_type
 				FROM mod_monitis_int_monitors 
-				LEFT JOIN tblservers ON tblservers.id=mod_monitis_int_monitors.server_id 
-				WHERE client_id='.$this->client_id;
+				LEFT JOIN tblservers ON tblservers.id=mod_monitis_int_monitors.server_id ';
+				//WHERE client_id='.$this->client_id;
 		return $this->query( $sql );
 	}
 	
@@ -136,7 +137,8 @@ class WHMCS_class extends whmcs_db {
 		$sql = 'SELECT id, name, ipaddress, hostname, mod_monitis_int_monitors.*
 				FROM mod_monitis_int_monitors 
 				LEFT JOIN tblservers ON ( tblservers.id='.$server_id.' AND tblservers.id = mod_monitis_int_monitors.server_id ) 
-				WHERE client_id='.$this->client_id.' AND monitor_type="'.$type.'"';
+				WHERE  monitor_type="'.$type.'"';
+			//	WHERE client_id='.$this->client_id.' AND monitor_type="'.$type.'"';
 		return $this->query( $sql );
 	}
 	
@@ -168,6 +170,7 @@ class WHMCS_class extends whmcs_db {
 		$sql = 'SELECT * FROM mod_monitis_int_monitors WHERE server_id in ('.$serverIds.')';
 		return $this->query( $sql );
 	}
+
 	
 	// remove ext and int monitors from whmcs db
 	public function removeExtMonitorsByServersId($server_id) {
@@ -205,7 +208,9 @@ class WHMCS_class extends whmcs_db {
 		$sql = 'DELETE FROM mod_monitis_product_monitor WHERE monitor_id='.$monitor_id;
 		return $this->query_del( $sql );
 	}
+	
 	//////////////////////////////////////////////////////
+	
 	public function getAdmin(){
 
 		$sql = 'SELECT tbladmins.id as adminid, username, email, tbladmins.roleid as roleid

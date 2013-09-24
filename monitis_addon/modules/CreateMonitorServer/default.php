@@ -5,6 +5,7 @@
 		<input type="button" class="m_CreateMonitorServer_Trigger"
 			serverID="<?php echo $this->serverID; ?>" 
 			serverName="<?php echo $this->serverName; ?>" 
+                        
 			value="<?php echo $this->linkText; ?>" />
 	<?php } elseif ($this->linkType == 'anchor') { ?>
 		<a href="#" class="m_CreateMonitorServer_Trigger">
@@ -35,7 +36,7 @@ var m_CreateMonitorServer = {
 		});
 	},
 	trigger: function(monitorID, monitorType) {
-//console.log('trigger **** monitorID = ' + monitorID + '; monitorType = '+monitorType);
+//console.log('trigger **** monitorID = ' + monitorID + '; monitorType = '+monitorType + '; alertGroupId = '+alertGroupId );
 		if (typeof monitorID != 'undefined' && typeof monitorType != 'undefined') {
 			this.loadCreateForm(monitorType, monitorID);
 		} else {
@@ -70,12 +71,13 @@ var m_CreateMonitorServer = {
 		);
 		this.openDialog();
 	},
-	loadCreateForm: function(type, monitorID) {
+	loadCreateForm: function(type, monitorID, alertGroupId) {
 //console.log('loadCreateForm **** monitorID = ' + monitorID + '; type = '+type);
 		type = type.charAt(0).toUpperCase() + type.slice(1);
 		var params = {};
 		if (typeof monitorID != 'undefined')
 			params.module_CreateMonitorServer_monitorID = monitorID;
+                        params.module_CreateMonitorServer_alertGroupId = alertGroupId;
 		var that = this;
 		this.load('createForm' + type, params, function() {
 				$.getScript("../modules/addons/monitis_addon/modules/CreateMonitorServer/static/js/createForm" + type + ".js",
@@ -88,6 +90,7 @@ var m_CreateMonitorServer = {
 				var form = $("#m_CreateMonitorServer_Content").find("form").first();
 				if (typeof monitorID != 'undefined') {
 					$(form).find('input[name="module_CreateMonitorServer_monitorID"]').val(monitorID);
+                                        $(form).find('input[name="module_CreateMonitorServer_alertGroupId"]').val(alertGroupId);
 				} else {
 					$(form).find('input[name="module_CreateMonitorServer_monitorID"]').val(0);
 				}
@@ -163,7 +166,10 @@ var m_CreateMonitorServer = {
 	}
 };
 
+ 
 $(document).ready(function(){
 	m_CreateMonitorServer.init();
+        
+  
 });
 </script>

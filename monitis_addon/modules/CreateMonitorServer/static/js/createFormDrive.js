@@ -19,11 +19,11 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 			tag: {
 				required: true,
 				noSpace: true,
-			},
-			freeLimit: {
-				required: true,
-				range: [1, 50],
 			}/*,
+			freeLimit: {
+				
+				//range: [1, 50],
+			},
 			uptimeSLA: {
 				number: true,
 				range: [1, 100],
@@ -45,7 +45,8 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 				minlength: "Drive letter must be one character"
 			},
 			freeLimit: {
-				range: "Free limit can be set from 1 to 10 GB."
+				//range: "Free limit can be set from 1 to 10 GB."
+                                range: "Free limit can be set from 1 to 50 GB."
 			},
 			tag: {
 				required: "Tag name is required",

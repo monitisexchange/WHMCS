@@ -6,7 +6,7 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 		      element.parent().append(error);
 		},
 		rules: {
-		/*	name: {
+			name: {
 				required: true,
 				minlength: 3,
 				maxlength: 20,
@@ -24,7 +24,7 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 				required: true,
 				noSpace: true,
 			}
-		*/
+		
 			/*,uptimeSLA: {
 				number: true,
 				range: [1, 100],
@@ -35,7 +35,7 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 			},*/
 		},
 		messages: {
-		/*
+		
 			name: {
 				required: "Please provide monitor name",
 				noSpace: "Monitor name can not contain spaces",
@@ -53,7 +53,7 @@ m_CreateMonitorServer_Validator = function(jqForm) {
 				required: "Tag name is required",
 				noSpace: "Tag name can not contain spaces",
 			}
-		*/	
+			
 			/*,
 			uptimeSLA: {
 				number: "Please provide numeric value",

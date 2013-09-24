@@ -41,33 +41,28 @@ function monitis_addon_activate() {
 				`monitor_type` varchar(50),
 				`available` INT default 1,
 				`user_id` INT NOT NULL,
-				`orderid` INT NOT NULL,
+				`order_id` INT NOT NULL,
+				`alertgroup_id` INT default 0,
 				`ordernum` varchar(255),
 				`publickey` varchar(255),
 				PRIMARY KEY ( `monitor_id` )
 				);";
-	$result = mysql_query($query);
-	//$result = mysql_query("DROP TABLE `mod_monitis_product`");	
+	mysql_query($query);
 	$query = "CREATE TABLE `mod_monitis_product` (
 				`product_id` INT NOT NULL,
 				`settings`  TEXT,
-				`order_behavior` TEXT,
-				`notification_rule` TEXT,
-				`status` varchar(50),
+				`status` varchar(50) default 'active',
 				PRIMARY KEY ( `product_id` )
 				);";
-	$result = mysql_query($query);
-	//$result = mysql_query("DROP TABLE `mod_monitis_addon`");
+	mysql_query($query);
 	$query = "CREATE TABLE `mod_monitis_addon` (
 				`addon_id` INT NOT NULL,
 				`type` varchar(50),
 				`settings`  TEXT,
-				`order_behavior` TEXT,
-				`notification_rule` TEXT,
 				`status` varchar(50) default 'active',
 				PRIMARY KEY ( `addon_id` )
 				);";
-	$result = mysql_query($query);
+	mysql_query($query);
 
 	$query = "CREATE TABLE `mod_monitis_client` (
 				`client_id` INT,
@@ -76,7 +71,7 @@ function monitis_addon_activate() {
 				`settings`  TEXT NOT NULL,
 				PRIMARY KEY ( `client_id` )
 				);";
-	$result = mysql_query($query);
+	mysql_query($query);
 	
 	$query = "CREATE TABLE `mod_monitis_ext_monitors` (
 				`client_id` INT NOT NULL,
@@ -84,10 +79,11 @@ function monitis_addon_activate() {
 				`monitor_id` INT NOT NULL,
 				`monitor_type` varchar(100),
 				`available` INT default 1,
+				`alertgroup_id` INT default 0,
 				`publickey` varchar(255),
 				PRIMARY KEY ( `monitor_id` )
 				);";
-	$result = mysql_query($query);
+	mysql_query($query);
 	
 	$query = "CREATE TABLE `mod_monitis_int_monitors` (
 				`client_id` INT NOT NULL,
@@ -96,19 +92,24 @@ function monitis_addon_activate() {
 				`monitor_id` INT NOT NULL,
 				`monitor_type` varchar(100),
 				`available` INT default 1,
+				`alertgroup_id` INT default 0,
 				`publickey` varchar(255),
 				PRIMARY KEY ( `monitor_id` )
 				);";
-	$result = mysql_query($query);	
+	mysql_query($query);	
 
-	$query = "CREATE TABLE `mod_monitis_contact_group` (
-				`group_id` INT NOT NULL,
-				`notification_rule` TEXT,
-				PRIMARY KEY ( `group_id` )
-				);";
-	$result = mysql_query($query);	
-	
 	//$result = mysql_query("DROP TABLE IF EXISTS `mod_monitis_server_available` ");
+
+	$query = '
+		CREATE TABLE `mod_monitis_options`(
+			`option_id` INT NOT NULL,
+			`type` VARCHAR(50),
+			`settings` TEXT,
+			`is_active` TINYINT(1) DEFAULT 0,
+			PRIMARY KEY (`option_id`)
+		)
+	';
+	mysql_query($query);
 
 	MonitisConf::setupDB();
 	
@@ -121,7 +122,7 @@ function monitis_addon_deactivate() {
 
 	$query = "DROP TABLE  `mod_monitis_client`, `mod_monitis_ext_monitors`, `mod_monitis_int_monitors`";
 	$result = mysql_query($query);
-	$query = "DROP TABLE `mod_monitis_product`, `mod_monitis_product_monitor`, `mod_monitis_addon`, `mod_monitis_contact_group`";
+	$query = "DROP TABLE `mod_monitis_product`, `mod_monitis_product_monitor`, `mod_monitis_addon`, `mod_monitis_options`";
 	$result = mysql_query($query);
 	
 	return array('status'=>'success','description'=>'Monitis addon deactivation successful');

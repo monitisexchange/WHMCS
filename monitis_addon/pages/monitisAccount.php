@@ -4,6 +4,9 @@ $isNewAcc = empty(MonitisConf::$apiKey);
 if (monitisPostInt('monitisFormSubmitted')) {
 	$apiKey = trim(monitisPost('apiKey'));
 	$secretKey = trim(monitisPost('secretKey'));
+	
+	$timezone = monitisPostInt('monitisTimeZone');
+	
 	if (empty($apiKey))
 		MonitisApp::addError('Please provide valid API Key');
 	elseif (empty($secretKey))
@@ -11,12 +14,12 @@ if (monitisPostInt('monitisFormSubmitted')) {
 	elseif (!MonitisApi::checkKeysValid($apiKey, $secretKey))
 		MonitisApp::addError('Wrong API and/or Secret keys provided.');
 	else {
-	
 
-		MonitisConf::update_config( MONITIS_CLIENT_ID, array('apiKey' => $apiKey, 'secretKey' => $secretKey) );
+		MonitisConf::update_config( array('apiKey' => $apiKey, 'secretKey' => $secretKey, 'timezone'=> $timezone) );
 
 		if ($isNewAcc) {
-			header('location: ' . MONITIS_APP_URL . '&monitis_page=configure&isNewAcc=1');
+			//header('location: ' . MONITIS_APP_URL . '&monitis_page=configure&isNewAcc=1');
+			header('location: ' . MONITIS_APP_URL . '&monitis_page=settings&isNewAcc=1');
 		}
 	}
 } else {
@@ -37,6 +40,14 @@ if (monitisPostInt('monitisFormSubmitted')) {
 	
 }
 </style>
+<script>    
+$(document).ready(function() {
+	var d = new Date();
+	var minutes = d.getTimezoneOffset(); // minutes
+	var hours = parseInt(minutes/60); // hours
+	$('.monitisTimeZone').val( hours );
+});
+</script>
 <center>
 	<form action="" method="post">
 		<table class="form" width="100%" border=0 cellspacing=2 cellpadding=3>
@@ -58,6 +69,7 @@ if (monitisPostInt('monitisFormSubmitted')) {
 				<td class="fieldarea">
 					<input type="submit" value="Save" class="btn btn-primary" />
 					<input type="hidden" name="monitisFormSubmitted" value="1" />
+					<input type="hidden" name="monitisTimeZone" class="monitisTimeZone" value="1" />
 				</td>
 			</tr>
 		</table>
