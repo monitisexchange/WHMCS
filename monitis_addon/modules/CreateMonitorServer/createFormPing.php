@@ -6,17 +6,18 @@ foreach ($locations as $key => $value) {
 		unset($locations[$key]);
 }
 
-//_dump($_GET);
-
-//_dump($locations);
+//_dump($_POST);
 $serverID = monitisGet('server_id');
 $editMode = monitisGet('editMode');
 $isAgent = monitisGet('isAgent');
 $agentId = monitisGet('agentId');
+$newMonitor= monitisGet('newMonitor');
+
 //$agentKey = monitisGet('agentKey');
 //$drivesList = monitisGet('drivesList');
 
 
+$singletype =monitisPostInt('module_CreateMonitorServer_singletype');
 $monitorID = monitisPostInt('module_CreateMonitorServer_monitorID');
 $serverName = $ipaddress = $hostname = '';
 $monitorType = 'ping';
@@ -24,12 +25,15 @@ if($serverID > 0){
 
 	$oWHMCS = new WHMCS_class();
 	$mExt = $oWHMCS->extServerMonitors( $serverID );
+        //_dump($mExt);
 
 	if( $mExt) {
 		$serverName = $mExt[0]['name'];
 		$monitorID = $mExt[0]['monitor_id'];
 		$hostname = $mExt[0]['hostname'];
 		$ipaddress = $mExt[0]['ipaddress'];
+               
+                
 	} else {
 		$mExt = $oWHMCS->serverInfo( $serverID );
 		
@@ -62,13 +66,13 @@ if ($isEdit) {
 	$monitor = MonitisApi::getExternalMonitorInfo($monitorID);
 	$readonly = 'readonly="readonly"';
 	$disabled = 'readonly="readonly"';
-	//_dump($monitor);
+	//_dump($monitor);        
 	$_timeout = $monitor['timeout'];
 	$_name = $monitor['name'];
 	$_url = $monitor['url'];
 	$_tag = $monitor['tag'];
-	$action_type = 'edit';
-} 
+	$action_type = 'edit';       
+}
 
 ?>
 <style>
@@ -83,8 +87,12 @@ if ($isEdit) {
 			<td class="fieldlabel" width="30%">Monitor type</td>
 			<td class="fieldarea">
 
-<? if( isset($isAgent) && $isAgent == 1 ) { ?>
-				<select name="type" onchange="javascript: m_CreateMonitorServer.loadCreateForm(this.value);">
+                        <? if( isset($isAgent) && $isAgent == 1 ) { ?>
+                          <?  if($singletype){?>
+                               <span>Ping</span>                            
+			                                
+                          <?} else{?>
+                                <select name="type" onchange="javascript: m_CreateMonitorServer.loadCreateForm(this.value);">
 					<optgroup label="External monitors">
 						<option value="ping" selected="selected">Ping</option>
 					</optgroup>
@@ -94,11 +102,11 @@ if ($isEdit) {
 						<option value="drive">Drive</option>
 					</optgroup>
 				</select>
-
-<? } else {?>
+                          <? } ?>
+                        <? } else {?>
 				<?=$monitorType?>
 				<input type="hidden" name="type" size="50" placeholder="Monitor type" value="<?=$monitorType?>"  />
-<?}?>
+                        <?}?>
 			</td>
 		</tr>
 		<tr>
@@ -195,6 +203,8 @@ if ($isEdit) {
 	<input type="hidden" name="server_hostname" value="<?=$hostname?>" />
 	
 	<input type="hidden" name="module_CreateMonitorServer_monitorID" value="<?=$monitorID?>" />
+        
+        <input type="hidden" name="module_CreateMonitorServer_singletype" value="<?=$singletype?>" />
 	<input type="hidden" name="module_CreateMonitorServer_action" value="createSubmited" />
 </form>
 </monitis_data>

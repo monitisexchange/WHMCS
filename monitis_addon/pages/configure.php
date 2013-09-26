@@ -370,8 +370,8 @@ if( $newAgentPlatform == 'LINUX' ) {
 				</td>
 			</tr>
 			<tr>
-				<td class="title" align="center">
-					<input type="submit" value="Save" class="btn" />
+				<td class="title" align="center" style="text-align:center">
+					<input type="submit" value="Save" class="btn btn-primary" />
 				</td>
 			</tr>
 		</table>

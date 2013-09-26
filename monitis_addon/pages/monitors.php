@@ -31,7 +31,7 @@ if( isset($_POST) && isset($_POST['type']) && !empty($_POST['type']) ) {
 $editMode = 'create';
 $serverID = monitisGetInt('server_id');
 if ($serverID == 0)
-	MonitisApp::redirect(MONITIS_APP_URL . '&monitis_page=servers');
+MonitisApp::redirect(MONITIS_APP_URL . '&monitis_page=servers');
 
 	
 //////////////////////////////////////
@@ -128,6 +128,8 @@ $arentName = '';
 if( $int_monitors ) {
 	$arentName = $agentInfo['agentKey'];
 }
+
+  
 ?>
 
 <div style="text-align: right;">
@@ -140,16 +142,17 @@ if( $int_monitors ) {
 
 
 <script>
-function setParameters(form, type, monitor_id, monitor_type, values) {
+function setParameters(form, type, monitor_id, monitor_type,  values) {
 	form.type.value = type;
 	form.monitor_id.value = monitor_id;
-	form.monitor_type.value = monitor_type;
+	form.monitor_type.value = monitor_type;     
 	form.values.value = values;
 }
 </script>
 <section class="sectionblock">
 <form action="" method="post" id="setMonitorForm">
 <?
+$singletype = 1;
 	if( $ext_monitors ) {
 
 _logActivity("monitors tab **** ext_monitors = " . json_encode($ext_monitors) );
@@ -176,13 +179,15 @@ _logActivity("monitors tab **** ext_monitors = " . json_encode($ext_monitors) );
 			//_dump($notif);
                         
 //$ext = MonitisApi::getExternalSnapshot($monitor_id);
-//_dump( $notif );
+//_dump( $notif );      
 			if( $ping && $publickey) {
+                          
 				echo '<figure class="monitor">';
 				//echo MonitisApiHelper::embed_module_by_pubkey( $publickey, 800, 350 );
 				echo monitis_embed_module( $publickey, 800, 350 );
-				echo '<div>
-				<input type="button" value="Edit" onclick="m_CreateMonitorServer.trigger('.$monitor_id.', \''.$monitor_type.'\');" class="btn" />';
+				echo '<div>                                
+				<input type="button" value="Edit" onclick="m_CreateMonitorServer.trigger('.$monitor_id.', \''.$monitor_type.'\', \''.$singletype.'\' );" class="btn" />';
+                               
 				//if( $ping ) {
 					if( $ping['status'] == 'suspended' ) {
 						echo '<input type="submit" value="Activate" 
@@ -233,7 +238,7 @@ _logActivity("monitors tab **** ext_monitors = " . json_encode($ext_monitors) );
 				echo monitis_embed_module( $publickey, 800, 350 );
 				// btn-success
 				echo '<div>
-				<input type="button" value="Edit" onclick="m_CreateMonitorServer.trigger('.$monitor_id.', \''.$monitor_type.'\');" class="btn"  />';
+				<input type="button" value="Edit" onclick="m_CreateMonitorServer.trigger('.$monitor_id.', \''.$monitor_type.'\', \''.$singletype.'\');" class="btn"  />';
 				if( $item['available'] > 0 ) {
 					echo '<input type="submit" value="Not available to customer" 
 					onclick="setParameters(this.form, \'available\', '.$monitor_id.', \''.$monitor_type.'\', 0);" class="btn btn-suspended"  />';

@@ -15,6 +15,7 @@ $agentId = monitisGet('agentId');
 
 //$monitorID = intval(monitisPostInt('module_CreateMonitorServer_monitorID'));
 $monitorID = intval(monitisPostInt('module_CreateMonitorServer_monitorID'));
+$singletype = monitisPostInt('module_CreateMonitorServer_singletype');
 $monitorType = 'memory';
 $serverName = $ipaddress = $hostname = '';
 if($serverID > 0){
@@ -98,6 +99,9 @@ if ($isEdit) {
 <? if ($isEdit && $editMode == 'edit') { ?>
 				<input type="text" name="type" size="50" placeholder="Monitor type" value="<?=$monitorType?>" <?=$readonly?> />
 <? } else {?>
+                               <? if($singletype){?> 
+                                <span>Memory</span>
+                               <? } else{?>
 				<select name="type" onchange="javascript: m_CreateMonitorServer.loadCreateForm(this.value);">
 					<optgroup label="External monitors">
 						<option value="ping">Ping</option>
@@ -108,6 +112,7 @@ if ($isEdit) {
 						<option value="drive">Drive</option>
 					</optgroup>
 				</select>
+                               <? } ?> 
 <?}?>
 			</td>
 		</tr>

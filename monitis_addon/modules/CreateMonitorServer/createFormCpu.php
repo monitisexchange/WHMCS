@@ -12,7 +12,7 @@ $serverID = monitisGet('server_id');
 $editMode = monitisGet('editMode');
 $agentId = monitisGet('agentId');
 $monitorID = intval(monitisPostInt('module_CreateMonitorServer_monitorID'));
-
+$singletype = monitisPostInt('module_CreateMonitorServer_singletype');
 $monitorType = 'cpu';
 $serverName = $ipaddress = $hostname = '';
 $whmcs_cpus = null;
@@ -109,6 +109,9 @@ if ($isEdit > 0) {
 				<?=$monitorType?>
 				<input type="hidden" name="type" size="50" value="<?=$monitorType?>" />
 <? } else {?>
+                               <? if($singletype){ ?>
+                                <span>CPU</span>
+                               <? } else{?>
 				<select name="type" onchange="javascript: m_CreateMonitorServer.loadCreateForm(this.value);">
 					<optgroup label="External monitors">
 						<option value="ping">Ping</option>
@@ -119,6 +122,7 @@ if ($isEdit > 0) {
 						<option value="drive">Drive</option>
 					</optgroup>
 				</select>
+                               <? } ?>
 <?}?>
 	
 			</td>

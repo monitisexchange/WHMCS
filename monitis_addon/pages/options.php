@@ -441,6 +441,37 @@ $(document).ready(function(){
 		$('#actions [name=settings]').val($option.attr('data-settings').replace(/\~/g, '"'));
 		$('#actions').submit();
 	});
+	$('.monitis-options [name=type]').change(function(){
+		var type = $(this).val();
+		var from, to;
+		if(type == 'ping'){
+			from = 1;
+			to = 5000;
+		}
+		else{
+			from = 1000;
+			to = 50000;
+		}
+		$(this).closest('tr').find('.from').text(from);
+		$(this).closest('tr').find('.to').text(to);
+		$(this).closest('tr').find('[name=timeout]').blur();
+	});
+	$('.monitis-options [name=type]').change();
+	$('.monitis-options [name=timeout]').blur(function(){
+		var val = parseInt($(this).val());
+		if(isNaN(val)) val = 0;
+		var from = $(this).parent().find('.from').text();
+		var to = $(this).parent().find('.to').text();
+		if(val < from){
+			$(this).val(from);
+		}
+		else if(val > to){
+			$(this).val(to);
+		}
+		else{
+			$(this).val(val);
+		}
+	});
 });
 </script>
 
@@ -512,7 +543,7 @@ $(document).ready(function(){
 				<tr>
 					<th style="width: 250px;">Configurable option</th>
 					<th style="width: 120px;">Monitor type</th>
-					<th style="width: 320px;">Monitor settings</th>
+					<th style="width: 380px;">Monitor settings</th>
 					<th>Actions</th>
 				</tr>
 			</thead>
@@ -536,9 +567,9 @@ $(document).ready(function(){
 					</td>
 					<td>
 						<?if($optionId != $optionIdToRemove):?>
-						<table width="330px" cellspacing="1" cellpadding="3" border="0">
+						<table width="380px" cellspacing="1" cellpadding="3" border="0">
                                         		<tr>
-                                            			<td class="fieldlabel">Interval:</td>
+                                            			<td class="fieldlabel" style="width: 100px;">Interval:</td>
                                             			<td>
 									<select name="interval">
                                             					<option value="1" <?if($option['settings']['interval'] == 1):?>selected="selected"<?endif?>>1</option>
@@ -555,7 +586,7 @@ $(document).ready(function(){
                                         		</tr>
                                         		<tr>
                                             			<td class="fieldlabel">Timeout:</td>
-                                            			<td><input type="text" size="15" name="timeout" id="timeout" value="<?=$option['settings']['timeout']?>">ms.</td>
+                                            			<td><input type="text" size="15" name="timeout" value="<?=$option['settings']['timeout']?>"> (<span class="from">1000</span> — <span class="to">50 000</span> ms.)</td>
                                         		</tr>
                                         		<tr>
                                             			<td class="fieldlabel">Max locations:</td>

@@ -45,8 +45,6 @@ function hook_monitis_AcceptOrder($vars) {
 	require_once 'MonitisApp.php';
 
 	m_log( $vars, 'AcceptOrder', 'order');
-
-//_logActivity("HOOK AcceptOrder: _SESSION = ".json_encode($_SESSION) );
 	monitisOrderHookHandler( $vars, 'active' ); 
 }
 add_hook("AcceptOrder",1,"hook_monitis_AcceptOrder");
@@ -137,6 +135,7 @@ function hook_monitis_AddonDeleted($vars) {
 }
 add_hook("AddonDeleted",1,"hook_monitis_AddonDeleted");
 
+
 /*
 function hook_monitis_AddonEdit($vars) {
 	require_once 'MonitisApp.php';
@@ -219,41 +218,6 @@ function hook_monitis_AdminServiceEdit($vars) {
 add_hook("AdminServiceEdit",1,"hook_monitis_AdminServiceEdit");
 
 ///////////////////////////////////////////////////////////////////////////
-/*
-// ProductEdit
-// AddonDeleted
-
-// 
-function hook_monitis_ProductDelete($vars) {
-	require_once 'MonitisApp.php';
-	m_log( $vars, 'ProductDelete', 'product');
-}
-add_hook("ProductDelete",1,"hook_monitis_ProductDelete");
-
-
-function hook_monitis_ViewOrderDetailsPage($vars) {
-	require_once 'MonitisApp.php';
-	m_log( $vars, 'ViewOrderDetailsPage', 'orderDetailsPage');
-}
-add_hook("ViewOrderDetailsPage",1,"hook_monitis_ViewOrderDetailsPage");
-
-
-
-function hook_monitis_AnnouncementEdit($vars) {
-	require_once 'MonitisApp.php';
-	m_log( $vars, 'AnnouncementEdit', 'announcement');
-}
-add_hook("AnnouncementEdit",1,"hook_monitis_AnnouncementEdit");
-
-function hook_monitis_NetworkIssueEdit($vars) {
-	require_once 'MonitisApp.php';
-	m_log( $vars, 'NetworkIssueEdit', 'network');
-}
-add_hook("NetworkIssueEdit",1,"hook_monitis_NetworkIssueEdit");
-
-*/
-
-
 
 
 

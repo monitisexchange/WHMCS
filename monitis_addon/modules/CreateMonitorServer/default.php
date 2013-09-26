@@ -5,7 +5,6 @@
 		<input type="button" class="m_CreateMonitorServer_Trigger"
 			serverID="<?php echo $this->serverID; ?>" 
 			serverName="<?php echo $this->serverName; ?>" 
-                        
 			value="<?php echo $this->linkText; ?>" />
 	<?php } elseif ($this->linkType == 'anchor') { ?>
 		<a href="#" class="m_CreateMonitorServer_Trigger">
@@ -35,10 +34,10 @@ var m_CreateMonitorServer = {
 			modal: true,
 		});
 	},
-	trigger: function(monitorID, monitorType) {
-//console.log('trigger **** monitorID = ' + monitorID + '; monitorType = '+monitorType + '; alertGroupId = '+alertGroupId );
+	trigger: function(monitorID, monitorType, singletype ) {
+//console.log('trigger **** monitorID = ' + monitorID + '; monitorType = '+monitorType);
 		if (typeof monitorID != 'undefined' && typeof monitorType != 'undefined') {
-			this.loadCreateForm(monitorType, monitorID);
+			this.loadCreateForm(monitorType, monitorID, singletype );
 		} else {
 			this.loadCreateForm('ping');
 		}
@@ -71,13 +70,14 @@ var m_CreateMonitorServer = {
 		);
 		this.openDialog();
 	},
-	loadCreateForm: function(type, monitorID, alertGroupId) {
-//console.log('loadCreateForm **** monitorID = ' + monitorID + '; type = '+type);
+	loadCreateForm: function(type, monitorID, singletype ) {
+                //console.log('loadCreateForm **** monitorID = ' + monitorID + '; type = '+type);
 		type = type.charAt(0).toUpperCase() + type.slice(1);
+                //console.log('type = '+type);
 		var params = {};
 		if (typeof monitorID != 'undefined')
 			params.module_CreateMonitorServer_monitorID = monitorID;
-                        params.module_CreateMonitorServer_alertGroupId = alertGroupId;
+                        params.module_CreateMonitorServer_singletype = singletype;
 		var that = this;
 		this.load('createForm' + type, params, function() {
 				$.getScript("../modules/addons/monitis_addon/modules/CreateMonitorServer/static/js/createForm" + type + ".js",
@@ -90,7 +90,6 @@ var m_CreateMonitorServer = {
 				var form = $("#m_CreateMonitorServer_Content").find("form").first();
 				if (typeof monitorID != 'undefined') {
 					$(form).find('input[name="module_CreateMonitorServer_monitorID"]').val(monitorID);
-                                        $(form).find('input[name="module_CreateMonitorServer_alertGroupId"]').val(alertGroupId);
 				} else {
 					$(form).find('input[name="module_CreateMonitorServer_monitorID"]').val(0);
 				}
@@ -128,7 +127,7 @@ var m_CreateMonitorServer = {
 		);
 	},
 	load: function(actionName, params, callback) {
-//console.log('load **** actionName = ' + actionName);
+console.log(params.module_CreateMonitorServer_singletype);
 		$("#m_CreateMonitorServer_Content").prepend("<div class='monitisOverlay'></div><div class='monitisLoader'></div>");
 		
 		if (typeof params == 'undefined')
@@ -146,10 +145,12 @@ var m_CreateMonitorServer = {
 		
 		$.post(url, params, function(data) {
 			$('#m_CreateMonitorServer_Content').html($(data).find('monitis_data').html());
-
 			if (callback instanceof Function)
 				callback();
 		});
+             
+                
+                
 	},
 	openDialog: function() {
 		$("#m_CreateMonitorServer_Content").dialog( "open" );
@@ -166,10 +167,7 @@ var m_CreateMonitorServer = {
 	}
 };
 
- 
 $(document).ready(function(){
 	m_CreateMonitorServer.init();
-        
-  
 });
 </script>

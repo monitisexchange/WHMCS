@@ -27,8 +27,8 @@ class MonitisApi {
 			if( !isset($result['error']) && isset($result['authToken']) ) {
 _logActivity("<b>from COOKIE *************** Get authToken</b><p>$json</p>");
 				$authToken = $result['authToken'];
-				//setcookie("monitis_authtoken", $authToken, time()+(3600*20) );
-				setcookie("monitis_authtoken", $authToken, time()+3600 );
+				//setcookie("monitis_authtoken", $authToken, time()+(3600*10) );
+				setcookie("monitis_authtoken", $authToken, time()+36000 );
 			} else {
 _logActivity("<b>from COOKIE *************** Reset authToken</b><p></p>");
 				setcookie("monitis_authtoken", '', time()-3600 );
@@ -475,7 +475,19 @@ _logActivity("requestPost **** action = <b>$action</b><p>$query</p><p>$result</p
            return self::requestPost('editContactGroup', $params);            
 		
 	}
-        
+
+       static function editContactGroup1($newName, $groupId) {     
+           $params['newName']=$newName;
+           $params['groupId']=$groupId;
+           return self::requestPost('editContactGroup', $params);            
+		
+	}
+
+     static function deleteContactGroup1($groupId) {     
+           $params['groupId']=$groupId;
+           return  self::requestPost('deleteContactGroup', $params);            
+	}
+
 	static function deleteContactGroup($groupName) {     
            $params['groupName']=$groupName;
            return  self::requestPost('deleteContactGroup', $params);            

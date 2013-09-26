@@ -26,7 +26,7 @@ class clientServicesClass extends whmcs_db {
 	}
 	
 	private function _addonsServicesByOrderId( $orderid=0 ) {
-		$sql = 'SELECT addonid, tblhostingaddons.hostingid, tblhosting.server as serverid, tblhosting.domain, tblhosting.dedicatedip, 
+		$sql = 'SELECT addonid, tblhostingaddons.hostingid as serviceid, tblhosting.server as serverid, tblhosting.domain, tblhosting.dedicatedip, 
 			tblhostingaddons.status as addonstatus,
 			tbladdons.name as addonname,
 			mod_monitis_addon.type as monitor_type, mod_monitis_addon.settings
@@ -51,9 +51,8 @@ class clientServicesClass extends whmcs_db {
 		return $this->query( $sql );
 	}
 	// LEFT JOIN tblhosting on (tblhosting.id = tblhostingaddons.hostingid AND tblhosting.orderid = tblhostingaddons.orderid ) 
-	
 	private function _clientAddonServiceByAddonId( $addonid, $addonserviceid ) {
-		$sql = 'SELECT addonid, tblhosting.userid, tblhosting.server as serverid, tblhosting.domain, tblhosting.dedicatedip, 
+		$sql = 'SELECT addonid, tblhosting.id as serviceid, tblhosting.userid, tblhosting.server as serverid, tblhosting.domain, tblhosting.dedicatedip, 
 			tblhostingaddons.status as addonstatus,
 			tblhostingaddons.id as addonserviceid,
 			tblhosting.orderid,
@@ -129,7 +128,6 @@ class clientServicesClass extends whmcs_db {
 	
 	public function removeProductMonitorsById($monitor_id) {
 		$sql = 'DELETE FROM mod_monitis_product_monitor WHERE monitor_id='.$monitor_id;
-echo $sql;
 		return $this->query_del( $sql );
 	}
 	
@@ -250,19 +248,26 @@ echo $sql;
 			$orderid = $addonservice['orderid'];
 			$product_addons = $this->_clientAddonServiceByAddonId( $addonid, $addonserviceid );
 
-			if( $product_addons ) {
+			if( $product_addons && $product_addons['monitor_type'] ) {
 				//$monitors = $this->monitorByOrderId($orderid); // ????
 				$monitors = $this->monitorByType($addonid,'addon',$userid);
 
+				$monitor = null;
+				if( $monitors && count($monitors) > 0) 
+					$monitor = $monitors[0];
+
 				$client_product = $this->clientProductBySeviceId( $serviceid, $adminuser );
-				
+
 				if( $product_addons['orderstatus'] == 'Active' ) {
-	
 					$product_addons['web_site'] = $this->url_IP( $product_addons, $product_addons['monitor_type'] );
+					$product_addons['productid'] = $product_addons['addonid'];
+					$product_addons['producttype'] = 'addon';
+					$product_addons['option_id'] = 0;
+					
 					$module = array(
-						'clientproduct' => $client_product,
-						'addon' => $product_addons,
-						'monitors' => $monitors
+						'clientproducts' => $client_product,
+						'addons' => $product_addons,
+						'monitors' => $monitor
 					);
 					
 					$result['data'] = $module;
@@ -274,15 +279,15 @@ echo $sql;
 				}
 			} else { // no addons
 				$result['status'] = 'error';
-				$result['msg'] = 'no addons';
+				$result['msg'] = 'no monitis addon';
 			}
 		} // no monitis product
 		return $result;
 	}
 	private function isAddonActive( & $data ) {
-		if( $data['addon']['orderstatus'] == 'Active' && 
-			$data['clientproduct'] && $data['clientproduct']['status'] == 'Active' && 
-			$data['addon']['addonstatus'] == 'Active' ) {
+		if( $data['addons']['orderstatus'] == 'Active' && 
+			$data['clientproducts'] && $data['clientproducts']['status'] == 'Active' && 
+			$data['addons']['addonstatus'] == 'Active' ) {
 			return true;
 		}
 		return false;
@@ -296,7 +301,6 @@ echo $sql;
 		$this->actionBehavior = MonitisConf::$settings['order_behavior'];
 		$action = $this->actionBehavior[$status];
 
-//echo "*************** hook=$status ******** action=$action *********************** <br>";		
 		$result['action'] = $action; 
 		$result['hook'] = $status; 
 		if( $action != 'noaction') {
@@ -304,11 +308,11 @@ echo $sql;
 			//$addonid = $vars['addonid'];
 
 			if( $response['status'] == 'ok' && $response['data'] ) {
-				//$this->serviceData = $response['data'];
+				$this->serviceData = $response['data'];
 				$data = $response['data'];
-//_dump($data);
-				if( $data['monitor'] ) {
-					$monitor_id = $data['monitor']['monitor_id'];
+
+				if( $data['monitors'] ) {
+					$monitor_id = $data['monitors']['monitor_id'];
 					switch( $action ) {
 						case 'suspended':
 							$resp = MonitisApi::suspendExternal( $monitor_id );
@@ -340,7 +344,7 @@ echo $sql;
 						break;
 					}
 				} elseif( $action == 'active' && $this->isAddonActive( $data ) ) {
-					$resp = $this->createMonitor( $data['addon'] );
+					$resp = $this->createMonitor( $data['addons'] );
 					$result = $resp;
 				}
 			} else {
@@ -371,33 +375,32 @@ echo $sql;
 			$orderid = $service['orderid'];
 			$monitors = $this->monitorByOrderId($orderid);
 			$userid = $service['userid'];
+
+			$adminuser = MonitisConf::getAdminName();
+			$values = array( "id"=> $orderid );
+			$orders = localAPI( "getorders", $values, $this->adminuser);
+			if( $orders['result'] == 'success' ) {
+				$order = $orders['orders']['order'][0];
 			
-			//if( $monitor ) {	
-				$adminuser = MonitisConf::getAdminName();
-				$values = array( "id"=> $orderid );
-				$orders = localAPI( "getorders", $values, $this->adminuser);
-				if( $orders['result'] == 'success' ) {
-					$order = $orders['orders']['order'][0];
+				$client_product = $this->clientProductBySeviceId( $serviceid, $adminuser );
+				$product_addons = $this->_addonsServicesByOrderId( $orderid );
 				
-					$client_product = $this->clientProductBySeviceId( $serviceid, $adminuser );
-					$product_addons = $this->_addonsServicesByOrderId( $orderid );
-					
-					$module = array(
-						'userid' => $userid,
-						'serviceid' => $serviceid,
-						'orderid' => $orderid,
-						'orderstatus'=>$order['status'],
-						'ordernum' => $order['ordernum'],
-						'clientproducts' => $client_product,
-						'addons'=> $product_addons,
-						'monitors' => $monitors
-					);
-					
-					$result['msg'] = 'ok';
-					$result['data'] = $module;
-				} else {
-					$result['msg'] = 'order error';
-				}
+				$module = array(
+					'userid' => $userid,
+					'serviceid' => $serviceid,
+					'orderid' => $orderid,
+					'orderstatus'=>$order['status'],
+					'ordernum' => $order['ordernum'],
+					'clientproducts' => $client_product,
+					'addons'=> $product_addons,
+					'monitors' => $monitors
+				);
+				
+				$result['msg'] = 'ok';
+				$result['data'] = $module;
+			} else {
+				$result['msg'] = 'order error';
+			}
 		}
 //_dump($module);
 		return $result;
@@ -431,7 +434,6 @@ echo $sql;
 		return '';
 	}
 
-	//private function isClientProductActive() {
 	private function clientProductStatus() {
 		$data = $this->serviceData;
 		if( isset($data['clientproducts']) && $data['clientproducts'] ) {
@@ -457,8 +459,6 @@ echo $sql;
 		
 		for($i=0; $i<count( $monitors ); $i++) {
 		
-//echo "isMonitorExist ****** productid = $productid ******** producttype = $producttype********************** monitor_type = $monitor_type <br>";	
-		
 			if( $monitors[$i]['type'] == $producttype && $monitors[$i]['product_id'] == $productid ) { 
 				if( empty($monitor_type) || ( !empty($monitor_type) && $monitors[$i]['monitor_type'] == $monitor_type) )
 					return $monitors[$i];
@@ -474,83 +474,85 @@ echo $sql;
 		$monitors = $data['monitors'];
 		$params = array();
 		$params['tag'] = ''.$data['userid'].'_whmcs';
-		//$params['serverid'] = $data['serverid'];
+
 		$params['userid'] = $data['userid'];
 		$params['orderid'] = $data['orderid'];
 		$params['ordernum'] = $data['ordernum'];
+		
+		
+		$clientproducts = $data['clientproducts'];
+		
 		$params['serverid'] = $clientproducts['serverid'];
+		$params['serviceid'] = $clientproducts['serviceid'];
+		$params['productid'] = $clientproducts['productid'];		
+		
 //_dump($data);
 
 		$productStatus = '';
-		if( $data['clientproducts'] ) {
+		$productStatus = strtolower($clientproducts['status']);
 		
-			$clientproducts = $data['clientproducts'];
-			$productStatus = strtolower($clientproducts['status']);
+		$params['option_id'] = 0;
+		/* if( $data['clientproducts'] ) {} else {} */
 			
-			$params['serverid'] = $clientproducts['serverid'];
-			$params['productid'] = $clientproducts['productid'];
+		if( $clientproducts['customfields'] && isset($clientproducts['customfields']['monitor_type']) ) {
+		
+			$existMonitor = $this->isMonitorExist( $monitors, $clientproducts['pid'], 'product' );
+			
+			if( !$existMonitor ) {		// && ($productStatus == 'active' || $action == 'active')
+				$customfields = $clientproducts['customfields'];
+				$type = $customfields['monitor_type'];
+				$params['producttype'] = 'product';
+				$params['monitor_type'] = $type;
+				$params["web_site"] = $customfields['web_site'];
+				$params['settings'] = $customfields['settings'];
+				// call 
+m_log( $params, 'customfields', '_monitors');
+				$result['monitors'][] = $this->createMonitor( $params );
 
-			if( $clientproducts['customfields'] && isset($clientproducts['customfields']['monitor_type']) ) {
+			} elseif( $existMonitor ) {
+
+				$cProductStatus = $this->clientProductStatus(); 
+				if( !empty($cProductStatus) ) {
+					$monitor_id = $existMonitor['monitor_id'];
+					
+					$result['monitors'][$monitor_id] = $this->_doMonitorAction( $monitor_id, $this->actionBehavior[$cProductStatus] );
+m_log( 'customfields id '.$monitor_id.'***************** action = '.$this->actionBehavior[$cProductStatus], ' customfields monitor', '_monitors');
+				}
+			}
+		}
 			
-				$existMonitor = $this->isMonitorExist( $monitors, $clientproducts['pid'], 'product' );
-				
-				if( !$existMonitor ) {		// && ($productStatus == 'active' || $action == 'active')
-					$customfields = $clientproducts['customfields'];
-					$type = $customfields['monitor_type'];
-		//_dump($data);
-					$params['producttype'] = 'product';
+		if( $clientproducts['configoptions'] && count($clientproducts['configoptions']) > 0 ) {
+		
+			$params['producttype'] = 'option';
+
+			for($i=0; $i < count($clientproducts['configoptions']); $i++) {
+				$configoption = $clientproducts['configoptions'][$i];
+				$type = $configoption['monitor_type'];
+
+				$existMonitor = $this->isMonitorExist( $monitors, $clientproducts['productid'], 'option', $type );
+
+				if(!$existMonitor && $configoption['is_active'] ) {		// && $configoption['is_active']	// && ($productStatus == 'active' || $action == 'active')
+					
+					$params['option_id'] = $configoption['option_id'];
+					$params["web_site"] = $this->url_IP( $clientproducts, $type );
 					$params['monitor_type'] = $type;
-					$params["web_site"] = $customfields['web_site'];
-					$params['settings'] = $customfields['settings'];
-					// call 
-					//m_log( $params, 'customfields', '_monitors');
+					$params['settings'] = $configoption['settings'];
+//_dump($params);
+					m_log( $params, 'configoptions', '_monitors');
 					$result['monitors'][] = $this->createMonitor( $params );
-					//$monitors[] = $params;
 				} elseif( $existMonitor ) {
-
 					$cProductStatus = $this->clientProductStatus(); 
 					if( !empty($cProductStatus) ) {
 						$monitor_id = $existMonitor['monitor_id'];
 						
 						$result['monitors'][$monitor_id] = $this->_doMonitorAction( $monitor_id, $this->actionBehavior[$cProductStatus] );
-						//m_log( 'customfields id '.$monitor_id.'***************** action = '.$this->actionBehavior[$cProductStatus], ' customfields monitor', '_monitors');
+						m_log( 'configoptions id '.$monitor_id.'***************** action = '.$this->actionBehavior[$cProductStatus], ' configoptions monitor', '_monitors');
 					}
 				}
 			}
-			
-			if( $clientproducts['configoptions'] && count($clientproducts['configoptions']) > 0 ) {
-			
-				$params['producttype'] = 'option';
-				//$params['productid'] = $clientproducts['productid'];
-
-				for($i=0; $i < count($clientproducts['configoptions']); $i++) {
-				
-					$configoption = $clientproducts['configoptions'][$i];
-					$type = $configoption['monitor_type'];
-
-					$existMonitor = $this->isMonitorExist( $monitors, $clientproducts['productid'], 'option', $type );
-
-					if(!$existMonitor ) {		// && ($productStatus == 'active' || $action == 'active') 
-						
-						$params["web_site"] = $this->url_IP( $clientproducts, $type );
-
-						$params['monitor_type'] = $type;
-						$params['settings'] = $configoption['settings'];
-//_dump($params);
-						//m_log( $params, 'configoptions', '_monitors');
-						$result['monitors'][] = $this->createMonitor( $params );
-					} elseif( $existMonitor ) {
-						$cProductStatus = $this->clientProductStatus(); 
-						if( !empty($cProductStatus) ) {
-							$monitor_id = $existMonitor['monitor_id'];
-							
-							$result['monitors'][$monitor_id] = $this->_doMonitorAction( $monitor_id, $this->actionBehavior[$cProductStatus] );
-							//m_log( 'configoptions id '.$monitor_id.'***************** action = '.$this->actionBehavior[$cProductStatus], ' configoptions monitor', '_monitors');
-						}
-					}
-				}
-			}			
-		}
+		}			
+	//	}
+		
 	
 		if( $data['addons'] ) {
 			for($i=0; $i<count($data['addons']); $i++) {
@@ -559,10 +561,10 @@ echo $sql;
 				$existMonitor = $this->isMonitorExist( $monitors, $addonid, 'addon' );
 				$addonStatus = $this->addonStatus( $addonid );
 				// if monitor doesn't exist
-//m_log( "addonStatus = $addonStatus **************", '***************', '_monitors_order');
 				if( !$existMonitor && $addonStatus == 'active' ) {
 					$addon = $data['addons'][$i];
-					$params['serverid'] = $addon['serverid'];
+					if( $addon['serverid'] > 0)
+						$params['serverid'] = $addon['serverid'];
 					$params['producttype'] = 'addon';
 					$params['productid'] = $addonid;
 					$type = $addon['monitor_type'];
@@ -574,13 +576,13 @@ echo $sql;
 					$params['settings'] = $addon['settings'];
 					$result['monitors'][] = $this->createMonitor( $params );
 					// call 
-//m_log( $params, 'addon product', '_monitors');
+m_log( $params, 'addon product', '_monitors');
 				//} elseif( $monitors && $existMonitor ) {
 				} elseif( $existMonitor ) {
 					if( !empty($addonStatus) ) {
 						$monitor_id = $existMonitor['monitor_id'];
 						$result['monitors'][$monitor_id] = $this->_doMonitorAction( $monitor_id, $this->actionBehavior[$addonStatus] );
-//m_log( 'monitor id = '.$monitor_id.'*****************'.$this->actionBehavior[$addonStatus], 'addon product', '_monitors');
+m_log( 'monitor id = '.$monitor_id.'*****************'.$this->actionBehavior[$addonStatus], 'addon product', '_monitors');
 					}
 				}
 			}
@@ -654,15 +656,17 @@ echo $sql;
 					$result = mysql_query( $query );
 					$optionMonitis = mysql_fetch_assoc( $result );
 					$optionForModul = array();
+//_dump($optionMonitis);
 					if( $optionMonitis ) {
 						array_push( $module['configoptions'], array(
-							//'option_id' => $optionMonitis['id'],
+							'option_id' => $optionMonitis['id'],
 							'monitor_type' => $optionMonitis['type'],
 							'settings' => html_entity_decode( $optionMonitis['settings'] ),
 							'is_active' => $optionMonitis['is_active']
 						) );
 					}
 				}
+//_dump($module['configoptions']);
 			}
 			return $module;
 		}
@@ -678,16 +682,20 @@ echo $sql;
 		$values = array( "id"=> $orderid  );
 		$iOrder = localAPI( "getorders", $values, $adminuser);
 		
-//_dump($iOrder);
 		if( $iOrder && $iOrder['result'] == 'success') {
 			$order = $iOrder['orders']['order'][0];
 			if( $order ){
-
+				$serviceid = 0;
 				$product_addons = $this->_addonsServicesByOrderId( $orderid );
+				if( $product_addons && count($product_addons) > 0)
+					$serviceid = $product_addons[0]['serviceid'];
+					
 				$product = $this->getProduct( $order['lineitems']['lineitem'] );
+
 				$client_product = null;
 				if( $product ) {
-					$client_product = $this->clientProductBySeviceId( $product['serviceid'], $adminuser );
+					$serviceid = $product['serviceid'];
+					$client_product = $this->clientProductBySeviceId( $serviceid, $adminuser );
 				}
 				if( $product_addons || $client_product ) {
 					$result['status'] = 'ok';
@@ -695,6 +703,7 @@ echo $sql;
 					$monitors = $this->monitorByOrderId($orderid);
 					$module = array(
 						'userid' => $order['userid'],
+						'serviceid' => $serviceid,
 						'orderid' => $orderid,
 						'orderstatus'=>$order['status'],
 						'ordernum' => $order['ordernum'],
@@ -715,11 +724,6 @@ echo $sql;
 	
 	private function toDo( & $data, $action ){
 	
-//echo "****** toDo  $action ******************** <br>";
-//m_log( "******* toDo  $action ***********************", 'addon product', '_testing');
-		
-//_dump($this->serviceData);
-
 		$result = array( 'status'=>'','msg'=>'');
 		if( $action == 'active') {
 			$result = $this->createNewMonitors( );
@@ -738,9 +742,6 @@ echo $sql;
 	
 	private function _doMonitorAction( $monitor_id, $action ) {
 	
-//echo "****** _doMonitorAction  action=$action monitor_id=$monitor_id ******************** <br>";
-//m_log( "***** _doMonitorAction  action=$action monitor_id=$monitor_id ********************", 'addon product', '_testing');
-//echo "****** action = $action *********** monitor_id = $monitor_id ******************** ";
 		$result = array('status'=>'***', 'action'=>$action, 'monitor_id'=>$monitor_id, 'msg'=>'' );
 		switch( $action ) {
 			case 'suspended':
@@ -765,8 +766,6 @@ echo $sql;
 			case 'active':
 			case 'create':
 				$mon = $this->isMonitorById( $monitor_id );
-m_log( "***** _doMonitorAction  action=$action monitor_id=$monitor_id ******************** ". $this->clientProductStatus(), '************', '_testing');
-m_log( $mon, '************', '_testing');
 
 				if( ($mon['type'] == 'addon' && $this->addonStatus( $mon["product_id"]) == 'active' ) ||
 					( ( $mon['type'] == 'product' || $mon['type'] == 'option') && $this->clientProductStatus() == 'active') ) {
@@ -799,7 +798,6 @@ m_log( $mon, '************', '_testing');
 			$response = $this->byOrderId( $orderid );
 			if( $response && $response['data'] ) {
 				$this->serviceData = $response['data'];
-//_dump($this->serviceData);
 				$result['toDoResult'] = $this->toDo( $response['data'], $action );
 				$result['action'] = $action; 
 				$result['hook'] = $status;
@@ -829,12 +827,6 @@ m_log( $mon, '************', '_testing');
 			
 			if( $response['status'] == 'ok' && $response['data'] ) {
 				$this->serviceData = $response['data'];
-//_dump($this->serviceData);
-//echo "****** moduleHookHandler ******************** <br>";
-//m_log( "****** moduleHookHandler ********************", 'addon product', '_testing');
-
-m_log( $this->serviceData, '************ this->serviceData  & action=$action', '_testing');
-
 				$result['toDoResult'] = $this->toDo( $response['data'], $action );
 				$result['action'] = $action; 
 				$result['hook'] = $status;
@@ -859,8 +851,6 @@ m_log( $this->serviceData, '************ this->serviceData  & action=$action', '
 
 			$oUserProds = new monitisClientProducts();
 			$userProducts = $oUserProds->userProductsByServiceId( $userid, $serviceid );
-			
-//_dump($userProducts);
 
 			if($userProducts) {
 				$product = $oUserProds->productByField( 'id', $serviceid );
@@ -874,9 +864,6 @@ m_log( $this->serviceData, '************ this->serviceData  & action=$action', '
 					
 					$productStatus = $this->clientProductStatus();
 					$action = $this->actionBehavior[$productStatus];
-
-//echo "***************** productStatus  = $productStatus ****** action = $action <br>";
-//_dump($this->serviceData);
 
 					$result['toDoResult'] = $this->toDo( $response['data'], $action );
 					$result['action'] = $action; 
@@ -903,7 +890,7 @@ m_log( $this->serviceData, '************ this->serviceData  & action=$action', '
 		$monitor_type = $product['monitor_type'];
 		$product["tag"] = ''.$product['userid'] . '_whmcs';
 		$result = array( "status"=>'ok', "monitor_id"=>0, "monitor_type"=>$monitor_type );
-		
+
 		if( !empty($product['web_site']) ) {
 			$settings = null;
 			if( !empty( $product["settings"] ) ) {
@@ -913,27 +900,36 @@ m_log( $this->serviceData, '************ this->serviceData  & action=$action', '
 			}
 		
 			if($monitor_type == 'ping') {
-				$resp = MonitisApiHelper::addWebPing( $product, $settings );
+				if( isset($settings['ping_timeout']) ){
+					$settings['timeout'] = $settings['timeoutPing'];
+//_dump($settings);
+				}
+				$response = MonitisApiHelper::addWebPing( $product, $settings );
 			} else {
 				$settings['timeout'] = intval($settings['timeout'] / 1000);
-				$resp = MonitisApiHelper::addDefaultWeb( $product, $settings );	
+				$response = MonitisApiHelper::addDefaultWeb( $product, $settings );	
 			}
 
-//_logActivity("createMonitor  **** result = ". json_encode($resp));
+//_logActivity("client product createMonitor  **** result = ". json_encode($response));
 
-			if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {
-				$monitor_id = $resp['data']['testId'];
+			if (@$response['status'] == 'ok' || @$response['error'] == 'monitorUrlExists' || @$response['error'] == 'Already exists') {
+				$monitor_id = $response['data']['testId'];
 				$result["monitor_id"] = $monitor_id;
+				
 				$resp = MonitisApi::getWidget( array('moduleType'=>'external','monitorId'=>$monitor_id) );
+
 				if( $resp && $resp['data'] ) {
 
 					$mon_monitor = $this->_monitorById($monitor_id);
+
 					if( !$mon_monitor ) {
 						$publicKey = $resp['data'];
 						$values = array(
 							'server_id' => $product['serverid'],
+							'service_id' => $product['serviceid'],
 							'available' => $settings['available'],
-							'product_id' => $product['productid'], 
+							'product_id' => $product['productid'],
+							'option_id' => $product['option_id'],							
 							'type' => $product["producttype"], 
 							'monitor_id' => $monitor_id,
 							'monitor_type' => $monitor_type,
@@ -942,15 +938,17 @@ m_log( $this->serviceData, '************ this->serviceData  & action=$action', '
 							'ordernum' => $product['ordernum'],
 							'publicKey' => $publicKey
 						);
-						insert_query('mod_monitis_product_monitor', $values);
 						
-						if( @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists' ) {
-							$resp = MonitisApi::suspendExternal( $monitor_id );
-						}
+						insert_query('mod_monitis_product_monitor', $values);
+			
 						$result["status"] = 'ok';
 						$result["msg"] = 'Monitor successfully created';
 					} else {
 						$result["status"] = 'warning'; $result["msg"] = 'Monitor already exists.';
+					}
+					
+					if( @$response['error'] == 'monitorUrlExists' || @$response['error'] == 'Already exists' ) {
+						$response = MonitisApi::suspendExternal( $monitor_id );
 					}
 					///////////////////////////////////////////////
 					
@@ -969,28 +967,17 @@ m_log( $this->serviceData, '************ this->serviceData  & action=$action', '
 		return $result;
 	}
 	
-/*
-	$tpl = array(
-		'tag'=>'',
-		'serverid'=>'',
-		'userid'=>'',
-		'orderid'=>'',
-		'ordernum'=>'',
-		'producttype'=>'',
-		'web_site'=>'',
-		'monitor_type'=>'',
-	);
-*/	
 	public function addonProductsList( $addonid ) {
-		
+	
 		$services = $this->_activeServicesByAddonId( $addonid );
-//_dump( $services );
+		
 		$adminuser = MonitisConf::getAdminName();
 		$oUserProds = new monitisClientProducts();
 		$arr = array();
 		for( $i=0; $i<count($services); $i++) {
 
 			$prdcts = $oUserProds->userProductsByServiceId( $services[$i]['userid'], $services[$i]['serviceid'] );
+//_dump( $prdcts );
 			$serviceStatus = $prdcts[0]['status'];
 			if( $serviceStatus == 'Active') {
 				$web_site = $this->url_IP( $services[$i], $type );
@@ -1005,6 +992,7 @@ m_log( $this->serviceData, '************ this->serviceData  & action=$action', '
 	}
 }
 
+
 class monitisClientProducts {
 
 	private $products = null;
@@ -1013,7 +1001,7 @@ class monitisClientProducts {
 	public function userProducts( $userid ) {
 		$products = null;
 		$adminuser = MonitisConf::getAdminName();
-//echo "adminuser=$adminuser";
+
 		$values = array( "clientid"=> $userid );
 		$prdcts = localAPI( "getclientsproducts", $values, $adminuser );
 //_dump($prdcts);
@@ -1043,19 +1031,6 @@ class monitisClientProducts {
 		}
 		return null;
 	}
-/*
-	public function test_productByField( $fieldname, $fieldvalue ) {
-	
-		$arr = array();	
-		for( $i=0; $i<count($this->products); $i++) {
-			 
-			if( $this->products[$i][$fieldname] == $fieldvalue )
-				$arr[] = $this->products[$i];
-		}
-		
-		return $arr;
-	}
-*/
 }
 
 

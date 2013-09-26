@@ -36,7 +36,9 @@ function monitis_addon_activate() {
 	$query = "CREATE TABLE `mod_monitis_product_monitor` (
 				`server_id` INT NOT NULL,
 				`product_id` INT NOT NULL,
+				`service_id` INT NOT NULL,
 				`type` varchar(50),
+				`option_id` INT NOT NULL,
 				`monitor_id` INT NOT NULL,
 				`monitor_type` varchar(50),
 				`available` INT default 1,

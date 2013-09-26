@@ -97,15 +97,17 @@ if ($action ) {
 		$locs = explode(',', $_POST["locationIDs"]);
 		$loc = array_map("intval", $locs);
         $timeout = monitisPostInt("timeout");
-        if ($timeout > 5000) {
-            $timeout = 5000;
-        }
+        //if ($timeout > 5000) {
+        //    $timeout = 5000;
+        //}
 
 		$setting = json_encode(MonitisConf::$settings);
 		$setting = json_decode( $setting, true );
 		$set = $setting['http'];
 		
 		$set['timeout'] = $timeout;
+		$set['timeoutPing'] = isset($_POST["timeoutPing"]) ? $_POST["timeoutPing"] : 1000; 
+		
 		$set['interval'] = $_POST["interval"]; 
 		$set['locationIds'] = $loc;
 		$set['locationsMax'] = (!$_POST["locationsMax"]) ? 0 : $_POST["locationsMax"];
@@ -186,12 +188,31 @@ $products = $oMProduct->getproducts();
 ?>
 <?php MonitisApp::printNotifications(); ?>
 
-<table class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3" style="text-align: left;">
+<script type="text/javascript">
+$(document).ready(function(){
+	$('.monitis-products [name=timeout], .monitis-products [name=timeoutPing]').blur(function(){
+		var val = parseInt($(this).val());
+		if(isNaN(val)) val = 0;
+		var from = parseInt($(this).parent().find('.from').text());
+		var to = parseInt($(this).parent().find('.to').text());
+		if(val < from){
+			$(this).val(from);
+		}
+		else if(val > to){
+			$(this).val(to);
+		}
+		else{
+			$(this).val(val);
+		}
+	});
+});
+</script>
+<table class="monitis-products datatable" width="100%" border="0" cellspacing="1" cellpadding="3" style="text-align: left;">
     <tr>
         <th width="20px">&nbsp;</th>
         <th class="title" style="width:150px;">Product Name</th>
         <th class="title" style="width:150px;">Monitor type</th>
-        <th class="title" style="width:320px;">Monitor settings</th>
+        <th class="title" style="width:380px;">Monitor settings</th>
         <th>&nbsp;</th>
     </tr>
     <?
@@ -248,10 +269,97 @@ $products = $oMProduct->getproducts();
 								<? } ?>
                                     </ul>
 								</td>   
-                                <td width="320px" >
-									<? /* $settings, $monitor_type, $prefix */ 
-									include 'incs/monitorprops.php'; 
-									?>
+                                <td width="380px">
+								<?
+										// $settings, $monitor_type, $prefix
+									if( !isset( $monitor_type) ) {
+										$monitor_type = 'ping';
+									}
+									$alertRules = MONITIS_NOTIFICATION_RULE;
+									$loaction = '';
+									$setts = $settings;
+									if( !$setts || !isset( $setts) || empty($setts) ) {
+										//$settings = MonitisConf::$settings;
+										$setts = MonitisConf::$settings[$monitor_type];
+									} else {
+										$setts = json_decode( $setts, true );
+										//$timeOut = $setts['timeout'];
+									}
+
+									$alertRules = $setts['alertRules'];
+									if( !isset($alertRules) || empty($alertRules) ) {
+										$alertRules = MONITIS_NOTIFICATION_RULE;
+									} else {
+										$alertRules = json_encode($alertRules);
+									}
+									
+									$timeOut = $setts['timeout'];
+									
+									$timeOutPing = isset( $setts['timeoutPing'] ) ? $setts['timeoutPing'] : 1000;
+									
+									$group = MonitisApiHelper::alertGroupById( $setts['alertGroupId'], $groupList );
+									
+									if( !isset( $setts['locationIds']) || !empty($setts['locationIds'])) {
+										$loaction = implode(',', $setts['locationIds']);
+									}
+									//
+									$alertRules = str_replace('"', "~", $alertRules );
+								  //  $order_behavior = json_decode($addons[$i]["monitor"]['order_behavior'], true);
+									
+								?>
+								<table width="380px" cellspacing="1" cellpadding="3" border=0>
+									<tr>
+										<td class="fieldlabel">Interval:</td>
+										<td><select name="interval">
+										<?	$newInterval = $setts['interval'];
+
+											$aInterval = explode(',', MonitisConf::$checkInterval);
+											for ($int = 0; $int < count($aInterval); $int++) {
+												if ($aInterval[$int] == $newInterval) { ?>
+													<option value="<?= $aInterval[$int] ?>" selected ><?=$aInterval[$int]?></option>
+												<? } else { ?>
+													<option value="<?= $aInterval[$int] ?>"><?=$aInterval[$int]?></option>
+												<? }
+											}
+											//$timeOut = $setts['timeout'];
+											//if ($monitor_type != 'ping') {
+											//	$timeOut = $timeOut*1000;
+											//}	
+										   ?>
+											</select>&nbsp;min.
+										</td>
+									</tr>
+									<tr>
+									<tr>
+										<td class="fieldlabel">Timeout:</td>
+										<td><input type="text" size="15" name="timeout" value="<?=$timeOut?>"/> (<span class="from">1000</span> — <span class="to">50000</span> ms.)</td>
+									</tr>
+										<td class="fieldlabel">Ping timeout:</td>
+										<td><input type="text" size="15" name="timeoutPing" value="<?=$timeOutPing?>"/> (<span class="from">1</span> — <span class="to">5000</span> ms.)</td>
+									</tr>
+									<tr>
+										<td class="fieldlabel">Max locations:</td>
+										<td><input type="text" size="15" id="locationsMax<?=$prefix?>"  name="locationsMax" value="<?=$setts['locationsMax']?>" /></td>
+									</tr>
+									<tr class="monitisMultiselect">
+										<td class="fieldlabel" >Check locations:</td>
+										<td>
+											<label><span class="monitisMultiselectText" id="locationsize<?=$prefix?>" ><?php echo sizeof($setts['locationIds']); ?></span> locations</label>
+											<input type="button" class="monitisMultiselectTrigger" value="Select" element_prefix="<?=$prefix?>" />
+											<input type="hidden" name="locationIDs" id="locationIDs<?=$prefix?>" value="<?=$loaction?>" />
+										</td>
+									</tr>
+									
+									<tr  style="display:none">
+										 <td class="fieldlabel" >Alert:</td>
+										<td>
+											<input type="button" class="notificationRule" value="<?=$group['title']?>" product="<?=$prefix?>" />
+											<input type="hidden" name="alertGroupId" class="notificationGroupId_<?=$prefix?>" value="<?=$group['id']?>" />
+											<input type="hidden" name="groupname" class="notificationGroupName_<?=$prefix?>" value="<?=$group['name']?>" />
+											<input type="hidden" name="alertRules" id="notifications<?=$prefix?>" class="notificationRule_<?=$prefix?>" value='<?=$alertRules?>' />
+										</td>
+									</tr>
+								</table>
                                 </td>
                                 <td class="actions">
                                  <? if( $isMonitisProduct ) { ?>

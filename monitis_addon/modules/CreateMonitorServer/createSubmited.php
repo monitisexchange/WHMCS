@@ -2,7 +2,8 @@
 $monitorID = monitisPostInt('monitor_id');
 
 $isEdit = $monitorID > 0;
-$type = monitisPost('type');
+//$type = monitisPost('type');
+$type = monitisPost('monitor_type');
 
 $server = array(
 	'id' => monitisPostInt('server_id'),
@@ -32,6 +33,7 @@ switch ($type) {
 		if ($isEdit) {
 			$monParams['testId'] = $monitorID;
 			//$resp = MonitisApiHelper::editPingMonitor( $monParams );
+                        
 			$resp = MonitisApi::editExternalPing( $monParams );
 
 			//if (@$resp['status'] == 'ok' || @$resp['error'] == 'monitorUrlExists' || @$resp['error'] == 'Already exists') {

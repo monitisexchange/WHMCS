@@ -116,38 +116,14 @@ class monitisClientClass extends whmcs_db {
 							$monitors[$i]['settings'] = $monproduct['settings'];
 							
 						} else {
+//$option_id = $monitors[$i]['option_id'];
+//_dump($monitors[$i]);
 							// hayk
-							$configoptions = $product['configoptions']['configoption'];
-							if( $configoptions ) {
-								foreach( $configoptions as $option ){
-									if( $option['type'] == 'yesno' ){
-										if( $option['value'] == '1' ){
-											$optionName = $option['option'];
-										} else {
-											continue;
-										}
-									} else {
-										$optionName = $option['value'];
-									}
-									$query = '
-										SELECT monitis.settings, monitis.type, monitis.is_active
-										FROM `mod_monitis_options` AS monitis
-											LEFT JOIN `tblproductconfigoptionssub` AS options
-											ON options.id = monitis.option_id
-										WHERE options.optionname = "'.$optionName.'" AND options.configid = '.$option['id'].'
-										LIMIT 1
-									';
-									$result = mysql_query( $query );
-									$optionMonitis = mysql_fetch_assoc( $result );
-									//_dump($optionMonitis);
-									if( $optionMonitis && $optionMonitis['is_active'] ){
-										$monitors[$i]['settings'] = html_entity_decode($optionMonitis['settings']);
-										break;
-									} else {
-										$monitors[$i]['settings'] = '';
-									}
-								}
-							}
+							$option_id = $monitors[$i]['option_id'];
+							$result = select_query( 'mod_monitis_options', 'settings', array('option_id'=>$option_id), null, null, 1 );
+							$data = mysql_fetch_assoc( $result );
+							$monitors[$i]['settings'] = html_entity_decode($data['settings']);
+
 						}
 						$monitors[$i]['productname'] = $product['groupname'] .' - '. $product['name'];
 						//_dump($monitors[$i]);

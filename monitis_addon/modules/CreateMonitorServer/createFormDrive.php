@@ -18,6 +18,7 @@ $_driveLetter = monitisPostInt('module_CreateMonitorServer_driveLetter');
 $letterIndex = intval(monitisPostInt('module_CreateMonitorServer_letterIndex'));
 
 $monitorID = intval(monitisPostInt('module_CreateMonitorServer_monitorID'));
+$singletype = monitisPostInt('module_CreateMonitorServer_singletype');
 $monitorType = 'drive';
 $serverName = $ipaddress = $hostname = '';
 $agentPlatform = MonitisConf::$newAgentPlatform;
@@ -100,7 +101,9 @@ if( $agentInfo) {
 		<tr>
 			<td class="fieldlabel" width="30%">Monitor type</td>
 			<td class="fieldarea">
-
+                        <? if($singletype){?>
+                            <span>Drive</span>
+                        <? } else{?>
 				<select name="type" onchange="javascript: m_CreateMonitorServer.loadCreateForm(this.value);">
 					<optgroup label="External monitors">
 						<option value="ping">Ping</option>
@@ -111,6 +114,7 @@ if( $agentInfo) {
 						<option value="drive" selected="selected">Drive</option>
 					</optgroup>
 				</select>
+                        <? } ?>
 			</td>
 		</tr>
 		<tr>
