@@ -70,7 +70,7 @@ class monitisProductClass extends whmcs_db {
 	}
 	public function all_Products() {
 		$command = "getproducts";
-		$adminuser = 'admin'; //MonitisConf::getAdminName();
+		$adminuser = MonitisConf::getAdminName();
 		$values = array();
 		$results = localAPI($command,$values,$adminuser);
 
