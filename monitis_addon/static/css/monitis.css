@@ -1,0 +1,322 @@
+.monitis-grid:after, .monitis-grid-collapse:after{
+    display: block;
+    content: '.';
+    clear: both;
+    height: 0;
+    visibility: hidden;
+}
+.monitis-grid-item-25, .monitis-grid-item-50, .monitis-grid-item-75, .monitis-grid-item-100{
+	display: block;
+    float: left;
+}
+.monitis-grid .monitis-grid-item-25{
+    width: 23%;
+    margin: 0 1%;
+}
+.monitis-grid .monitis-grid-item-50{
+    width: 47%;
+    margin: 0 1%;
+}
+.monitis-grid .monitis-grid-item-75{
+    width: 73%;
+    margin: 0 1%;
+}
+.monitis-grid .monitis-grid-item-100{
+    width: 98%;
+    margin: 0 1%;
+}
+.monitis-grid-collapse .monitis-grid-item-25{
+	width: 25%;
+}
+.monitis-grid-collapse .monitis-grid-item-50{
+	width: 50%;
+}
+.monitis-grid-collapse .monitis-grid-item-75{
+	width: 75%;
+}
+.monitis-grid-collapse .monitis-grid-item-100{
+	width: 100%;
+}
+
+
+.monitis-fixed{
+    display: inline-block;
+    width: 200px;
+}
+.monitis-fixed-mini{
+    display: inline-block;
+    width: 100px;
+}
+.monitis-block{
+    margin: 20px 0;
+}
+.monitis-block-mini{
+    margin: 10px 0;
+}
+.monitis-title{
+    font-weight: bold;
+    padding-bottom: 5px;
+}
+.monitis-title-large{
+    font-weight: bold;
+    padding-bottom: 5px;
+    font-size: 14px;
+}
+
+.monitis-page-bottom {
+	text-align:left;
+	padding:15px 0px;
+}
+.monitis-page-bottom  input {
+	margin: 0px 10px; 
+}
+table.datatable {
+	width:100%;
+}
+table.datatable th, 
+table.datatable td {
+	text-align:left;
+	border: none;
+}
+table.datatable td.action {
+	text-align:left;
+}
+
+table.datatable tr:nth-child(odd) td {
+	background-color: #EBEBEB;
+}
+table.datatable tr:nth-child(odd):hover td {
+	background-color: #E0E0E0;
+}
+
+/*
+.dn {
+	display: none;
+}
+*/
+
+.widget-header {
+	cursor: move;
+}
+.ui-icon-minusthick, .ui-icon-plusthick {
+	cursor: pointer;
+}
+.monitis.homecolumn .widget-content {
+	position: relative;
+}
+.monitisLoader {
+	background-image: url(../img/loading.gif);
+	background-repeat: no-repeat;
+	background-position: center center;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 10;
+}
+.monitisOverlay {
+	background-color: #fff;
+	opacity: 0.9;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 9;
+}
+
+/* message notification */
+.monitis-message {
+	margin:10px 5px;
+	padding: 5px;
+	font-weight: bold;
+	font-size:14px;
+	text-align: center;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-o-border-radius: 5px;
+	border-radius: 5px;
+}
+
+.monitis-message.errors {
+	background-color: #FBEEEB;
+	border: 1px dashed #cc0000;
+	color: #cc0000;
+}
+
+.monitis-message.success {
+	background-color: #dff0d8;
+	border: 1px solid #b9cfa7;
+	color: #468847;
+}
+
+.monitis-message.warning {
+	background-color: #FCF8E3;
+	border: 1px solid #efc987;
+	color: #C09853;
+}
+
+.monitis-message .close {
+	float: right;
+	width: 20px;
+	cursor: pointer;
+	color: #999;
+}
+.monitis-message .close:hover {
+	color: #000; 
+}
+
+
+/* locations dialogue box */
+.monitisMultiselectDialog {
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+
+.monitisMultiselectDialog  hr{
+	margin: 10px 0px;
+	border: solid 1px #e17009; 	/*#666666*/
+}
+
+.monitisMultiselectDialog .column-title {
+	font-weight:bold; 
+	color: #666666;	/* #e17009; */
+	font-size: 14px;
+}
+
+div.monitisFormError {
+	color: #d55a45;
+	padding-left: 3px;
+}
+
+input.monitisFormError {
+	color: #d55a45;
+}
+
+.dialogTitle {
+	text-align:left;
+	padding: 5px 0px;
+}
+.fieldlabel {
+	font-weight:bold;
+}
+
+.section_block {
+	border: 1px solid #ccc; 
+	padding: 20px 5px; 
+	margin: 2px; 
+	text-align: left;
+}
+
+
+
+#monitis_submenu {
+	padding:0px;
+	margin:0px 0px 20px 0px;
+	list-style:none;
+	height:28px;
+}
+#monitis_submenu li {
+	float:left; 
+}
+#monitis_submenu li a {
+	display:block;
+	height:28px;
+	line-height:28px;
+	padding:0 10px; 
+	float:left;
+	font-family: Tahoma, Arial, Helvetica, sans-serif;
+	font-size:12px;
+	text-decoration:none;
+}
+#monitis_submenu li a:hover {
+	text-decoration:underline;
+}
+#monitis_submenu li a.selected {
+	color:#e17009; 
+	font-weight:bold;
+	font-size:12px;
+	border: 1px solid #ebebeb;
+	border-bottom: none;
+	border-left: none; 
+	border-top-right-radius: 7px;
+	
+	-moz-box-shadow: 1px 0 0 rgba(225,112,9, .5);
+	-webkit-box-shadow: 1px 0 0 rgba(225,112,9, .5);
+	box-shadow: 1px 0 0 rgba(225,112,9, .5);
+}
+
+
+/***POP UP WINDOIW****/
+.monitis_dialog_content {
+	margin-top: 20px;
+	font-size: 12px;
+}
+
+.monitis_dialog_content h4 { 
+	font-weight:normal;
+	padding-left:20px;
+}
+	
+.monitis_dialog_content ul {
+   margin-left:0px;
+   padding-left:20px;
+   list-style:none;
+}
+.monitis_dialog_content li {
+	line-height:25px;
+}
+.monitis_dialog_content hr {
+	margin:10px 0px;
+	width:90%;
+	border: solid 1px rgba(225, 112, 9, 0.7); 	/*#666666; rgba(225, 112, 9, 0.7); #e17009*/
+}
+.monitis_dialog_content .monitis_schedule {
+	width:160px;
+	float:left;
+}
+.monitis_dialog_content #scheduleContent {
+	 width:280px;
+	 float:left;
+	 height:70px;
+}
+.monitis_dialog_content #scheduleContent div {
+	text-align:right;
+}
+.monitis_dialog_content #scheduleContent select {
+	width:60px;
+}
+.monitis_dialog_content select.contactgroup {
+	width:160px;
+}
+.ui-widget {
+	z-index:1200;
+}
+/* ========================================== modal layer */
+#monitis_modal_overlay {
+	position:fixed; 
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	background:#ffffff;
+	opacity:0.5;
+	filter:alpha(opacity=50);
+}
+
+#monitis_modal {
+	position:absolute;
+	padding:30px 100px;
+	background: url(../img/loading36.gif) no-repeat;
+}
+
+#monitis_modal_close {
+	position:absolute;
+	width:24px;
+	height:27px;
+	display:block;
+	text-indent:-9999px;
+	top:-7px;
+	right:-7px;
+}

@@ -13,10 +13,6 @@ initialiseClientArea($pagetitle,$pageicon,$breadcrumbnav);
 
 $smartyvalues["variablename"] = $value; 
 
-//$templatefile = "services"; 
 $templatefile = "monitis_monitors"; 
-
 outputClientArea($templatefile)
-
-
 ?>
