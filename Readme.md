@@ -9,5 +9,5 @@ The Monitis Addon requires WHMCS  V5.1.2 or later.
 If you do not have Monitis account, please, [signup](https://portal.monitis.com/free-signup). 
   
 
-You can get more detailed information about installing and using the Monitis Addon in the document [Monitis Addon for WHMCS](https://app.box.com/s/7ihpkqpq4zqvuyqv7fk8).
+You can get more detailed information about installing and using the Monitis Addon in the document [Monitis Addon for WHMCS.doc](https://app.box.com/s/jc6bngeidxivrpmzpbka).
  
