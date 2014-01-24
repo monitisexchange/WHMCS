@@ -234,7 +234,6 @@ table.datatable .monitors_list .active {
 <table class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3" style="">
 	<tr>
 		<th width="20%">Client / Sub Account</th>
-		<th style="width:40%;">Monitis Account / Password</th>
 		<th style="width:40%;">
 			<table width="100%" border="0" cellspacing="0" cellpadding="0">
 				<tr>
@@ -304,13 +303,7 @@ $producttype = array(
 			<?=$uname?>
 		<?}?>
 		</td>
-		<td class="account">
-		<? if(!empty($apiId)) {
-				$userid = userIdByEmail($account);
-		?>
-				<div><?=$account?></div><div><?=MonitisConf::$apiKey?>_<?=$userid?></div>
-		<?}?>
-		</td>
+
 		<td>
 			<table class="monitors_list" width="100%" border="0" cellspacing="0" cellpadding="0">
 		<? for($j=0; $j<count($oks); $j++) {
