@@ -467,9 +467,9 @@ $(document).ready(function(){
                 'name': 'Create Ping Monitor',
                 'settings': {
                         'type': 'ping',
-                        'interval': 1,
-                        'timeout': 1000,
-                        'locationIds': [1,9,10]
+                        'interval': <?= MonitisConf::$settings['ping']['interval'] ?>,
+                        'timeout': <?= MonitisConf::$settings['ping']['timeout'] ?>,
+                        'locationIds': <?= json_encode(MonitisConf::$settings['ping']['locationIds']) ?>
                 },
                 'locations': monitisMonitors.locations
         }, function(settings) {
@@ -498,13 +498,7 @@ $(document).ready(function(){
         monitisProductDialog({
                 'type': 'server-cpu',
                 'name': 'New CPU Monitor',
-                'settings': {
-                        'kernelMax': 90,
-                        'usedMax': 90,
-                        'idleMin': 0,
-                        'ioWaitMax': 90,
-                        'niceMax': 90
-                }
+                'settings': <?= json_encode(MonitisConf::$settings['cpu']['LINUX']) ?>
         }, function(settings) {
             settings.type = 'cpu';
             monitisMonitors.submit(settings);
@@ -530,10 +524,7 @@ $(document).ready(function(){
         monitisProductDialog({
                 'type': 'server-memory',
                 'name': 'New Memory Monitor',
-                'settings': {
-                    'freeLimit': '2000',
-                    'freeSwapLimit': '1000'
-                },
+                'settings': <?= json_encode(MonitisConf::$settings['memory']['LINUX']) ?>,
                 'locations': monitisMonitors.locations
         }, function(settings) {
             settings.type = 'memory';
@@ -561,7 +552,7 @@ $(document).ready(function(){
                 'type': 'server-drive',
                 'name': 'New Drive Monitor',
                 'settings': {
-                    'freeLimit': 30
+                    'freeLimit': <?= MonitisConf::$settings['drive']['freeLimit'] ?>
                 },
                 'drives': monitisMonitors.drives
         }, function(settings) {

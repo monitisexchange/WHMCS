@@ -183,16 +183,19 @@ class notificationsClass {
 		}
 		return $result;
 	}
+	
 
-	public function getNotificationRuleIdsByType($monitor_type) {
+   
+	public function getNotifRuleIds($contact_id, $monitor_type) {
 		$notificationRuleIds = array();
 
 		$params = array('monitorType' => $monitor_type);
 		$notifSet = MonitisApi::getNotificationRules($params);
 
 		for ($i = 0; $i < count($notifSet); $i++) {
-
-			if ($notifSet[$i]['contactId'] == "All") {
+                      if ($notifSet[$i]['contactId'] == $contact_id){
+				$notificationRuleIds[] = $notifSet[$i]['id'];
+			}elseif($notifSet[$i]['contactId'] == "All") {
 				$notificationRuleIds[] = $notifSet[$i]['id'];
 			}
 		}
@@ -200,24 +203,9 @@ class notificationsClass {
 		$notificationRuleIds = implode(",", $notificationRuleIds);
 		return $notificationRuleIds;
 	}
+	////////////////////////////////////////////////
 
-	public function getNotificationRuleIds($contact_id, $monitor_type) {
-		$notificationRuleIds = array();
-
-		$params = array('contactId' => $contact_id, 'monitorType' => $monitor_type);
-		$notifSet = MonitisApi::getNotificationRules($params);
-
-		for ($i = 0; $i < count($notifSet); $i++) {
-
-			if ($notifSet[$i]['contactId'] != "All") {
-				$notificationRuleIds[] = $notifSet[$i]['id'];
-			}
-		}
-
-		$notificationRuleIds = implode(",", $notificationRuleIds);
-		return $notificationRuleIds;
-	}
-
+	
 	public function getGroupInfoById($group_id) {
 		return $this->groupById($group_id);
 	}

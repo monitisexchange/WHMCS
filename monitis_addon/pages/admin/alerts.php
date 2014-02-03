@@ -1,5 +1,6 @@
 <?php
 $notifications = new notificationsClass();
+
 if(isset($_POST['action'])){
 	switch($_POST['action']){
 		case 'save_contacts':
@@ -20,10 +21,12 @@ if(isset($_POST['action'])){
 			elseif($groupId == MonitisConf::$settings['groups']['internal']['groupId']) {
 				$monitorType = 'internal';
 			}
+			
 			$alertRules = MonitisApiHelper::getNotificationRuleByTypeGroup($monitorType, $groupId);
 			if(!$alertRules) {
 				$alertRules = MonitisConf::$settings['groups'][$monitorType]['alert'];
 			}
+			
 			if(is_array($contactsToRemove)) {
 				foreach($contactsToRemove as $contact) {
 					$contactInfo = $notifications->existContact($contact);
@@ -32,36 +35,35 @@ if(isset($_POST['action'])){
 						$indexToRemove = array_search($groupId, $ids);
 						array_splice($ids, $indexToRemove, 1);
 					}
-					$response = MonitisApi::editContact($contactInfo['contactId'], implode(',', $ids));
+					$params = array('contactId'=>$contactInfo['contactId'], 'contactGroupIds'=>implode(',', $ids));
+					$response = MonitisApi::editContact($params);
 					if ($response['status'] == 'ok') {
 						MonitisApiHelper::deleteNotificationRule($contactInfo['contactId'], $monitorType);
 					}
-				}
-			}
+				} 
+			} 
 			if(is_array($contactsToAdd)) {
 				foreach($contactsToAdd as $contact) {              
 					$contactInfo = $notifications->existContact($contact);
 					if($contactInfo) {
 						$ids = $notifications->getGroupIdsByContcatId($contactInfo['contactId']);
+						
 						if(!in_array($groupId, $ids)) {
 							array_push($ids, $groupId);
 						}
-						MonitisApi::editContact($contactInfo['contactId'], implode(",", $ids));
+						$params = array('contactId'=>$contactInfo['contactId'], 'contactGroupIds'=>implode(",", $ids), 'activeFlag'=>1 );
+						MonitisApi::editContact($params);						
 						
-						$notificationRuleIdsOnContact = $notifications->getNotificationRuleIds($contactInfo['contactId'], $monitorType);
-						$notificationRuleIds = $notifications->getNotificationRuleIdsByType($monitorType);
-					  
 						
-						if($notificationRuleIdsOnContact) {
+		                                $notificationRuleIdsOnContact = $notifications->getNotifRuleIds($contactInfo['contactId'], $monitorType);
+						
+						if($notificationRuleIdsOnContact){
 							$notifications->editNotificationRule($contactInfo['contactId'], $groupName, $alertRules, $notificationRuleIdsOnContact);
 						}
-						else {
-							if($notificationRuleIds) {
-								$notifications->editNotificationRule($contactInfo['contactId'], $groupName, $alertRules, $notificationRuleIds);
-							}
-							else {
-								MonitisApiHelper::addNotificationRule($contactInfo['contactId'], $monitorType, $groupId, $alertRules);
-							}
+						else {						 
+						     
+							MonitisApiHelper::addNotificationRule($contactInfo['contactId'], $monitorType, $groupId, $alertRules);
+
 						}
 					}
 					else {
@@ -79,8 +81,10 @@ if(isset($_POST['action'])){
 					
 						$response = MonitisApi::addContactToGroup($contactNew);
 						if($response['status'] == 'ok') {
-							$contactInfo = $response['data'];
-							$notificationRuleIdsOnContact = $notifications->getNotificationRuleIds($contactInfo['contactId'], $monitorType);
+							$contactInfo = $response['data'];							
+							
+							$notificationRuleIdsOnContact = $notifications->getNotifRuleIds($contactInfo['contactId'], $monitorType);
+
 							if ($notificationRuleIdsOnContact) {
 								$notifications->editNotificationRule($contactInfo['contactId'], $groupName, $alertRules, $notificationRuleIdsOnContact);
 							} else {
@@ -90,7 +94,7 @@ if(isset($_POST['action'])){
 							MonitisApp::addWarning($response['error']);
 						}
 					}
-				}
+				} 
 			}
 		break;
 		case 'save_notifications':
@@ -109,33 +113,36 @@ if(isset($_POST['action'])){
 			if(is_array($monitisContactGroup)){
 				foreach($monitisContactGroup[0]['contacts'] as $contact){ 
 				    
-					$notificationRuleIdsOnContact = $notifications->getNotificationRuleIds($contact['contactId'], $groupType); 
+					$notificationRuleIdsOnContact = $notifications->getNotifRuleIds($contact['contactId'], $groupType); 
+					
 					if($notificationRuleIdsOnContact!=''){
 					$notifications->editNotificationRule($contact['contactId'], $groupName, $groupAlerts, $notificationRuleIdsOnContact);
 					}else{
 					    MonitisApiHelper::addNotificationRule($contact['contactId'], $groupType, $groupId, $groupAlerts);
 					}
 				}
-			}
+			} 
 		break;
 	}
 }
+
 MonitisApp::printNotifications();
 
-
-if(!MonitisApi::getContactsByGroupID('All')){    
-   $notifications->createDefaultGroup();
-}
 $monitisContactGroups = MonitisApi::getContactsByGroupID('All');
+if(!$monitisContactGroups){    
+   $monitisContactGroups = $notifications->createDefaultGroup();
+}
 
 $whmcsAdmins = monitisSqlHelper::query('SELECT CONCAT(firstname, " ", lastname) as name, email FROM tbladmins');
 $contactGroups = array();
 
 for($i = 0; $i < count($monitisContactGroups); $i++){
+    
 	$contactGroups[$i] = array();
 	$contactGroups[$i]['id'] = $monitisContactGroups[$i]['contactGroupId'];
 	$contactGroups[$i]['name'] = $monitisContactGroups[$i]['contactGroupName'];
-
+       
+	
 	$alertRules = '';
 	if(MonitisConf::$settings['groups']['external']['groupId'] == $monitisContactGroups[$i]['contactGroupId'] ) {
 		$monitorType = 'external';
@@ -166,10 +173,12 @@ for($i = 0; $i < count($monitisContactGroups); $i++){
 
 	$contactGroups[$i]['whmcsContacts'] = array();
 	$contactGroups[$i]['notWhmcsContacts'] = array();
+	
 	for($j = 0; $j < count($monitisContactGroups[$i]['contacts']); $j++){
 		$contact = array(
 			'email' => $monitisContactGroups[$i]['contacts'][$j]['account'],
-			'name' => $monitisContactGroups[$i]['contacts'][$j]['name']
+			'name' => $monitisContactGroups[$i]['contacts'][$j]['name'],
+			'isActive' => $monitisContactGroups[$i]['contacts'][$j]['activeFlag']
 		);
 		
 		$isWhmcsContact = false;
@@ -186,7 +195,7 @@ for($i = 0; $i < count($monitisContactGroups); $i++){
 		}
 	}
 }
-//_dump($contactGroups);
+
 ?>
 
 
@@ -250,6 +259,9 @@ padding: 0px 0px 5px 10px;
 .monitis-notifications .disabled{
 	color: #CCCCCC;
 }
+#monitis_contacts_dialog_div .passive, .monitis-notifications .passive{
+    color: #1975D1;
+}
 
 
 
@@ -292,7 +304,10 @@ $(document).ready(function(){
 				$element.find('.contacts li').each(function(){
 					var name = $(this).html();
 					var email = $(this).attr('data-email');
-					var $option = $('<option value="' + email + '">' + name + '</option>')
+					var $option = $('<option value="' + email + '" data-is-added="ture">' + name + '</option>');
+					if($(this).hasClass('passive')) {
+					    $option.addClass('passive');
+					}
 					if($(this).hasClass('disabled')){
 						$option.attr('disabled', true);
 					}
@@ -303,7 +318,7 @@ $(document).ready(function(){
 				for(key in whmcsAdmins){
 					var email = key;
 					var name = whmcsAdmins[key];
-					var $option = $('<option value="' + email + '">' + name + '</option>')
+					var $option = $('<option value="' + email + '"  data-is-added="false">' + name + '</option>');
 					$whmcs.append($option);
 				}
 				$(this).find('.remove').click(function(){
@@ -335,12 +350,12 @@ try {
 						$form.append('<input type="text" name="group_id" value="'+ $(this).attr('data-id') +'" />');
 						$form.append('<input type="text" name="group_name" value="'+ $(this).attr('data-name') +'" />');
 						var contactsToAdd = [];
-						$(this).find('.contacts-group select option').each(function(){
+						$(this).find('.contacts-group select option[data-is-added=false]').each(function(){
 							contactsToAdd.push($(this).attr('value'));
 						});
 						$form.append('<input type="text" name="contacts_to_add" value="'+ contactsToAdd.join(',') +'" />');
 						var contactsToRemove = [];
-						$(this).find('.contacts-whmcs select option').each(function(){
+						$(this).find('.contacts-whmcs select option[data-is-added=ture]').each(function(){
 							contactsToRemove.push($(this).attr('value'));
 						});
 						$form.append('<input type="text" name="contacts_to_remove" value="'+ contactsToRemove.join(',') +'" />');
@@ -412,11 +427,14 @@ try {
 		<? foreach($contactGroups as $group): ?>
 		<tr data-id="<?= $group['id'] ?>" data-name="<?= $group['name'] ?>" data-type="<?= $group['type'] ?>" data-alerts="<?= $group['alerts'] ?>">
 			<td><?= $group['name'] ?></td>
-			<td>
-			   
-				<ul class="contacts">
-					<? foreach($group['whmcsContacts'] as $contact): ?>
-					<li data-email="<?= $contact['email'] ?>"><?= $contact['name'] ?></li>
+			<td>			  
+				<ul class="contacts">				  
+					<? foreach($group['whmcsContacts'] as $contact): ?>	    
+				        <? if($contact['isActive']){?>
+					<li data-email="<?= $contact['email'] ?>" ><?= $contact['name'] ?></li>
+					<? } else{?>
+					<li data-email="<?= $contact['email'] ?>" class="passive"><?= $contact['name'] ?></li>
+					<? } ?>
 					<? endforeach ?>
 					<? foreach($group['notWhmcsContacts'] as $contact): ?>
 					<li data-email="<?= $contact['email'] ?>" class="disabled"><?= $contact['name'] ?></li>
@@ -435,7 +453,7 @@ try {
 		<? endforeach ?>
 		<? else: ?>
 		<tr>
-			<td colspan="2">No alerts available.</td>
+		<td colspan="2">No alerts available.</td>
 		</tr>
 		<? endif ?>
 		</tbody>
