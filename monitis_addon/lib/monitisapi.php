@@ -9,6 +9,7 @@ class MonitisApi {
 		if(empty($result)) {
 			return array('status'=>'error', 'code'=>101);
 		} else {
+			$result = utf8_encode($result);
 			$resp = json_decode($result, true);
 			if(empty($resp) && gettype($resp) != 'array') {
 				return array('status'=>'error', 'code'=>101);
@@ -28,7 +29,10 @@ class MonitisApi {
 			$ch = curl_init( $url );
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			$json = curl_exec($ch);
+			curl_close($ch);
 			$result = json_decode($json, true);
+
+
 			if( !empty($result) && !isset($result['error']) && isset($result['authToken']) ) {
 monitisLog("<b>***************Parent Set authToken</b><p>$json</p>");
 				return $result['authToken'];
@@ -65,7 +69,9 @@ monitisLog("<b>***************Parent Set authToken</b><p>$json</p>");
 
 			$ch = curl_init( $url );
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_ENCODING, 'UTF-8');
 			$result = curl_exec($ch);
+			curl_close($ch);
 monitisLog("GET requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>");
 			$json = self::jsonDecode($result);
 			if( $json && isset( $json['errorCode']) && $json['errorCode'] == 4 ) {
@@ -387,9 +393,10 @@ monitisLog("POST requestPost **** action = <b>$action</b><p>$query</p><p>$result
 		return self::requestPost('deleteContact', $params);
                
 	}
-	static function editContact($params ){		
-		return self::requestPost('editContact', $params); 
-	    
+	static function editContact($contactId, $contactGroupIds ){
+		$params['contactId'] = $contactId;
+		$params['contactGroupIds'] = $contactGroupIds;
+		return self::requestPost('editContact', $params);
 	}	
 	
 	// Sub Account
