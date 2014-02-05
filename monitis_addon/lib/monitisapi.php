@@ -393,10 +393,11 @@ monitisLog("POST requestPost **** action = <b>$action</b><p>$query</p><p>$result
 		return self::requestPost('deleteContact', $params);
                
 	}
-	static function editContact($contactId, $contactGroupIds ){
-		$params['contactId'] = $contactId;
-		$params['contactGroupIds'] = $contactGroupIds;
-		return self::requestPost('editContact', $params);
+	static function editContact($params ){
+		//$params['contactId'] = $contactId;
+		//$params['contactGroupIds'] = $contactGroupIds;
+		//return self::requestPost('editContact', $params);
+		return self::requestPost('editContact', $params); 
 	}	
 	
 	// Sub Account
