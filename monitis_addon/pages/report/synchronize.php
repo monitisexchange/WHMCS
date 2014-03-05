@@ -1,62 +1,5 @@
 <?php
 
-function userIdByEmail($email) {
-
-	$arr = explode('_', $email);
-	$userid = 0;
-	if($arr && $arr[0]) {
-		$userid = intval(substr($arr[0], 1));
-	}
-	return $userid;
-}
-
-
-$action = isset($_POST['act']) ? $_POST['act'] : '';
-if(!empty($action)) {
-	$monitor_id = $_POST['monitor_id'];
-	$user_id = $_POST['user_id'];
-
-	switch($action) {
-		case 'unlink_monitor':
-			monitisWhmcsServer::unlinkExternalMonitorById($monitor_id);
-		break;
-		case 'delete_monitor':
-			$params = array(
-				'monitor_id'=>$monitor_id,
-				'user_id'=>$user_id
-			);
-			$resp = monitisClientApi::deleteExternalMonitor($params);
-			if( $resp["status"] == 'ok') {
-				MonitisApp::addMessage('Monitor successfully deleted');
-			} else {
-				MonitisApp::addError('Unable to delete monitor, API request failed: '.$resp['error']);
-			}
-			monitisLog($resp, 'action '.$action);
-		break;
-		case 'delete_user':
-			$apikey = $_POST['apikey'];
-			$resp = monitisClientApi::deleteUserByApikey($apikey);
-			if( $resp["status"] == 'ok') {
-				MonitisApp::addMessage('User successfully deleted');
-			} else {
-				MonitisApp::addError('Unable to delete user: '.$resp['error']);
-			}
-		break;
-		case 'restore_user':
-			$email = $_POST['email'];
-			$apikey = $_POST['apikey'];
-
-			$resp = monitisClientApi::restorUserByEmail($email, $apikey);
-			if( $resp["status"] == 'ok') {
-				MonitisApp::addMessage('User successfully recovered');
-			} else {
-				MonitisApp::addError('Unable to recover user: '.$resp['error']);
-			}
-		break;
-	}
-}
-
-MonitisApp::printNotifications();
 class monitisSynchronize {
 
 	public function __construct() {}
@@ -69,50 +12,6 @@ class monitisSynchronize {
 			}
 		}
 		return -1;
-	}
-	public function synchronizeMonitors11($userid) {
-
-		$mons = array();
-		$links = array();
-		$all = array();
-		
-		$linkMons = monitisClientApi::linksMonitors($userid);
-		$apiMons = monitisClientApi::externalMonitors($userid);
-
-		if($apiMons && $apiMons['testList'] && count( $apiMons['testList']) > 0 ) {
-			$apiMons = $apiMons['testList'];
-			if($apiMons && !$linkMons) {
-				$mons = $apiMons;
-			} else {
-				$mons = array();
-				$links = array();
-				for($i=0; $i<count($apiMons); $i++) {
-					$index = $this->monitorInArray($linkMons, 'monitor_id', $apiMons[$i]['id']);
-					if($index < 0) {
-						$mons[] = $apiMons[$i];
-					} else {
-					
-						$all[] = array('api'=>$apiMons[$i], 'whmcs'=>$linkMons[$index]);
-					} 
-				}
-				
-				for($i=0; $i<count($linkMons); $i++) {
-					$index = $this->monitorInArray($apiMons, 'id', $linkMons[$i]['monitor_id']);
-					if($index < 0) {
-						$links[] = $linkMons[$i];
-					} 
-				}
-			
-			}
-		} elseif($links) {
-			$links = $linkMons;
-		}
-
-		return array(
-			'api' => $mons,
-			'link' => $links,
-			'oks' => $all
-		);
 	}
 	
 	public function synchronizeMonitors($userid, & $apiMons) {
@@ -150,31 +49,50 @@ class monitisSynchronize {
 			'oks' => $oks
 		);
 	}
+	
+	private function userById($userid) {
+		return monitisSqlHelper::objQuery('SELECT id as user_id, firstname, lastname, email
+			FROM tblclients 
+			WHERE id='.$userid);
+	}
+	
 	//
 	public function synchronizeClients() {
 		
 		$all = array();
-		
+
 		$subUsers = MonitisApi::clients(true);
+
 		$clntByUsr = monitisSqlHelper::query('SELECT user_id, firstname, lastname, email, LOWER(status) as status, api_key, secret_key
 			FROM mod_monitis_user
 			LEFT JOIN tblclients ON tblclients.id=mod_monitis_user.user_id');
-	
+
 		for($i=0; $i<count($subUsers); $i++) {
 		
-			$whmcsUser = MonitisHelper::in_array($clntByUsr, 'api_key', $subUsers[$i]['apikey']);
-
+			$apikey = $subUsers[$i]['apikey'];
+			$whmcsUser = MonitisHelper::in_array($clntByUsr, 'api_key', $apikey);
 			$userid = 0;
-			// client linked
+			// user linked
 			if($whmcsUser) {
 				$userid = $whmcsUser['user_id'];
 			} else {
-				// client unlinked
+				// link user
+				$arr = explode('_', $subUsers[$i]['account']);
+				if($arr && $arr[0]) {
+					$userid = intval(substr($arr[0], 1));
+					$resp = monitisClientApi::linkUserByApikey($apikey, $userid);
+
+					if(@$resp['status'] == 'ok' && isset($resp['data'])) {
+						//$secretkey = $resp['data']['secret_key'];
+						$whmcsUser = $this->userById($userid);
+						$whmcsUser['api_key'] = $apikey;
+						$whmcsUser['secret_key'] = $resp['data']['secret_key'];
+					}
+				}
 			}
 			$monitors = null;
 			if($userid > 0) {
 				$monitors = $subUsers[$i]['monitors'];
-				
 				$monitors = $this->synchronizeMonitors($userid, $monitors);
 			}
 			$all[] = array(

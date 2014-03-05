@@ -50,7 +50,9 @@ class MonitisConf {
 	static $locations = null;
 	static $locationsDays = 0;
 	
-	static $apiServerError = 0;
+	static $apiServerError = '';
+	
+	
 
 	static function update_config( $vals ) {
 
@@ -148,7 +150,7 @@ class MonitisConf {
 			return true;
 		}
 		// 
-		if(empty(self::$locations)) {
+		if(empty(self::$locations) && !empty(self::$secretKey)) {
 			self::update_locations( MonitisApiHelper::getExternalLocations() );
 		}
 		if(empty(self::$authToken)) {

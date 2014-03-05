@@ -235,6 +235,7 @@ class serverMonitors {
 				
 			} elseif($type == 'ping' || $type == 'external') {
 				$ping = MonitisApi::getExternalMonitorInfo($monitorId);
+				 
 				$locs = array();
 				$intervals = array();
 				for($i=0; $i<count($ping['locations']); $i++) {
@@ -243,6 +244,7 @@ class serverMonitors {
 				}
 				$ping['locations'] = implode(',', $locs);
 				$ping['intervals'] = implode(',', $intervals);
+				$ping['id'] = $monitorId;
 				$resp = $this->whmcsInfo($ping, $monitorId, 'external');
 			} 
 		}

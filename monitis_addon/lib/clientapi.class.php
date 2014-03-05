@@ -4,6 +4,25 @@ class monitisClientApiAccess {
 
 	static $endpoint = MONITISAPIURL;
 	
+	
+	static function jsonDecode($result) {
+		//$err = 'Sorry, Monitis API does not respond, try later ';
+		//MonitisConf::$apiServerError = '';
+		if(empty($result)) {
+			//MonitisConf::$apiServerError = $err;
+			return array('status'=>'error', 'code'=>101);
+		} else {
+			$result = utf8_encode($result);
+			$resp = json_decode($result, true);
+			if(empty($resp) && gettype($resp) != 'array') {
+				//MonitisConf::$apiServerError = $err;
+				return array('status'=>'error', 'code'=>101);
+			}
+			return $resp;
+		}
+	}
+	
+	
 	static function requestGet($action, $params) {
 		// TODO: error handling when JSON is not returned
 		$authToken = MonitisConf::$authToken;
@@ -19,7 +38,8 @@ class monitisClientApiAccess {
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			$result = curl_exec($ch);
 monitisLog("client requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>");
-			$resp = json_decode($result, true);
+			$resp = json_decode($result, true); // mml
+			//$resp = self::jsonDecode($result);
 			
 			if(@$resp['error'] && @$resp['errorCode'] && $resp['errorCode'] == 4) {
 				if(MonitisConf::update_token())
@@ -59,6 +79,7 @@ monitisLog("client requestGet **** action = <b>$action</b><p>$url</p><p>$result<
 			$result = curl_exec($ch);
 monitisLog("client requestPost **** action = <b>$action</b><p>$query</p><p>$result</p>");
 			$resp = json_decode($result, true);
+			//$resp = self::jsonDecode($result);
 			
 			if(@$resp['error'] && @$resp['errorCode'] && $resp['errorCode'] == 4) {
 					if(MonitisConf::update_token())
@@ -140,7 +161,7 @@ class monitisClientApi extends monitisClientApiAccess {
 		);
 		
 	}
-
+	
 	static function addMonitisUser($user) {
 
 		$result = array('status'=>'error');
@@ -149,6 +170,7 @@ class monitisClientApi extends monitisClientApiAccess {
 
 		$user['email'] = $monitisAccount['email'];
 		$user['password'] = $monitisAccount['password'];
+		$user['role'] = 'Client_Unlimited';
 		
 		$userInfo = array(
 			'user_id' => $userid,
@@ -188,10 +210,20 @@ class monitisClientApi extends monitisClientApiAccess {
 		$params["timezone"] = MonitisConf::$settings['timezone'];		// admin time zone
 		$params["sendDailyReport"] = 'true';
 		$params["confirmContact"] = 'true';
+		$params["textType"] = '0';
 		
 		$user = self::userToken($userid);
 		if($user['status'] == 'ok') {
 			return self::requestPost('addContact', $params, $user); 
+		} else {
+			return $user;
+		}
+	}
+	
+	static function editContact($params, $userid) {
+		$user = self::userToken($userid);
+		if($user['status'] == 'ok') {
+			return self::requestPost('editContact', $params, $user); 
 		} else {
 			return $user;
 		}
@@ -210,13 +242,13 @@ class monitisClientApi extends monitisClientApiAccess {
 
 			if($usr && $usr['status'] == 'active') {
 				$resp = self::addMonitisUser($usr);
-monitisLog($resp, 'addMonitisUser userid='.$userid );
+//monitisLog($resp, 'addMonitisUser userid='.$userid );
 				if($resp['status'] == 'ok' && isset($resp['data']) ) {
 					$user = $resp['data'];
 					$result = $resp;
 					// add contact action
 					$resp = self::addContact(array('firstName'=>$usr['firstName'],'lastName'=>$usr['lastName'],'account'=>$usr['email']), $userid);
-monitisLog($resp, 'Action addContact userid='.$userid );
+//monitisLog($resp, 'Action addContact userid='.$userid );
 				} else {
 					//
 					$result['msg'] = $resp['msg'];
@@ -228,7 +260,7 @@ monitisLog($resp, 'Action addContact userid='.$userid );
 		}
 		return $result;
 	}
-
+	
 	static function unlinkUserMonitors($userid) {
 		monitisSqlHelper::altQuery('DELETE FROM mod_monitis_product_monitor WHERE user_id='.$userid);
 		return array('status'=>'ok');
@@ -531,7 +563,7 @@ monitisLog($resp, 'Action addContact userid='.$userid );
 
 
 function monitisClientHookHandler(& $vars, $hook) {
-	$resp = monitisUserHelper::userHookHandler( $vars, $hook );
-monitisLog( $resp, 'userHookHandler');
+	$resp = monitisClientApi::userHookHandler( $vars, $hook );
+//monitisLog( $resp, 'userHookHandler');
 }
 ?>

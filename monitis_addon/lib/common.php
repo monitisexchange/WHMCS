@@ -130,12 +130,13 @@ class MonitisHelper {
 	static function dump() {
 		return monitisSqlHelper::query('SELECT * FROM '.MONITIS_LOG_TABLE.' ORDER BY `date` DESC');
 	}
-	
+/*
 	static function lostMonitors($ids, $table) {
 		if(!MonitisConf::$apiServerError) {
 			monitisSqlHelper::altQuery('DELETE FROM '.$table.' WHERE monitor_id in ('.$ids.')');
 		}
 	}
+*/
 }
 
 class monitisSqlHelper {
@@ -213,6 +214,31 @@ echo "<p>$sql</p>";
 _dump($vObj);
 }
 
+function monitisForQA($action='', $method='', $params='', $result=''){
+    //$resultSet='';
+    $values=array( 'action' =>  $action, 
+	           'method' =>  $method, 	      
+		   'params' =>  json_encode($params),
+		   'date'   =>  date("Y-m-d H:i:s", time()),
+		   'code'    =>  md5(json_encode($params)),
+		   'result' =>  json_encode($result),
+                );
+    //$resultSet = mysql_query('SELECT * FROM mod_monitis_qa WHERE `action`='.$action.' AND `date`='.date("Y-m-d H:i:s", time()));
+ 
+    $sql = 'SELECT * FROM mod_monitis_qa WHERE action="'.$action.'" AND code= "'.md5(json_encode($params)).'"';
+    $resultSet = monitisSqlHelper::query($sql);     
+    if($resultSet){
+	$update = array( 'action' =>$action, 'result'=>json_encode($result), 'params'=>json_encode($params), 'date'=>date("Y-m-d H:i:s", time()));
+	$where = array('id' =>$resultSet[0]['id']);
+	update_query('mod_monitis_qa', $update, $where);
+    }else{
+	insert_query('mod_monitis_qa', $values);
+    }
+   
+} 
+
+
+
 function m_log( $log_text, $title='', $filename=''){
 	
 	define('MONITIS_m_log_LOGGER', false );
@@ -239,6 +265,35 @@ function m_log( $log_text, $title='', $filename=''){
 		chmod($logFile, 0777);
 	}
 }
+
+function monitisMacros($log_text = '', $write = ''){
+    
+			$filename = 'monitis_macros';
+			$logPath  = '/var/www/whmcs/modules/addons/monitis_addon/_logs/';
+			$file     = 'log';
+			
+			if( !empty($filename) ) $file = $filename;		
+			$logFile = "$logPath$file.log";	
+			
+		if($write){
+		    
+			$st = array('monitis_macros'=>$log_text);
+			$st = json_encode($st);
+			if (! $f = fopen ( $logFile, "w" )) return FALSE;
+			if (! fwrite ( $f, $st )) return FALSE;
+		    
+		    }else{
+		    
+			$file_contnet = file_get_contents($logFile, true);
+			$file_contnet = json_decode($file_contnet, true);
+			return $file_contnet;
+		    }
+		    
+		fclose ( $f );
+		chmod($logFile, 0777);
+
+}
+
 
 function _logActivity($str, $title='') {
 	if( MONITIS_LOGGER ) {

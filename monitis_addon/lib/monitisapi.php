@@ -2,23 +2,46 @@
 class MonitisApi {
 
 	static $endpoint = MONITISAPIURL;
-	//static $authTokenCount = 3;
 	
 	static function jsonDecode($result) {
-		
+		$err = 'The Monitis API is temporarily unavailable. Please try again later.';
+		MonitisConf::$apiServerError = '';
 		if(empty($result)) {
+			MonitisConf::$apiServerError = $err;
 			return array('status'=>'error', 'code'=>101);
 		} else {
 			$result = utf8_encode($result);
 			$resp = json_decode($result, true);
 			if(empty($resp) && gettype($resp) != 'array') {
+				MonitisConf::$apiServerError = $err;
 				return array('status'=>'error', 'code'=>101);
 			}
 			return $resp;
 		}
 	}
 	
-	static function getAuthToken() {
+	/* 
+	static function getSecretkey() {
+		$params = array('apikey' => MonitisConf::$apiKey);
+		//$params['apikey'] = MonitisConf::$apiKey;
+		$resp = self::requestGet('secretkey', $params);
+		if( !@$resp['error'] && $resp['secretkey']) {
+			$secretKey = $resp['secretkey'];
+			if($secretKey != MonitisConf::$secretKey) {
+				$update = array('secretKey' => $secretKey);
+				$where = array('client_id' => MONITIS_CLIENT_ID );
+				update_query(MONITIS_SETTING_TABLE, $update, $where);
+			}
+			return $secretKey;
+		} else {
+			return '';
+		}
+	}
+	*/
+	static function getAuthToken() {	
+			//if(MonitisConf::$secretKey)
+			//	MonitisConf::$secretKey = self::getSecretkey();
+
 			$params = array();
 			$params['version'] = MONITIS_API_VERSION;
 			$params['action'] = 'authToken';
@@ -31,8 +54,7 @@ class MonitisApi {
 			$json = curl_exec($ch);
 			curl_close($ch);
 			$result = json_decode($json, true);
-
-
+			
 			if( !empty($result) && !isset($result['error']) && isset($result['authToken']) ) {
 monitisLog("<b>***************Parent Set authToken</b><p>$json</p>");
 				return $result['authToken'];
@@ -57,22 +79,28 @@ monitisLog("<b>***************Parent Set authToken</b><p>$json</p>");
 	}
 
 	static function requestGet($action, $params) {
+//self::getSecretkey();
 		// TODO: error handling when JSON is not returned
+	    
 		$authToken = MonitisConf::$authToken;
-		if( $authToken) {
+		if( $authToken) {   
+		 
 			$params['version'] = MONITIS_API_VERSION;
 			$params['action'] = $action;
 			$params['apikey'] = MonitisConf::$apiKey;
 			$params['authToken'] = $authToken;
 			$query = http_build_query($params);
-			$url = self::$endpoint . '?' . $query;
-
+			$url = self::$endpoint . '?' . $query; 
+                       
 			$ch = curl_init( $url );
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($ch, CURLOPT_ENCODING, 'UTF-8');
 			$result = curl_exec($ch);
 			curl_close($ch);
-monitisLog("GET requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>");
+
+			
+			monitisLog("GET requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>");
+
 			$json = self::jsonDecode($result);
 			if( $json && isset( $json['errorCode']) && $json['errorCode'] == 4 ) {
 				if(MonitisConf::update_token())
@@ -109,6 +137,8 @@ monitisLog("GET requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>
 			curl_setopt($ch, CURLOPT_POST, 1 );
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
 			$result = curl_exec($ch);
+			curl_close($ch);
+			
 monitisLog("POST requestPost **** action = <b>$action</b><p>$query</p><p>$result</p>");		
 			//$json = json_decode($result, true);
 			$json = self::jsonDecode($result);
@@ -339,14 +369,17 @@ monitisLog("POST requestPost **** action = <b>$action</b><p>$query</p><p>$result
        
 	static function getContactGroupList() {         
 		return self::requestGet('contactGroupList', array());
-	}
-        
-	static function getContactsByGroupID($contactGroupId) {   
-		$params['contactGroupIds'] = $contactGroupId; 
+	}       
+	
+	
+        static function getContactsByGroupID($contactGroupId = '') { 
+	        if($contactGroupId){
+		    $params['contactGroupIds'] = $contactGroupId; 
+		}
 		$params[ 'nocache']='true';
 		return self::requestGet('contactsList', $params);
 	}
-
+	
 	static function editContactGroup($newName, $groupId) {     
 		$params['newName'] = $newName;
 		$params['groupId'] = $groupId;
@@ -377,26 +410,17 @@ monitisLog("POST requestPost **** action = <b>$action</b><p>$query</p><p>$result
 		static function editNotificationRule($params) {
 		 return self::requestPost('editNotificationRule', $params);  
 	}        
-
-	static function getContacts() { 
-		return self::requestGet('contactsList', array());
-	}
-
+	
 	static function addContactToGroup($params) {
 		return self::requestPost('addContact', $params);
 	}
 
-	static function deleteContact($contactId, $account, $contactType ){
-		$params['contactId']=$contactId;
-		$params['account']=$account;
-		$params['contactType']= $contactType;
+	static function deleteContact($contactId ){
+		$params['contactId']=$contactId;		
 		return self::requestPost('deleteContact', $params);
                
 	}
 	static function editContact($params ){
-		//$params['contactId'] = $contactId;
-		//$params['contactGroupIds'] = $contactGroupIds;
-		//return self::requestPost('editContact', $params);
 		return self::requestPost('editContact', $params); 
 	}	
 	
@@ -412,5 +436,13 @@ monitisLog("POST requestPost **** action = <b>$action</b><p>$query</p><p>$result
 	static function getPublicKeys() {
 		$params = array('nocache'=>'true');
 		return self::requestGet('getPublicKeys', $params);
+	}
+	
+	static function clientsList($params) {
+		return self::requestGet('clients', $params);
+	}
+	
+	static function userInfo($params) {
+		return self::requestGet('userInfo', $params);
 	}
 }

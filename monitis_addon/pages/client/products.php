@@ -383,7 +383,7 @@ MonitisApp::printNotifications();
 							} else {
 								$action = 'create';
 								?>
-								<span class="textgrey">Not monitoring product</span>
+								<span class="textred">Inactive</span>
 							<? } ?>
 						</td>
 						<td class="action">

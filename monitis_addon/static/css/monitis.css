@@ -320,3 +320,11 @@ input.monitisFormError {
 	top:-7px;
 	right:-7px;
 }
+/* ========================================== error message */
+#monitis_api_error {
+	color: #aa3333;
+	width:300px;
+	position:relative;
+	margin:-50px 0px 50px 0px;
+	float:right;
+}

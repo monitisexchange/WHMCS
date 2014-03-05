@@ -100,6 +100,6 @@ $(document).ready(function() {
 var d = new Date();
 var n = d.getTimezoneOffset(); // minutes
 //var monitisTZOffset = n * 60 * 1000; // microseconds
-var monitisTZOffset = n * 1000; // microseconds
+var monitisTZOffset = -n; // microseconds  (n * 1000);
 
 

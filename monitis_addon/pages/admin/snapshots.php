@@ -13,7 +13,7 @@ monitis_embed_module_readonly="false";
 monitis_embed_module_show_group_filter="false";   /*hide grouop filter in snapshot module*/
 monitis_embed_module_monitorIds="'.$ext_ids.'"; /*filter results by testIds*/
 </script>
-<script type="text/javascript" src="https://api.monitis.com/sharedModule/shareModule.js"></script>
+<script type="text/javascript" src="'.MONITISAPIURL_JS.'/sharedModule/shareModule.js"></script>
 <noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
 	} else {
 		return '<div style="width:500px;text-align:center">No data to display</div>';
@@ -33,7 +33,7 @@ monitis_embed_module_height="350";
 monitis_embed_module_readonly="false";
 monitis_embed_module_monitorIds="'.$ids.'"; /*filter results by testIds*/
 </script>
-<script type="text/javascript" src="https://api.monitis.com/sharedModule/shareModule.js"></script>
+<script type="text/javascript" src="'.MONITISAPIURL_JS.'/sharedModule/shareModule.js"></script>
 <noscript><a href="http://monitis.com">Monitoring by Monitis. Please enable JavaScript to see the report!</a> </noscript>';
 	} else {
 		return '<div style="width:500px;text-align:center">No data to display</div>';

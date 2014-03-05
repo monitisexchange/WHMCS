@@ -42,7 +42,7 @@ function monitis_addon_config() {
 /*
  * Handle addon activation
  */
-function monitis_addon_activate($vars) {
+function monitis_addon_activate() {
 	//$result = mysql_query("DROP TABLE `mod_monitis_product_monitor`");
 	$query = "CREATE TABLE `".MONITIS_SETTING_TABLE."` (
 				`client_id` INT,
@@ -158,13 +158,14 @@ function monitis_addon_activate($vars) {
 
 function monitis_addon_deactivate() {
 
-	$query = "DROP TABLE  `".MONITIS_SETTING_TABLE."`, `mod_monitis_ext_monitors`, `mod_monitis_int_monitors`";
-	$result = mysql_query($query);
-	$query = "DROP TABLE `mod_monitis_product`, `mod_monitis_product_monitor`, `mod_monitis_addon`, `".MONITIS_HOOK_REPORT_TABLE."`, `".MONITIS_LOG_TABLE."`, `".MONITIS_USER_TABLE."`";
-	$result = mysql_query($query);
-	$query = "DROP TABLE `mod_monitis_options`";
-	$result = mysql_query($query);
-
+	if(MONITIS_REMOVE_TABLES) {
+		$query = "DROP TABLE  `".MONITIS_SETTING_TABLE."`, `mod_monitis_ext_monitors`, `mod_monitis_int_monitors`";
+		mysql_query($query);
+		$query = "DROP TABLE `mod_monitis_product`, `mod_monitis_product_monitor`, `mod_monitis_addon`, `".MONITIS_HOOK_REPORT_TABLE."`, `".MONITIS_LOG_TABLE."`, `".MONITIS_USER_TABLE."`";
+		mysql_query($query);
+		$query = "DROP TABLE `mod_monitis_options`";
+		mysql_query($query);
+	}
 	return array('status'=>'success','description'=>'Monitis addon deactivation successful');
 }
 

@@ -33,7 +33,7 @@ if (monitisPostInt('monitisFormSubmitted')) {
 $(document).ready(function() {
 	var d = new Date();
 	var minutes = d.getTimezoneOffset(); // minutes
-	var hours = parseInt(minutes/60); // hours
+	var hours = -parseInt(minutes); // hours
 	//var hours = parseInt(minutes); // hours
 	$('.monitisTimeZone').val( hours );
 });

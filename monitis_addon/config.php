@@ -1,14 +1,16 @@
 <?
 //
 define('MONITISAPIURL_JS', 'https://api.monitis.com');
+
 define('MONITISAPIURL', MONITISAPIURL_JS.'/api');
 
 define('MONITIS_APP_URL', '?module=monitis_addon');
 define('MONITIS_PAGE_LIMIT', 20);
-define('MONITIS_API_VERSION', 3);
-define('MONITIS_RESOURCE_VERSION', 1);
-define('MONITIS_CLIENT_ID', 1 );	// admin
-define('MONITIS_LOGGER', false );
+define('MONITIS_API_VERSION', 3);		// Monitis API version
+define('MONITIS_RESOURCE_VERSION', 3);
+define('MONITIS_CLIENT_ID', 1 );		// admin
+define('MONITIS_REMOVE_TABLES', false);		// drop Monitis addon all tables
+define('MONITIS_LOGGER', false);			// hide Monitis addon Activity Log
 
 /*
  *	for notification Rule

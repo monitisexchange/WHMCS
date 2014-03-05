@@ -132,11 +132,11 @@ class MonitisApiHelper {
 		$platform = $agents[0]['platform'];
 		$agentId = $agents[0]['id'];
 		$result = array(
-			'cpu' => array("status" => 'error', "msg" => 'CPU does not exist'),
-			'memory' => array("status" => 'error', "msg" => 'Memory does not exist')
+			'cpu' => array("status" => 'warning', "msg" => 'agentKey: '.$agentKey.', hostname: '.$hostname),
+			'memory' => array("status" => 'warning', "msg" => 'agentKey: '.$agentKey.', hostname: '.$hostname)
 		);
 
-		if (strtolower($agentKey) == strtolower($hostname)) {
+		//if (strtolower($agentKey) == strtolower($hostname)) {
 			$agentInfo = array(
 				'agentKey' => $agentKey,
 				'agentId' => $agentId,
@@ -155,7 +155,10 @@ class MonitisApiHelper {
 				if ($cpus_monitorId == 0) {
 					$resp = self::addCPU($agentInfo, MonitisConf::$settings['cpu']);
 					if (isset($resp['data']) && isset($resp['data']['testId'])) {
+						
 						$cpus_monitorId = $resp['data']['testId'];
+						$result["cpu"]["status"] = 'ok';
+						$result["cpu"]["msg"] = 'CPU monitor created successfully';
 					} else {
 						$result['cpu']['error'] = 'error';
 						$result['cpu']['msg'] = $resp['error'];
@@ -198,6 +201,10 @@ class MonitisApiHelper {
 					$resp = self::addMemory($agentInfo, MonitisConf::$settings['memory']);
 					if (isset($resp['data']) && isset($resp['data']['testId'])) {
 						$memory_monitorId = $resp['data']['testId'];
+						$result["memory"]["msg"] = 'Memory monitor created successfully';
+						$result["memory"]["status"] = 'ok';
+					$result["memory"]["msg"] = 'Memory monitor created successfully';
+					
 					} else {
 						$result['memory']['error'] = 'error';
 						$result['memory']['msg'] = $resp['error'];					
@@ -228,7 +235,7 @@ class MonitisApiHelper {
 				$result["memory"]["status"] = 'warning';
 				$result["memory"]["msg"] = 'no autocreate';
 			}
-		}
+		//}
 		monitisLog($result, 'addAllDefault - add Default CPU / Memory');
 		return $result;
 	}
@@ -371,82 +378,24 @@ class MonitisApiHelper {
 		return null;
 	}
 
-	 static function getNotificationRuleByType($monitor_type) {
-	  $params = array('monitorType' => $monitor_type);
-	  $rules = MonitisApi::getNotificationRules($params);
-	  $rule = end($rules);
-	  $notif = null;
-	  if ($rule) {
-	  $notif = self::rulesToJson($rule);
-	  }
-	  return $notif;
-	  } 
 
-	static function getNotificationRuleByType1($monitor_type, $group_id=0){
+	static function getNotificationRuleByType($monitor_type, $group_id=0){
 	   $params=($group_id)? array('monitorType' => $monitor_type, 'contactGroupId' => $group_id):array('monitorType' => $monitor_type);
 	   $rules = MonitisApi::getNotificationRules($params);
-	   $rule = end($rules);
-	   $notif = null;
-	   if ($rule) {
-	   $notif = self::rulesToJson($rule);
-	  }
-	  return $notif;
-	}
-
-	static function getNotificationRuleByTypeGroup($monitor_type, $group_id) {
-		$params = array('monitorType' => $monitor_type, 'contactGroupId' => $group_id);
-		$rules = MonitisApi::getNotificationRules($params);
-		if(count($rules)> 0){
-		    $rule = end($rules);
+	   if(count($rules)> 0){
+		$rule = end($rules);
 		$notif = null;
 		if ($rule) {
-			$notif = self::rulesToJson($rule);
-		}
+		     $notif = self::rulesToJson($rule);
+		 }
 		return $notif;
-		}else{
-		    return null;
+	   }else{
+	        return null;
 		}
-		
 	}
+	
 
-	static function getNotificationRuleByType_GroupId($monitor_type) {
-		$array = array();
-		$params = array('monitorType' => $monitor_type);
-		$rules = MonitisApi::getNotificationRules($params);
-		$rule = $rules[0];
-		$notif = null;
-		if ($rule) {
-			$notif = self::rulesToJson($rule);
-			$array = array('contactGroupId' => $rule['contactGroupId'], 'alerts' => $notif);
-		}
-		return $array;
-	}
 
-	static function getNotificationRuleByType_test($monitor_type) {
-		$params = array('monitorType' => $monitor_type);
-		$rules = MonitisApi::getNotificationRules($params);
-
-		$set = array();
-		$notif = null;
-		if (count($rules) > 0) {
-			for ($i = 0; $i < count($rules); $i++) {
-
-				$notif = self::rulesToJson($rules[$i]);
-				$set[] = array('contactId' => $rules[$i]['contactId'], 'contactName' => $rules[$i]['contactName'], 'alert' => $notif);
-			}
-		}
-		return $set;
-	}
-
-	static function getNotificationRule($contactId, $monitor_type) {
-		$params = array('contactId' => $contactId, 'monitorType' => $monitor_type);
-		$rule = MonitisApi::getNotificationRules($params);
-		$notif = null;
-		if ($rule) {
-			$notif = self::rulesToJson($rule);
-		}
-		return $notif;
-	}
 
 	static function addNotificationRule($contactId, $monitor_type, $alertGroupId, $alertRules) {
 		$result = array();
@@ -494,7 +443,7 @@ class MonitisApiHelper {
 	}
 
 	static function getContactsEmails() {
-		$allGroups = MonitisApi::getContacts();
+		$allGroups = MonitisApi::getContactsByGroupID();
 		$array = array();
 		if ($allGroups) {
 			for ($i = 0; $i < count($allGroups); $i++) {

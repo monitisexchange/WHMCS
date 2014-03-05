@@ -16,6 +16,29 @@ function hook_monitis_AdminAreaHeadOutput($vars) {
 add_hook("AdminAreaHeadOutput", 1, "hook_monitis_AdminAreaHeadOutput");
 
 
+function hook_monitis_AdminAreaFooterOutput($vars) {
+	require_once 'monitisapp.php';
+	
+	$error = @MonitisConf::$apiServerError;
+	$foot = '';
+	if(!empty($error)) {
+		$foot = '<script type="text/javascript">
+		$(document).ready(function(){
+			$("#monitis_api_error").css({
+				fontSize:"12px",
+				fontWeight:"bold",
+				color: "#ff3333",
+				width:"300px",
+				position:"relative",
+				margin:"-50px 150px 0px 0px",
+				float:"right"
+			}).html("'.$error.'");
+		});
+		</script>';
+	}
+	return $foot;
+}
+add_hook("AdminAreaFooterOutput", 1, "hook_monitis_AdminAreaFooterOutput");
 ///////////////////////////////////////////////////////////////////////////////////// Hooks: Admin
 
 function hook_monitis_ServerAdd($vars) {
@@ -58,6 +81,9 @@ add_hook("PreDeleteClient",1,"hook_monitis_PreDeleteClient");
 // FraudOrder
 function hook_monitis_AcceptOrder($vars) {
 	require_once 'monitisapp.php';
+	
+//m_log( $vars, 'AcceptOrder', 'order');
+
 	monitisOrderHookHandler($vars, 'active'); 
 }
 add_hook("AcceptOrder",5,"hook_monitis_AcceptOrder");
@@ -65,6 +91,8 @@ add_hook("AcceptOrder",5,"hook_monitis_AcceptOrder");
 
 function hook_monitis_PendingOrder($vars) {
 	require_once 'monitisapp.php';
+	
+//m_log( $vars, 'PendingOrder', 'order');
 	monitisOrderHookHandler( $vars, 'pending' ); 
 }
 add_hook("PendingOrder",1,"hook_monitis_PendingOrder");
@@ -72,6 +100,7 @@ add_hook("PendingOrder",1,"hook_monitis_PendingOrder");
 
 function hook_monitis_DeleteOrder($vars) {
 	require_once 'monitisapp.php';
+//m_log( $vars, 'DeleteOrder', 'order');
 	monitisOrderHookHandler( $vars, 'deleted' ); 
 }
 add_hook("DeleteOrder",1,"hook_monitis_DeleteOrder");
@@ -79,12 +108,14 @@ add_hook("DeleteOrder",1,"hook_monitis_DeleteOrder");
 
 function hook_monitis_CancelOrder($vars) {
 	require_once 'monitisapp.php';
+//m_log( $vars, 'CancelOrder', 'order');
 	monitisOrderHookHandler( $vars, 'cancelled' ); 
 }
 add_hook("CancelOrder",1,"hook_monitis_CancelOrder");
 
 function hook_monitis_FraudOrder($vars) {
 	require_once 'monitisapp.php';
+//m_log( $vars, 'FraudOrder', 'order');
 	monitisOrderHookHandler( $vars, 'fraud' ); 
 }
 add_hook("FraudOrder",1,"hook_monitis_FraudOrder");

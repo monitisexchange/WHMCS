@@ -22,7 +22,7 @@ if(isset($_POST['action'])){
 				$monitorType = 'internal';
 			}
 			
-			$alertRules = MonitisApiHelper::getNotificationRuleByTypeGroup($monitorType, $groupId);
+			$alertRules = MonitisApiHelper::getNotificationRuleByType($monitorType, $groupId);
 			if(!$alertRules) {
 				$alertRules = MonitisConf::$settings['groups'][$monitorType]['alert'];
 			}
@@ -35,7 +35,7 @@ if(isset($_POST['action'])){
 						$indexToRemove = array_search($groupId, $ids);
 						array_splice($ids, $indexToRemove, 1);
 					}
-					$params = array('contactId'=>$contactInfo['contactId'], 'contactGroupIds'=>implode(',', $ids));
+					$params = array('contactId'=>$contactInfo['contactId'], 'contactGroupIds'=>implode(',', $ids), 'textType'=>'0');
 					$response = MonitisApi::editContact($params);
 					if ($response['status'] == 'ok') {
 						MonitisApiHelper::deleteNotificationRule($contactInfo['contactId'], $monitorType);
@@ -51,7 +51,7 @@ if(isset($_POST['action'])){
 						if(!in_array($groupId, $ids)) {
 							array_push($ids, $groupId);
 						}
-						$params = array('contactId'=>$contactInfo['contactId'], 'contactGroupIds'=>implode(",", $ids), 'activeFlag'=>1 );
+						$params = array('contactId'=>$contactInfo['contactId'], 'contactGroupIds'=>implode(",", $ids), 'activeFlag'=>1, 'textType'=>'0' );
 						MonitisApi::editContact($params);						
 						
 						
@@ -76,7 +76,8 @@ if(isset($_POST['action'])){
 							'contactGroupIds' => $groupId,
 							'contactType' => 1,
 							'timezone' => $timezone,
-							'confirmContact' => 'true'
+							'confirmContact' => 'true',
+                                                        'textType' => '0'
 						); 
 					
 						$response = MonitisApi::addContactToGroup($contactNew);
@@ -146,7 +147,7 @@ for($i = 0; $i < count($monitisContactGroups); $i++){
 	$alertRules = '';
 	if(MonitisConf::$settings['groups']['external']['groupId'] == $monitisContactGroups[$i]['contactGroupId'] ) {
 		$monitorType = 'external';
-		$externalAlerts = MonitisApiHelper::getNotificationRuleByTypeGroup($monitorType, $monitisContactGroups[$i]['contactGroupId']);
+		$externalAlerts = MonitisApiHelper::getNotificationRuleByType($monitorType, $monitisContactGroups[$i]['contactGroupId']);
 		if ($externalAlerts) {
 			$alertRules = json_encode($externalAlerts);
 			$alertRules = str_replace('"', "~", $alertRules);
@@ -158,7 +159,7 @@ for($i = 0; $i < count($monitisContactGroups); $i++){
 	}
 	elseif(MonitisConf::$settings['groups']['internal']['groupId'] == $monitisContactGroups[$i]['contactGroupId']) {
 		$monitorType = 'internal';
-		$internalAlerts = MonitisApiHelper::getNotificationRuleByTypeGroup($monitorType, $monitisContactGroups[$i]['contactGroupId']);
+		$internalAlerts = MonitisApiHelper::getNotificationRuleByType($monitorType, $monitisContactGroups[$i]['contactGroupId']);
 		if ($internalAlerts) {
 			$alertRules = json_encode($internalAlerts);
 			$alertRules = str_replace('"', "~", $alertRules);

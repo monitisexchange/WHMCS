@@ -44,11 +44,23 @@ section.monitis-monitor-item {
 <?php
 $userid = 0;
 
+
 if(isset($_SESSION) && isset($_SESSION['uid']) && $_SESSION['uid'] > 0) {
 	//$userid = $this->_tpl_vars['clientsdetails']['userid'];
 	$userid = $_SESSION['uid'];
 }
 //echo "************ userid = $userid ***** $language <br>";
+
+$hTimezone = null;
+$contactId = 0;
+if($userid > 0) {
+	$hTimezone = intval(MonitisConf::$settings['timezone'])/60;		// admin time zone
+	$contactsList = monitisClientApi::contactsList($userid);
+	if($contactsList && count($contactsList) > 0) {
+		$hTimezone = $contactsList[0]['timezone'];
+		$contactId = $contactsList[0]['contactId'];
+	}
+}
 
 if( isset($_POST["act"]) && isset($userid) && $userid > 0) {
 	
@@ -118,13 +130,29 @@ if( isset($_POST["act"]) && isset($userid) && $userid > 0) {
 				'notificationRuleIds' => $_POST["rule_id"],					// notification id
 				'monitorId' => $monitor_id
 			);
-				
 			$resp = monitisClientApi::editNotificationRule($params, $rules, $userid);
 			if( $resp["status"] == 'ok') {
 				monitisClientUi::successMessage($MLANG['rules_updated']);
 			} else {
 				monitisClientUi::errorMessage($resp['error']);
 			}
+
+			$newTimezone = $rules['timeZone'];
+			if($newTimezone != $hTimezone) {
+				$params = array(
+					'contactId' => $contactId,
+					'textType' => '0',
+					'timezone' => $newTimezone*60
+				);
+				$resp = monitisClientApi::editContact($params, $userid);
+				if( $resp["status"] == 'ok') {
+					monitisClientUi::successMessage('Contact timezone updated');
+					$hTimezone = $newTimezone;
+				} else {
+					monitisClientUi::errorMessage($resp['error']);
+				}
+			}
+
 		break;
 		case 'add_rule':
 			$rules = str_replace("~", '"', $_POST["rule_external"]);
@@ -133,11 +161,28 @@ if( isset($_POST["act"]) && isset($userid) && $userid > 0) {
 				'monitorType' => 'external',
 				'monitorId' => $monitor_id
 			);
+			
 			$resp = monitisClientApi::addNotificationRule($params, $rules, $userid);
 			if( $resp["status"] == 'ok') {
 				monitisClientUi::successMessage($MLANG['rules_added']);
 			} else {
 				monitisClientUi::errorMessage($resp['error']);
+			}
+
+			$newTimezone = $rules['timeZone'];
+			if($newTimezone != $hTimezone) {
+				$params = array(
+					'contactId' => $contactId,
+					'textType' => '0',
+					'timezone' => $newTimezone*60
+				);
+				$resp = monitisClientApi::editContact($params, $userid);
+				if( $resp["status"] == 'ok') {
+					monitisClientUi::successMessage('Contact timezone updated');
+					$hTimezone = $newTimezone;
+				} else {
+					monitisClientUi::errorMessage($resp['error']);
+				}
 			}
 		break;
 	}
@@ -152,7 +197,7 @@ if($userid > 0) {
 		$alerts = monitisClientApi::getNotificationRules(array('monitorType'=>'external'), $userid);
 		/* default notification rule - type "All" */
 		$allAlert = MonitisHelper::in_array( $alerts, 'monitorId', 'All');
-
+		
 		$rule = '';
 		$allRuleid = 0;
 		$allContactId = 0;
@@ -165,7 +210,6 @@ if($userid > 0) {
 		}
 		$alertAll = str_replace('"', "~", $rule);
 		
-		
 		echo "<section>";
 	
 		//$monitors = $monitors['monitors'];
@@ -174,7 +218,7 @@ if($userid > 0) {
 			$monitor = $monitors[$i];
 			$monitor_id = $monitor['monitor_id'];
 			$monitor_type = $monitor['monitor_type'];
-			
+
 			$item = $monitor['info'];
 			$sets = $monitor["settings"];
 			
@@ -185,7 +229,8 @@ if($userid > 0) {
 			$settingProduct = array(
 				'interval' => $interval,
 				'timeout' => $item['timeout'],
-				'name' => $products[$i]['name'],
+				//'name' => $products[$i]['name'],
+				'name' => $monitor['info']['name'],
 				'types' => $monitor_type,
 				'locationIds'=> $locationIds,
 				'locationsMax' => $sets['locationsMax']
@@ -207,7 +252,7 @@ if($userid > 0) {
 				$ruleid = $alert['id'];
 				$contactId = $alert['contactId'];
 			} 
-		
+			
 			/* suspend */
 			$suspend = 'unsuspend';
 			if(!$item["isSuspended"]) {
@@ -255,6 +300,7 @@ if($userid > 0) {
 					<input type="hidden" value="<?=$monitor_id?>" name="monitor_id" />
 					<input type="hidden" value="<?=$monitor_type?>" name="monitor_type" />
 					<input type="hidden" name="act" value="<?=$alertAction?>" />
+					
 				</form>
 				<hr style="border:solid 1px #cccccc"/>
 			</section>
@@ -270,10 +316,10 @@ if($userid > 0) {
 <div id="monitis_notification_dialog_div"></div>
 <script type="text/javascript">
 var countryname = <? echo json_encode($locations)?>;
+var timezone = '<?=$hTimezone?>';
+
 
 $(document).ready(function() {
-
-//console.log(monitisLang);
 
 	// edit notification rules
 	$('.alert_monitor').click(function(event){
@@ -293,10 +339,9 @@ $(document).ready(function() {
 			}
 			var obj = new monitisNotificationRuleClass(sets_json, monitor, group, function(not_json, group) {
 				setTimeout( 'monitisModal.open({content: null});', 1);
-
 				$('.notificationRule_' + monitor).attr('value', not_json);
 				$('#rulesForm'+prefix).submit();
-			});
+			}, timezone);
 		}
 
 	});

@@ -1,5 +1,6 @@
 
-function monitisNotificationRuleClass( settings, mtype,  groupObj, callback ) {
+function monitisNotificationRuleClass( settings, mtype,  groupObj, callback, timezone ) {
+	var timeZonesList = [-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-3.5,-2,-1,0,1,2,3,3.5,4,4.5,5,5.5,5.75,6,6.5,7,8,9,9.5,10,11,12,13];
 	var noalert = 'no alert';
 	var NotificationTitles = {
 		'always':'24/7',
@@ -26,6 +27,18 @@ function monitisNotificationRuleClass( settings, mtype,  groupObj, callback ) {
 		str += '<form id="notificationRuleForm"><div class="monitis_dialog_content" title="'+monitisLang.alertRule+'">';
 		str += '<ul class="monitis_notification_options">'
 
+		if(typeof timezone != 'undefined') {
+			str += '<li><lable>Timezone:</lable> <select name="timeZonesList">'
+				for(var i=0; i<timeZonesList.length; i++) {
+					var sel = '';
+					if(timezone == timeZonesList[i]) sel = 'selected';
+					str += '<option value="'+timeZonesList[i]+'" '+sel+'>GMT '+timeZonesList[i]+'</option>';
+				}
+			str += '</select></li>';
+			str += '<li><lable> <hr /></lable></li>';
+			sets.timeZone = timezone;
+		}
+		
 		if( groupObj && groupObj.list ){
 			var groups = groupObj.list;
 			str += '<li><lable>'+monitisLang.selectContactGroup+':</lable> <select class="contactgroup">';
@@ -78,10 +91,16 @@ function monitisNotificationRuleClass( settings, mtype,  groupObj, callback ) {
 	
 	})();
 
+	// timezome
+	$('.monitis_notification_options select[name=timeZonesList]').change(function(){
+		sets.timeZone = parseFloat($(this).val());
+	});
+	
 	// failureCount
 	$('.monitis_notification_options select[name=failureCount]').change(function(){
 		sets.failureCount = parseInt($(this).val());
 	});
+	
 	// minFailedLocationCount
 	$('.monitis_notification_options select[name=minFailedLocationCount]').change(function(){
 		sets.minFailedLocationCount = parseInt($(this).val());

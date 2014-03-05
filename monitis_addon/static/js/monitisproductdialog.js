@@ -72,7 +72,7 @@ function monitisProductDialog(properties, callback) {
         str += '<div class="monitis-block">';
         str += '<div class="monitis-block-mini">';
         var intervalsList = [1,3,5,10,15,20,30,40,60];
-        str += '<label class="monitis-title monitis-fixed">Interval (ms.):</label>';
+        str += '<label class="monitis-title monitis-fixed">Interval (min.):</label>';
         str += '<select name="interval">';
         for(var i = 0; i < intervalsList.length; i++) {
             var selected = (intervalsList[i] == parseInt(settings.interval)) ? 'selected="selected"' : '';
@@ -309,6 +309,7 @@ function monitisProductDialog(properties, callback) {
                     }
                     
                     if(properties.type === 'product' || properties.type === 'addon' || properties.type === 'options' || properties.type === 'server-ping'){
+			$(this).find('[name=timeout]').change();
                         settings['interval'] = parseInt($(this).find('[name=interval]').val());
                         settings['timeout'] = parseInt($(this).find('[name=timeout]').val());
                         
@@ -322,11 +323,11 @@ function monitisProductDialog(properties, callback) {
                         settings['locationsMax'] = parseInt($(this).find('[name=locations_max]').val());
                     }
                     
-                    if(properties.type == 'option'){
+                    if(properties.type === 'option'){
                         settings['subId'] = parseInt($(this).find('[name=sub]').val());
                     }
                     
-                    if(properties.type == 'server-cpu'){
+                    if(properties.type === 'server-cpu'){
                         settings['kernelMax'] = parseInt($(this).find('[name=kernel_max]').val());
                         settings['usedMax'] = parseInt($(this).find('[name=used_max]').val());
                         settings['idleMin'] = parseInt($(this).find('[name=idle_min]').val());
@@ -334,12 +335,12 @@ function monitisProductDialog(properties, callback) {
                         settings['niceMax'] = parseInt($(this).find('[name=nice_max]').val());
                     }
                     
-                    if(properties.type == 'server-memory'){
+                    if(properties.type === 'server-memory'){
                         settings['freeLimit'] = parseInt($(this).find('[name=free_limit]').val());
                         settings['freeSwapLimit'] = parseInt($(this).find('[name=free_swap_limit]').val());
                     }
                     
-                    if(properties.type == 'server-drive'){
+                    if(properties.type === 'server-drive'){
                         settings['freeLimit'] = parseInt($(this).find('[name=free_limit]').val());
                         if($(this).find('[name=drive_letter]').length) settings['driveLetter'] = $(this).find('[name=drive_letter]').val();
                     }

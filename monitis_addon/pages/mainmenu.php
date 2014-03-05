@@ -7,6 +7,7 @@ $(document).ready(function(){
 	}).html('&nbsp;');
 });
 </script>
+<div id="monitis_api_error"></div>
 <div id="monitis_dialogs" style="display: none;"></div>
 <div id="tabs">
 	<ul class="monitis_link_result">

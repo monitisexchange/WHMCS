@@ -22,64 +22,20 @@ class notificationsClass {
 
 //**************************GROUPS && ADMINS***********************//
 
-	public function createDefaultGroup1() {
+
+	public function createDefaultGroup(){
 		$defaultgroups = json_decode(MONITIS_ADMIN_CONTACT_GROUPS, true);
 		$existedGroups = MonitisApi::getContactGroupList(); // existed monitis groups
 
 		foreach ($defaultgroups as $mType => $groupName) {
-
+		    
 			$group = MonitisHelper::in_array($existedGroups, 'id', MonitisConf::$settings['groups'][$mType]['groupId']);
-			$existNotifByType = MonitisApiHelper::getNotificationRuleByType($mType);
-
-			$alerts = json_decode(MONITIS_NOTIFICATION_RULE, true);
-			if ($mType == 'internal') {
-				$alerts['minFailedLocationCount'] = null;
-			}
-
-			$alertRulesDefault = ($existNotifByType) ? $existNotifByType : $alerts;
-
-			if ($group) {
-				$notifByTypeGroup = MonitisApiHelper::getNotificationRuleByTypeGroup($mType, $group['id']);
-				if ($notifByTypeGroup) {
-					$alertRulesDefault = $notifByTypeGroup;
-				}
-				MonitisConf::$settings['groups'][$mType]['groupId'] = $group['id'];
-				MonitisConf::$settings['groups'][$mType]['groupName'] = $group['name'];
-				MonitisConf::$settings['groups'][$mType]['alert'] = $alertRulesDefault;
-			} else {
-				$newGroupName = $groupName;
-				$resp = MonitisApi::addContactGroup(1, $newGroupName);
-				if ($resp['status'] == 'ok') {
-					MonitisConf::$settings['groups'][$mType]['groupId'] = $resp['data'];
-					MonitisConf::$settings['groups'][$mType]['groupName'] = $newGroupName;
-					MonitisConf::$settings['groups'][$mType]['alert'] = $alertRulesDefault;
-				} else {
-					// error
-					return array('status' => 'error', 'msg' => 'Add contact group error ' . $resp['error']);
-				}
-			}
-
-			// $r = $this->addContacts(ucfirst($mType), MonitisConf::$settings['groups'][$mType]['groupId']);
-		}
-
-		MonitisConf::update_settings(json_encode(MonitisConf::$settings));
-		return array('status' => 'ok', 'msg' => 'External, internal groups sets success');
-	}
-
-	public function createDefaultGroup() {
-		$defaultgroups = json_decode(MONITIS_ADMIN_CONTACT_GROUPS, true);
-		$existedGroups = MonitisApi::getContactGroupList(); // existed monitis groups
-
-		foreach ($defaultgroups as $mType => $groupName) {
-
-			$group = MonitisHelper::in_array($existedGroups, 'id', MonitisConf::$settings['groups'][$mType]['groupId']);
-
 			$alerts = json_decode(MONITIS_NOTIFICATION_RULE, true);
 			if ($mType == 'internal') {
 				$alerts['minFailedLocationCount'] = null;
 			}
 			$groupId = ($group['id']) ? $group['id'] : 0;
-			$notifByTypeGroup = MonitisApiHelper::getNotificationRuleByType1($mType, $groupId);
+			$notifByTypeGroup = MonitisApiHelper::getNotificationRuleByType($mType, $groupId);
 			$alertRulesDefault = ($notifByTypeGroup) ? $notifByTypeGroup : $alerts;
 			if ($group) {
 				MonitisConf::$settings['groups'][$mType]['groupId'] = $group['id'];
@@ -105,57 +61,6 @@ class notificationsClass {
 		return array('status' => 'ok', 'msg' => 'External, internal groups sets success');
 	}
 
-	public function addContacts($mtype, $groupId) {
-		//$contactList = $this->query('SELECT * FROM tbladmins LIMIT 3');
-		$contactList = monitisSqlHelper::query('SELECT * FROM tbladmins LIMIT 3');
-
-
-		$existNotif = MonitisApiHelper::getNotificationRuleByType($mtype);
-		$alertRulesDefault = ($existNotif) ? $existNotif : json_decode(MONITIS_NOTIFICATION_RULE, true);
-		for ($i = 0; $i < count($contactList); $i++) {
-
-			$monitisEmailList = MonitisApiHelper::getContactsEmails();
-
-			if (!(in_array($contactList[$i]['email'], array_values($monitisEmailList)))) {
-				$adminObj = array(
-					'firstname' => $contactList[$i]['firstname'],
-					'lastname' => $contactList[$i]['lastname'],
-					'account' => $contactList[$i]['email'],
-					'contactType' => 1,
-					'timezone' => MonitisConf::$settings['timezone'],
-					'group' => $mtype,
-					'confirmContact' => 'true'
-				);
-				$resp = MonitisApi::addContactToGroup($adminObj);
-
-				if ($resp['status'] == 'ok') {
-					$contactInfo = $resp['data'];
-					$notifIdsOnContact = $this->getNotificationRuleIds($contactInfo['contactId'], $mtype);
-
-					if ($notifIdsOnContact) {
-						// $alertRulesDefault = MonitisApiHelper::getNotificationRule($contactInfo['contactId'], $mtype);
-						$this->editNotificationRule($contactInfo['contactId'], ucfirst($mtype), $alertRulesDefault, $notifIdsOnContact);
-					} else {
-						MonitisApiHelper::addNotificationRule($contactInfo['contactId'], $mtype, $groupId, $alertRulesDefault);
-					}
-				}
-			} else {
-				$contactId = array_search($contactList[$i]['email'], $monitisEmailList);
-				$gidlist = $this->getGroupIdsByContcatId($contactId);
-				$groupIds = (count($gidlist) != 0) ? implode(",", $gidlist) . ',' . $groupId : $groupId;
-				MonitisApi::editContact($contactId, $groupIds);
-
-				$checkNotif = MonitisApiHelper::getNotificationRule($contactId, $mtype);
-				if (!$checkNotif) {
-					MonitisApiHelper::addNotificationRule($contactId, $mtype, $groupId, $alertRulesDefault);
-				} else {
-					$notificationRuleIds = $this->getNotificationRuleIds($contactId, $mtype);
-					// $alertRulesDefault = $checkNotif;
-					$this->editNotificationRule($contactId, ucfirst($mtype), $alertRulesDefault, $notificationRuleIds);
-				}
-			}
-		}
-	}
 
 	public function editNotificationRule($contact_id, $contactGroup, $alertRules, $notificationRuleIds) {
 		$result = array();
@@ -188,7 +93,6 @@ class notificationsClass {
    
 	public function getNotifRuleIds($contact_id, $monitor_type) {
 		$notificationRuleIds = array();
-
 		$params = array('monitorType' => $monitor_type);
 		$notifSet = MonitisApi::getNotificationRules($params);
 
@@ -203,7 +107,7 @@ class notificationsClass {
 		$notificationRuleIds = implode(",", $notificationRuleIds);
 		return $notificationRuleIds;
 	}
-	////////////////////////////////////////////////
+	
 
 	
 	public function getGroupInfoById($group_id) {
@@ -259,7 +163,7 @@ class notificationsClass {
 	}
 
 	public function existContact($email) {
-		$contactList = MonitisApi::getContacts();
+		$contactList = MonitisApi::getContactsByGroupID();
 		for ($i = 0; $i < count($contactList); $i++) {
 			if ($contactList[$i]["contactAccount"] == $email) {
 				return $contactList[$i];
