@@ -67,21 +67,23 @@ class monitisSynchronize {
 			FROM mod_monitis_user
 			LEFT JOIN tblclients ON tblclients.id=mod_monitis_user.user_id');
 
+
 		for($i=0; $i<count($subUsers); $i++) {
 		
 			$apikey = $subUsers[$i]['apikey'];
 			$whmcsUser = MonitisHelper::in_array($clntByUsr, 'api_key', $apikey);
 			$userid = 0;
 			// user linked
+			
 			if($whmcsUser) {
 				$userid = $whmcsUser['user_id'];
 			} else {
 				// link user
 				$arr = explode('_', $subUsers[$i]['account']);
 				if($arr && $arr[0]) {
-					$userid = intval(substr($arr[0], 1));
+					$userid = intval(substr($arr[0], 5));
+					if($userid > 0 ) {
 					$resp = monitisClientApi::linkUserByApikey($apikey, $userid);
-
 					if(@$resp['status'] == 'ok' && isset($resp['data'])) {
 						//$secretkey = $resp['data']['secret_key'];
 						$whmcsUser = $this->userById($userid);
@@ -89,6 +91,7 @@ class monitisSynchronize {
 						$whmcsUser['secret_key'] = $resp['data']['secret_key'];
 					}
 				}
+			}
 			}
 			$monitors = null;
 			if($userid > 0) {

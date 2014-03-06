@@ -18,6 +18,18 @@ class MonitisHelper {
 		*/
 	}
 	
+	
+	static function parentDomain() {
+		$resp = MonitisApi::userInfo(array("apikey"=>MonitisConf::$apiKey));
+		if( isset($resp['account']) ) {
+			$userDomain = explode('@', $resp['account']);
+			return $userDomain[1];
+		} else {
+			return 'monitis.ccom';
+		}
+	
+	}
+	
 	static function checkAdminName() {
 		$admin = monitisSqlHelper::objQuery('SELECT value, tbladmins.id, tbladmins.firstname, tbladmins.lastname 
 			FROM tbladdonmodules

@@ -32,6 +32,7 @@ class MonitisConf {
 	static $secretKey = '';
 	
 	static $adminName = '';
+	static $parentDomain = '';
 	
 	static $authToken = null;
 	static $authTokenHour = 10;
@@ -77,9 +78,13 @@ class MonitisConf {
 			self::$settings["order_behavior"] = self::setupBehavior(MONITIS_ORDER_BEHAVIOR);
 			self::$settings["user_behavior"] = self::setupBehavior(MONITIS_USER_STATUS_BEHAVIOR);
 		
+			self::$parentDomain = MonitisHelper::parentDomain();
+			self::$settings["parentDomain"] = self::$parentDomain;
+			
 			// set autoToken
 			self::update_token();
 
+			
 			// setup notifications
 			$oNot = new notificationsClass();
 			$resp = $oNot->createDefaultGroup();
@@ -102,6 +107,18 @@ class MonitisConf {
 		}
 	}
 
+	static function update_parentDomain() {
+	
+		if(self::$settings && isset(self::$settings['parentDomain']) && !empty(self::$settings['parentDomain'])) {
+			self::$parentDomain = self::$settings['parentDomain'];
+		} else {
+			self::$parentDomain = MonitisHelper::parentDomain();
+			self::$settings["parentDomain"] = self::$parentDomain;
+			self::update_settings( json_encode( self::$settings ) );
+		}
+
+	}
+	
 	static function update_locations($locations) {
 
 		if( $locations ) {
@@ -141,12 +158,15 @@ class MonitisConf {
 			
 			self::$settings = json_decode($row['settings'], true);
 			self::$locations = json_decode($row['locations'], true);
+			
 			if($row['locs'] > self::$locationsDays ) {
 				self::update_locations( MonitisApiHelper::getExternalLocations() );
 			}
 			if($row['token'] > self::$authTokenHour ) {
 				self::update_token();
 			}
+			self::update_parentDomain();
+			
 			return true;
 		}
 		// 

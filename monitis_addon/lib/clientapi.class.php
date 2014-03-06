@@ -156,10 +156,20 @@ class monitisClientApi extends monitisClientApiAccess {
 	}
 	
 	static function generateAccount($userid) {
-		return array('email' => strtolower('w'.$userid.'_'.MonitisConf::$apiKey.'@whmcs.tmp'),
+		// MonitisHelper::parentDomain();
+		return array('email' => strtolower('whmcs'.$userid.'_'.MonitisConf::$apiKey.'@'.MonitisConf::$parentDomain),
 			'password' => MonitisConf::$apiKey.'_'.$userid
 		);
+	}
 		
+	static function editClient($params, $userid) {
+	
+		$user = self::userToken($userid);
+		if($user['status'] == 'ok') {
+			return self::requestPost('editUser', $params, $user); 
+		} else {
+			return $user;
+		}
 	}
 	
 	static function addMonitisUser($user) {
