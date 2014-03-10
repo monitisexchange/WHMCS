@@ -201,11 +201,11 @@ MonitisApp::addError($error);
 }
 </style>
 
-<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js?<?= rand(1, 1000) ?>"></script>
+<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js?<?php echo rand(1, 1000) ?>"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-	var locations = <?= json_encode($locations) ?>;
-	var optionGrups = <?= json_encode($optionGroups) ?>;
+	var locations = <?php echo json_encode($locations) ?>;
+	var optionGrups = <?php echo json_encode($optionGroups) ?>;
 
 	$('.monitis-options-edit').click(function() {
 		$option = $(this).closest('tr');
@@ -266,7 +266,7 @@ $(document).ready(function() {
 </script>
 
 <div class="monitis-options">
-<? MonitisApp::printNotifications(); ?>
+<?php MonitisApp::printNotifications(); ?>
 	<div class="monitis-options-link">
 		<input class="btn" type="button" value="Link a Configurable Option" />
 	</div>
@@ -274,7 +274,7 @@ $(document).ready(function() {
 		<table width="100%" border="0" cellpadding="3" cellspacing="0">
 			<tr>
 				<td width="50%" align="left">
-					<b><?= $subsCount ?></b> Options Found, Page <b>1</b> of <b>1</b>
+					<b><?php echo $subsCount ?></b> Options Found, Page <b>1</b> of <b>1</b>
 				</td>
 				<td width="50%" align="right">
 					Jump to Page:&nbsp;&nbsp; 
@@ -300,42 +300,42 @@ $(document).ready(function() {
 					</tr>
 				</thead>
 				<tbody>
-				<? if (count($groups)): ?>
-				<? foreach ($groups as $group): ?>
+				<?php if (count($groups)): ?>
+				<?php foreach ($groups as $group): ?>
 					<tr>
-						<th colspan="8" class="monitis-options-group">Group: <?= $group['name'] ?></th>
+						<th colspan="8" class="monitis-options-group">Group: <?php echo $group['name'] ?></th>
 					</tr>
-					<? foreach ($group['options'] as $option): ?>
-					<? foreach ($option['subs'] as $subId => $sub): ?>
-					<tr class="option" data-id="<?= $subId ?>" data-settings="<?= $sub['settingsEncoded'] ?>">
-						<td><input type="checkbox" class="monitis-checkbox" name="sub_ids[]" value="<?= $subId ?>"  /></td>
-						<td><b><?= $option['name'] . ':</b> ' . $sub['name'] ?></td>
-						<td><?= $sub['type'] ?></td>
-						<td><?= $sub['settings']['interval'] ?></td>
-						<td><?= $sub['settings']['timeout'] ?> <?= $sub['settings']['types'] == 'ping' ? 'ms.' : 'sec.' ?></td>
-						<td><?= $sub['settings']['locationsMax'] ?></td>
+					<?php foreach ($group['options'] as $option): ?>
+					<?php foreach ($option['subs'] as $subId => $sub): ?>
+					<tr class="option" data-id="<?php echo $subId ?>" data-settings="<?php echo $sub['settingsEncoded'] ?>">
+						<td><input type="checkbox" class="monitis-checkbox" name="sub_ids[]" value="<?php echo $subId ?>"  /></td>
+						<td><b><?php echo $option['name'] . ':</b> ' . $sub['name'] ?></td>
+						<td><?php echo $sub['type'] ?></td>
+						<td><?php echo $sub['settings']['interval'] ?></td>
+						<td><?php echo $sub['settings']['timeout'] ?> <?php echo $sub['settings']['types'] == 'ping' ? 'ms.' : 'sec.' ?></td>
+						<td><?php echo $sub['settings']['locationsMax'] ?></td>
 						<td>
-						<? if ($sub['is_active']): ?>
+						<?php if ($sub['is_active']): ?>
 							<span class="textgreen">Active</span>
-						<? else: ?>
+						<?php else: ?>
 							<span class="textred">Inactive</span>
-						<? endif ?>
+						<?php endif ?>
 						</td>
 						<td width="50">
-						<? if ($sub['is_active']): ?>
+						<?php if ($sub['is_active']): ?>
 							<a href="#" class="monitis-options-edit" title="Edit Configurable Option settings"><img src="images/edit.gif" alt="Edit Configurable Option settings" /></a>
-							<a href="<?= MONITIS_APP_URL ?>&monitis_page=client/optionsresult&id=<?= $subId ?>" class="monitis-options-create monitis_link_button" title="Create monitors"><img src="images/icons/autosettings.png" alt="Create monitors" /></a>
-						<? endif ?>
+							<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=client/optionsresult&id=<?php echo $subId ?>" class="monitis-options-create monitis_link_button" title="Create monitors"><img src="images/icons/autosettings.png" alt="Create monitors" /></a>
+						<?php endif ?>
 						</td>
 					</tr>
-					<? endforeach ?>
-					<? endforeach ?>
-					<? endforeach ?>
-					<? else: ?>
+					<?php endforeach ?>
+					<?php endforeach ?>
+					<?php endforeach ?>
+					<?php else: ?>
 					<tr>
 						<td colspan="8">No active products available.</td>
 					</tr>
-					<? endif ?>
+					<?php endif ?>
 				</tbody>
 			</table>
 			<div class="monitis-page-bottom">

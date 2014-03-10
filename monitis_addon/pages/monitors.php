@@ -1,4 +1,4 @@
-<?
+<?php
 $locations = MonitisConf::$locations;
 $drives = array();
 
@@ -276,9 +276,11 @@ elseif(isset($_POST['type'])) {
                 $params = array(
                     'testId' => $monitorId,
                     'freeLimit' => $freeLimit,
-                    'name' => $serverInfo['ipaddress'] . '_drive',
+                    //'name' => $serverInfo['ipaddress'] . '_drive',
+					'name' => 'drive_' . $driveLetter . '@' . $serverInfo['hostname'],
                     'tag' => $serverInfo['hostname'] . '_whmcs'
                 );
+
                 $resp = MonitisApi::editDriveMonitor( $params );
                 if($resp) {
                     if($resp['status'] == 'ok' ) {
@@ -374,6 +376,7 @@ if($serverInfo['agent'] != NULL){
         $serverInfo['agent']['memory']['settings'] = str_replace('"', "~", json_encode($settings));
     }
     if($serverInfo['agent']['drive'] != NULL){
+
         foreach($serverInfo['agent']['drive'] as $key => $drive){
             if(isset($drive['id'])){
                 $settings = array(
@@ -452,8 +455,8 @@ else{
 <script type="text/javascript">
 $(document).ready(function(){
     var monitisMonitors = {};
-    monitisMonitors.locations = <?=json_encode($locations)?>;
-    monitisMonitors.drives =  <?=json_encode($drives)?>;
+    monitisMonitors.locations = <?php echo json_encode($locations)?>;
+    monitisMonitors.drives =  <?php echo json_encode($drives)?>;
     monitisMonitors.submit = function(data){
         for(var key in data){
             $('.monitis-monitors-form').append('<input type="hidden" name="' + key + '" value="' + data[key] + '" />');
@@ -467,9 +470,9 @@ $(document).ready(function(){
                 'name': 'Create Ping Monitor',
                 'settings': {
                         'type': 'ping',
-                        'interval': <?= MonitisConf::$settings['ping']['interval'] ?>,
-                        'timeout': <?= MonitisConf::$settings['ping']['timeout'] ?>,
-                        'locationIds': <?= json_encode(MonitisConf::$settings['ping']['locationIds']) ?>
+                        'interval': <?php echo MonitisConf::$settings['ping']['interval'] ?>,
+                        'timeout': <?php echo MonitisConf::$settings['ping']['timeout'] ?>,
+                        'locationIds': <?php echo json_encode(MonitisConf::$settings['ping']['locationIds']) ?>
                 },
                 'locations': monitisMonitors.locations
         }, function(settings) {
@@ -498,7 +501,7 @@ $(document).ready(function(){
         monitisProductDialog({
                 'type': 'server-cpu',
                 'name': 'New CPU Monitor',
-                'settings': <?= json_encode(MonitisConf::$settings['cpu']['LINUX']) ?>
+                'settings': <?php echo json_encode(MonitisConf::$settings['cpu']['LINUX']) ?>
         }, function(settings) {
             settings.type = 'cpu';
             monitisMonitors.submit(settings);
@@ -524,7 +527,7 @@ $(document).ready(function(){
         monitisProductDialog({
                 'type': 'server-memory',
                 'name': 'New Memory Monitor',
-                'settings': <?= json_encode(MonitisConf::$settings['memory']['LINUX']) ?>,
+                'settings': <?php echo json_encode(MonitisConf::$settings['memory']['LINUX']) ?>,
                 'locations': monitisMonitors.locations
         }, function(settings) {
             settings.type = 'memory';
@@ -552,7 +555,7 @@ $(document).ready(function(){
                 'type': 'server-drive',
                 'name': 'New Drive Monitor',
                 'settings': {
-                    'freeLimit': <?= MonitisConf::$settings['drive']['freeLimit'] ?>
+                    'freeLimit': <?php echo MonitisConf::$settings['drive']['freeLimit'] ?>
                 },
                 'drives': monitisMonitors.drives
         }, function(settings) {
@@ -644,114 +647,114 @@ $(document).ready(function(){
 
 <div class="monitis-monitors">
     <div class="monitis-monitors-back">
-        <a href="<?= MONITIS_APP_URL ?>&monitis_page=tabadmin&sub=servers" class="monitis_link_result">← Back to servers list</a>
+        <a href="<?php echo MONITIS_APP_URL ?>&monitis_page=tabadmin&sub=servers" class="monitis_link_result">← Back to servers list</a>
     </div>
-    <? MonitisApp::printNotifications(); ?>
+    <?php MonitisApp::printNotifications(); ?>
     <div class="monitis-monitors-info">
-        Server name: <b><?= $serverInfo['name'] ?></b><br/>
-        <? if(isset($serverInfo['agent'])): ?>
-        Agent is <b><?= $serverInfo['agent']['status'] ?></b><br/>
-        <? else: ?>
+        Server name: <b><?php echo $serverInfo['name'] ?></b><br/>
+        <?php if(isset($serverInfo['agent'])): ?>
+        Agent is <b><?php echo $serverInfo['agent']['status'] ?></b><br/>
+        <?php else: ?>
         No agent
-        <? endif ?>
+        <?php endif ?>
     </div>
     <div class="monitis-monitors-actions">
-        <? if(isset($serverInfo['agent']) && $serverInfo['agent']['status'] == 'running'): ?>
+        <?php if(isset($serverInfo['agent']) && $serverInfo['agent']['status'] == 'running'): ?>
         <b>Add monitor:</b>
-        <button class="btn monitis-add-ping" <?if(!$isShowPingButton):?>disabled="disabled"<?endif?>>Ping</button>
-        <button class="btn monitis-add-cpu" <?if(!$isShowCpuButton):?>disabled="disabled"<?endif?>>CPU</button>
-        <button class="btn monitis-add-memory" <?if(!$isShowMemoryButton):?>disabled="disabled"<?endif?>>Memory</button>
-        <button class="btn monitis-add-drive" <?if(!$isShowDriveButton):?>disabled="disabled"<?endif?>>Drive</button>
-        <? elseif($isShowPingButton): ?>
+        <button class="btn monitis-add-ping" <?php if(!$isShowPingButton):?>disabled="disabled"<?php endif?>>Ping</button>
+        <button class="btn monitis-add-cpu" <?php if(!$isShowCpuButton):?>disabled="disabled"<?php endif?>>CPU</button>
+        <button class="btn monitis-add-memory" <?php if(!$isShowMemoryButton):?>disabled="disabled"<?php endif?>>Memory</button>
+        <button class="btn monitis-add-drive" <?php if(!$isShowDriveButton):?>disabled="disabled"<?php endif?>>Drive</button>
+        <?php elseif($isShowPingButton): ?>
         <button class="btn monitis-add-ping">Add Ping Monitor</button>
-        <? endif ?>
+        <?php endif ?>
     </div>
     
-    <? if(isset($serverInfo['ping']) && isset($serverInfo['ping']['publickey'])): ?>
-    <div class="monitis-monitor" data-id="<?= $serverInfo['ping']['id'] ?>" data-type="ping" data-name="<?= $serverInfo['ping']['name'] ?>" data-settings="<?= $serverInfo['ping']['settings'] ?>">
+    <?php if(isset($serverInfo['ping']) && isset($serverInfo['ping']['publickey'])): ?>
+    <div class="monitis-monitor" data-id="<?php echo $serverInfo['ping']['id'] ?>" data-type="ping" data-name="<?php echo $serverInfo['ping']['name'] ?>" data-settings="<?php echo $serverInfo['ping']['settings'] ?>">
         <div class="monitis-monitor-buttons">
             <div class="monitis-monitor-buttons-status">
-                <? if($serverInfo['ping']['isSuspended']): ?>
+                <?php if($serverInfo['ping']['isSuspended']): ?>
                 <button class="btn btn-mini btn-success monitis-monitor-activate monitis_link_button">Activate</button>
-                <? else: ?>
+                <?php else: ?>
                 <button class="btn btn-mini monitis-monitor-suspend monitis_link_button">Suspend</button>
-                <? endif ?>
-                <? if($serverInfo['ping']['available']): ?>
+                <?php endif ?>
+                <?php if($serverInfo['ping']['available']): ?>
                 <button class="btn btn-mini monitis-monitor-make-not-available monitis_link_button">Make not available to clients</button>
-                <? else: ?>
+                <?php else: ?>
                 <button class="btn btn-mini btn-success monitis-monitor-make-available monitis_link_button">Make availlable to clients</button>
-                <? endif ?>
+                <?php endif ?>
             </div>
             <div class="monitis-monitor-buttons-actions">
                 <button class="btn btn-mini monitis-monitor-edit">Edit</button>
                 <button class="btn btn-mini btn-danger monitis-monitor-delete">Delete</button>
             </div>
         </div>
-        <?= monitis_embed_module($serverInfo['ping']['publickey'], 800, 320); ?>
+        <?php echo monitis_embed_module($serverInfo['ping']['publickey'], 800, 320); ?>
     </div>
-    <? endif ?>
+    <?php endif ?>
     
-    <? if(isset($serverInfo['agent']) && $serverInfo['agent']['status'] == 'running'): ?>
-    <? if(isset($serverInfo['agent']['cpu']) && isset($serverInfo['agent']['cpu']['publickey'])): ?>
-    <div class="monitis-monitor" data-id="<?= $serverInfo['agent']['cpu']['id'] ?>" data-type="cpu" data-name="<?= $serverInfo['agent']['cpu']['name'] ?>" data-settings="<?= $serverInfo['agent']['cpu']['settings'] ?>">
+    <?php if(isset($serverInfo['agent']) && $serverInfo['agent']['status'] == 'running'): ?>
+    <?php if(isset($serverInfo['agent']['cpu']) && isset($serverInfo['agent']['cpu']['publickey'])): ?>
+    <div class="monitis-monitor" data-id="<?php echo $serverInfo['agent']['cpu']['id'] ?>" data-type="cpu" data-name="<?php echo $serverInfo['agent']['cpu']['name'] ?>" data-settings="<?php echo $serverInfo['agent']['cpu']['settings'] ?>">
         <div class="monitis-monitor-buttons">
             <div class="monitis-monitor-buttons-status">
-                <? if($serverInfo['agent']['cpu']['available']): ?>
+                <?php if($serverInfo['agent']['cpu']['available']): ?>
                 <button class="btn btn-mini monitis-monitor-make-not-available monitis_link_button">Make not available to clients</button>
-                <? else: ?>
+                <?php else: ?>
                 <button class="btn btn-mini btn-success monitis-monitor-make-available monitis_link_button">Make availlable to clients</button>
-                <? endif ?>
+                <?php endif ?>
             </div>
             <div class="monitis-monitor-buttons-actions">
                 <button class="btn btn-mini monitis-monitor-edit">Edit</button>
                 <button class="btn btn-mini btn-danger monitis-monitor-delete">Delete</button>
             </div>
         </div>
-        <?= monitis_embed_module($serverInfo['agent']['cpu']['publickey'], 800, 350); ?>
+        <?php echo monitis_embed_module($serverInfo['agent']['cpu']['publickey'], 800, 350); ?>
     </div>
-    <? endif ?>
+    <?php endif ?>
     
-    <? if(isset($serverInfo['agent']['memory']) && isset($serverInfo['agent']['memory']['publickey'])): ?>
-    <div class="monitis-monitor" data-id="<?= $serverInfo['agent']['memory']['id'] ?>" data-type="memory" data-name="<?= $serverInfo['agent']['memory']['name'] ?>" data-settings="<?= $serverInfo['agent']['memory']['settings'] ?>">
+    <?php if(isset($serverInfo['agent']['memory']) && isset($serverInfo['agent']['memory']['publickey'])): ?>
+    <div class="monitis-monitor" data-id="<?php echo $serverInfo['agent']['memory']['id'] ?>" data-type="memory" data-name="<?php echo $serverInfo['agent']['memory']['name'] ?>" data-settings="<?php echo $serverInfo['agent']['memory']['settings'] ?>">
         <div class="monitis-monitor-buttons">
             <div class="monitis-monitor-buttons-status">
-                <? if($serverInfo['agent']['memory']['available']): ?>
+                <?php if($serverInfo['agent']['memory']['available']): ?>
                 <button class="btn btn-mini monitis-monitor-make-not-available monitis_link_button">Make not available to clients</button>
-                <? else: ?>
+                <?php else: ?>
                 <button class="btn btn-mini btn-success monitis-monitor-make-available monitis_link_button">Make availlable to clients</button>
-                <? endif ?>
+                <?php endif ?>
             </div>
             <div class="monitis-monitor-buttons-actions">
                 <button class="btn btn-mini monitis-monitor-edit">Edit</button>
                 <button class="btn btn-mini btn-danger monitis-monitor-delete">Delete</button>
             </div>
         </div>
-        <?= monitis_embed_module($serverInfo['agent']['memory']['publickey'], 800, 350); ?>
+        <?php echo monitis_embed_module($serverInfo['agent']['memory']['publickey'], 800, 350); ?>
     </div>
-    <? endif ?>
+    <?php endif ?>
     
-    <? if(isset($serverInfo['agent']['drive'])): ?>
-    <? foreach($serverInfo['agent']['drive'] as $drive): ?>
-    <? if(isset($drive['publickey'])): ?>
-    <div class="monitis-monitor" data-id="<?= $drive['id'] ?>" data-type="drive" data-name="<?= $drive['name'] ?>" data-settings="<?= $drive['settings'] ?>">
+    <?php if(isset($serverInfo['agent']['drive'])): ?>
+    <?php foreach($serverInfo['agent']['drive'] as $drive): ?>
+    <?php if(isset($drive['publickey'])): ?>
+    <div class="monitis-monitor" data-id="<?php echo $drive['id'] ?>" data-type="drive" data-name="<?php echo $drive['name']?>" data-settings="<?php echo $drive['settings'] ?>">
         <div class="monitis-monitor-buttons">
             <div class="monitis-monitor-buttons-status">
-                <? if($drive['available']): ?>
+                <?php if($drive['available']): ?>
                 <button class="btn btn-mini monitis-monitor-make-not-available monitis_link_button">Make not available to clients</button>
-                <? else: ?>
+                <?php else: ?>
                 <button class="btn btn-mini btn-success monitis-monitor-make-available monitis_link_button">Make availlable to clients</button>
-                <? endif ?>
+                <?php endif ?>
             </div>
             <div class="monitis-monitor-buttons-actions">
                 <button class="btn btn-mini monitis-monitor-edit">Edit</button>
                 <button class="btn btn-mini btn-danger monitis-monitor-delete">Delete</button>
             </div>
         </div>
-        <?= monitis_embed_module($drive['publickey'], 800, 350); ?>
+        <?php echo monitis_embed_module($drive['publickey'], 800, 350); ?>
     </div>
-    <? endif ?>
-    <? endforeach ?>
-    <? endif ?>
-    <? endif ?>
+    <?php endif ?>
+    <?php endforeach ?>
+    <?php endif ?>
+    <?php endif ?>
 </div>
 <form class="monitis-monitors-form" action="" method="POST" style="display: none;"></form>

@@ -86,19 +86,19 @@ if ($total % $limit)
 
 ?>
 <div class="light_menu">
-	<a href="<?=MONITIS_APP_URL?>&monitis_page=refresh" class="monitis_link_result">Refresh monitors</a> (recommended to use after adding or removing monitors on Monitis dashboard)
+	<a href="<?php echo MONITIS_APP_URL?>&monitis_page=refresh" class="monitis_link_result">Refresh monitors</a> (recommended to use after adding or removing monitors on Monitis dashboard)
 </div>
 <form method="post" action="" id="serversListId">
 	<table width="100%" border="0" cellpadding="3" cellspacing="0">
 		<tr>
 			<td width="50%" align="left">
-				<b><?= count($srvrs) ?></b> Servers Found, Page <b><?= $page ?></b> of <b><?= $pages ?></b>
+				<b><?php echo count($srvrs) ?></b> Servers Found, Page <b><?php echo $page ?></b> of <b><?php echo $pages ?></b>
 			</td>
 			<td width="50%" align="right">
 				Jump to Page:&nbsp;&nbsp; 
 				<select name="page" onchange="this.form.create_NewMonitors.value = 0;
 						submit()">
-					<?
+					<?php
 					for ($i = 1; $i <= $pages; $i++) {
 						$selected = '';
 						if ($i == $page)
@@ -168,11 +168,11 @@ if ($total % $limit)
 		<tr>
 			<th width="20"><input type="checkbox" class="monitis-checkbox-all" ></th>
 			<th><a href="javascript:void(0)" onclick="sortRequest('name');
-						submit();">Server Name</a><input type="hidden" name="nameOrder" value="<?= $sList['name'] ?>" id="nameOrder" /></th>
+						submit();">Server Name</a><input type="hidden" name="nameOrder" value="<?php echo $sList['name'] ?>" id="nameOrder" /></th>
 			<th><a href="javascript:void(0)" onclick="sortRequest('ipaddress');
-						submit();">IP address</a><input type="hidden" name="ipaddressOrder" value="<?= $sList['ipaddress'] ?>" id="ipaddressOrder" /></th>
+						submit();">IP address</a><input type="hidden" name="ipaddressOrder" value="<?php echo $sList['ipaddress'] ?>" id="ipaddressOrder" /></th>
 			<th><a href="javascript:void(0)" onclick="sortRequest('hostname');
-						submit();">Hostname</a><input type="hidden" name="hostnameOrder" value="<?= $sList['hostname'] ?>" id="hostnameOrder" /></th>
+						submit();">Hostname</a><input type="hidden" name="hostnameOrder" value="<?php echo $sList['hostname'] ?>" id="hostnameOrder" /></th>
 			<th><a style="text-decoration:none;">Current Status</a></th>
 			<th><a style="text-decoration:none;">Monitis Monitors</a><input type="hidden" name="sortname" value="name" id="sortnameId" /></th>
 		</tr>
@@ -220,7 +220,7 @@ if ($total % $limit)
 					}
 					?>
 					<tr>
-						<td><input type="checkbox" class="monitis-checkbox" value="<?= $server_id ?>" name="serverId[]" <?= $disabled ?> /></td>
+						<td><input type="checkbox" class="monitis-checkbox" value="<?php echo $server_id ?>" name="serverId[]" <?php echo $disabled ?> /></td>
 						<td><?php echo $srvrs[$i]['name'] ?></td>
 						<td><?php echo $srvrs[$i]['ipaddress'] ?></td>
 						<td><?php echo $srvrs[$i]['hostname'] ?></td>
@@ -325,17 +325,17 @@ if ($total % $limit)
 						</td>
 
 						<td style="text-align: center;" class="monitis_link_result">
-							<a href="<?= MONITIS_APP_URL ?>&monitis_page=monitors&server_id=<?=$server_id?>">Monitors &#8594;</a>
+							<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=monitors&server_id=<?php echo $server_id?>">Monitors &#8594;</a>
 						</td>
 					</tr>
-				<?
+				<?php
 				}
 			} else {
 				?>
 				<tr>
 					<td colspan="6">No servers available.</td>
 				</tr>
-				<?
+				<?php
 			}
 			?>
         </tbody>

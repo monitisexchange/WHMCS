@@ -1,4 +1,4 @@
-<?
+<?php
 
 class monitisClientApiAccess {
 
@@ -6,17 +6,17 @@ class monitisClientApiAccess {
 	
 	
 	static function jsonDecode($result) {
-		//$err = 'Sorry, Monitis API does not respond, try later ';
-		//MonitisConf::$apiServerError = '';
+
 		if(empty($result)) {
-			//MonitisConf::$apiServerError = $err;
-			return array('status'=>'error', 'code'=>101);
+			//return array('status'=>'error', 'code'=>101);
+			return null;
 		} else {
 			$result = utf8_encode($result);
 			$resp = json_decode($result, true);
 			if(empty($resp) && gettype($resp) != 'array') {
 				//MonitisConf::$apiServerError = $err;
-				return array('status'=>'error', 'code'=>101);
+				//return array('status'=>'error', 'code'=>101);
+				return null;
 			}
 			return $resp;
 		}
@@ -38,8 +38,8 @@ class monitisClientApiAccess {
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			$result = curl_exec($ch);
 monitisLog("client requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>");
-			$resp = json_decode($result, true); // mml
-			//$resp = self::jsonDecode($result);
+			//$resp = json_decode($result, true); // mml
+			$resp = self::jsonDecode($result);
 			
 			if(@$resp['error'] && @$resp['errorCode'] && $resp['errorCode'] == 4) {
 				if(MonitisConf::update_token())
@@ -78,9 +78,9 @@ monitisLog("client requestGet **** action = <b>$action</b><p>$url</p><p>$result<
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
 			$result = curl_exec($ch);
 monitisLog("client requestPost **** action = <b>$action</b><p>$query</p><p>$result</p>");
-			$resp = json_decode($result, true);
-			//$resp = self::jsonDecode($result);
-			
+			//$resp = json_decode($result, true);
+			$resp = self::jsonDecode($result);
+
 			if(@$resp['error'] && @$resp['errorCode'] && $resp['errorCode'] == 4) {
 					if(MonitisConf::update_token())
 						return self::requestPost($action, $params);

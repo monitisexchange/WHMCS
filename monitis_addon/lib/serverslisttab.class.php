@@ -1,4 +1,4 @@
-<?
+<?php
 class serversListTab {
 
 	private $synchronize = true;

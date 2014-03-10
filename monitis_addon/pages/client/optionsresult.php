@@ -77,33 +77,33 @@ while( $row = mysql_fetch_assoc( $result ) ){
 			</tr>
 		</thead>
 		<tbody>
-			<?
+			<?php
 			if( is_array( $monitors ) && count($monitors) ):
 			$addonUrl = MonitisHelper::adminAddonUrl();
 			foreach( $monitors as $monitor ):
 			?>
 			<tr>
-				<!-- td><?=$monitor["orderid"]?></td -->
-				<td><a href="<?=MonitisHelper::adminOrderUrl($monitor["orderid"])?>" target="_blank"><?=$monitor["orderid"]?></a></td>
-				<td><?=$monitor["ordernum"]?></td>
-				<td><?=$monitor["username"]?></td>
-				<td><?=$monitor["monitor_type"]?></td>
-				<td><?=$monitor["domain"]?></td>
-				<td><?=$monitor["dedicatedip"]?></td>
-				<td class="status <?=$monitor["response"]["status"]?>">
-				<?if($monitor['response']['status'] == 'error') {?>
-					<a href="<?=$addonUrl?>&monitis_page=tabreport" class="status <?=$monitor["response"]["status"]?>" target="_blank"><?=$monitor["response"]["msg"]?></a>
-				<?} else {?>
-					<?=$monitor["response"]["msg"]?>
-				<?}?>
+				<!-- td><?php echo $monitor["orderid"] ?></td -->
+				<td><a href="<?php echo MonitisHelper::adminOrderUrl($monitor["orderid"]) ?>" target="_blank"><?php echo $monitor["orderid"] ?></a></td>
+				<td><?php echo $monitor["ordernum"]?></td>
+				<td><?php echo $monitor["username"]?></td>
+				<td><?php echo $monitor["monitor_type"]?></td>
+				<td><?php echo $monitor["domain"]?></td>
+				<td><?php echo $monitor["dedicatedip"]?></td>
+				<td class="status <?php echo $monitor["response"]["status"]?>">
+				<?php if($monitor['response']['status'] == 'error') {?>
+					<a href="<?php echo $addonUrl ?>&monitis_page=tabreport" class="status <?php echo $monitor["response"]["status"] ?>" target="_blank"><?php echo $monitor["response"]["msg"] ?></a>
+				<?php } else { ?>
+					<?php echo $monitor["response"]["msg"]?>
+				<?php } ?>
 				</td>
 			</tr>
-			<? endforeach ?>
-			<? else: ?>
+			<?php endforeach ?>
+			<?php else: ?>
 			<tr>
 				<td colspan="7">No active products available.</td>
 			</tr>
-			<? endif ?>
+			<?php endif ?>
 		</tbody>
 	</table>
 </div>

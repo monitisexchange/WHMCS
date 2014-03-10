@@ -122,7 +122,7 @@ $int_ids = $oMnts->get_whmcs_int_ids();
 MonitisApp::printNotifications();
 ?>
 <section style="text-align:left">
-<?
+<?php
 if( $ext_ids )
 	echo monitis_embed_externalSnapshot( 'externalSnapshot', $ext_ids );
 

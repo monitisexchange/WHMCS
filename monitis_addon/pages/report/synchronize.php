@@ -164,7 +164,7 @@ table.datatable .monitors_list .active {
 			</table>
 		</th>
 	</tr>
-<?
+<?php
 $producttype = array(
 	'addon'=>'Addon',
 	'option'=>'Config options',
@@ -216,18 +216,18 @@ $producttype = array(
 ?>
 	<tr>
 		<td>
-		<?if(!empty($whmcsId)) {
+		<?php if(!empty($whmcsId)) {
 			$url = MonitisHelper::adminUrl().'clientsprofile.php?action=view&userid='.$whmcsId;
 		?>
-			<a href="<?=$url?>" target="_blank" style="color:#1A4D80"><?=$uname?></a>
-		<?} else {?>
-			<?=$uname?>
-		<?}?>
+			<a href="<?php echo $url?>" target="_blank" style="color:#1A4D80"><?php echo $uname?></a>
+		<?php } else {?>
+			<?php echo $uname?>
+		<?php }?>
 		</td>
 
 		<td>
 			<table class="monitors_list" width="100%" border="0" cellspacing="0" cellpadding="0">
-		<? for($j=0; $j<count($oks); $j++) {
+		<?php for($j=0; $j<count($oks); $j++) {
 			$stl = 'active';
 			if($oks[$j]['api']['suspended']) 
 				$stl = '';
@@ -235,11 +235,11 @@ $producttype = array(
 			$url = MonitisHelper::adminServicerUrl($oks[$j]['whmcs']['user_id'], $oks[$j]['whmcs']['service_id']);
 		?>
 				<tr>
-					<td class="service"><a href="<?=$url?>" target="_blank"><?=$lbl?></a></td>
-					<td class="monitor <?=$stl?>"><?=$oks[$j]['api']['name']?></td>
+					<td class="service"><a href="<?php echo $url?>" target="_blank"><?php echo $lbl?></a></td>
+					<td class="monitor <?php echo $stl?>"><?php echo $oks[$j]['api']['name']?></td>
 				</tr>
 			
-		<?	}
+		<?php	}
 			for($j=0; $j<count($api); $j++) {
 				$stl = 'active';
 				if($oks[$j]['api']['suspended']) 
@@ -247,21 +247,21 @@ $producttype = array(
 		?>
 				<tr>
 					<td class="service">&nbsp;</td>
-					<td class="monitor <?=$stl?>"><?=$api[$j]['name']?></td>
+					<td class="monitor <?php echo $stl?>"><?php echo $api[$j]['name']?></td>
 				</tr>
-		<?	}	
+		<?php	}	
 			for($j=0; $j<count($link); $j++) {
 				$lbl = 'Service: '.$link[$j]['order_id'].'/'.$link[$j]['service_id'];
 				$url = MonitisHelper::adminServicerUrl($link[$j]['user_id'], $link[$j]['service_id']);
 		?>
 				<tr>
-					<td class="service"><a href="<?=$url?>" target="_blank"><?=$lbl?></a></td>
+					<td class="service"><a href="<?php echo $url?>" target="_blank"><?php echo $lbl?></a></td>
 					<td class="monitor">&nbsp;</td>
 				</tr>
-		<?	} ?>
+		<?php	} ?>
 			</table>
 		
 		</td>
 	</tr>
-<? } ?>
+<?php } ?>
 </table>

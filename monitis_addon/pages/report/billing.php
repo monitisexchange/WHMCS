@@ -12,11 +12,6 @@ define('MONITIS_PLAN_ACTIONS', '[
 {"id":23,"name":"subAccount","title":"Sub Accounts"}
 ]');
 
-//$planStruct = json_decode(MONITIS_PLAN_ACTIONS, true);
-
-//echo '<pre>'.MONITIS_PLAN_ACTIONS.'</pre>';
-
-
 class billingPlan {
 
 	private $plans = null;
@@ -61,7 +56,6 @@ class billingPlan {
 		if( isset($userInfo['status']) && $userInfo['status'] == 'error' && isset($userInfo['code']) && $userInfo['code'] == 101 )
 			return null;
 			
-		//$userInfo = $sss;
 		$plan = array(
 			'roleName' => '',
 			'uptimePlan' => 0,
@@ -146,9 +140,7 @@ class billingPlan {
 $oPlan = new billingPlan();
 $uptimeInfo = $oPlan->planDetails();
 
-
 if($uptimeInfo) {
-	//_dump($uptimeInfo);
 	$uptimePlan = $uptimeInfo['plan']['uptimePlan'];
 	$serverPlan = $uptimeInfo['plan']['serverPlan'];
 	$roleName = '';
@@ -159,8 +151,6 @@ if($uptimeInfo) {
 	$uptimeTotal = $uptimeInfo['uptimeMonitors'] + $uptimeInfo['clientsMonitors'];
 
 	$available = 0;
-	//$isOkPlan = true;
-	//$style = '';
 	if($uptimeTotal < $uptimePlan) {
 		$available = $uptimePlan - $uptimeTotal;
 	} 
@@ -180,7 +170,6 @@ if($uptimeInfo) {
 }
 .datatable span{
 	font-size:14px;
-	/*font-weight:bold;*/
 }
 .datatable label{
 	font-size:12px;
@@ -192,7 +181,7 @@ if($uptimeInfo) {
 	padding: 10px 0px;
 }
 </style>
-<div class="monitis-role-name"><?=$roleName?></div>
+<div class="monitis-role-name"><?php echo $roleName?></div>
 
 
 <table class="datatable" style="text-align: left;">
@@ -207,25 +196,25 @@ if($uptimeInfo) {
     </tr>
     <tr>
 		<td>Uptime</td>
-		<td><span><?=$uptimePlan?></span></td>
-		<td><span><?=$uptimeInfo['uptimeMonitors']?></span></td>
+		<td><span><?php echo $uptimePlan?></span></td>
+		<td><span><?php echo $uptimeInfo['uptimeMonitors']?></span></td>
 		
-		<td><span><?=$uptimeInfo['clientsMonitors']?> </span> <!-- label>(from <?=$uptimeInfo['clients']?> clients)</label --></td>
-		<td><?=$uptimeTotal?></td>
-		<td><?=$available?></td>
+		<td><span><?php echo $uptimeInfo['clientsMonitors']?> </span> <!-- label>(from <?php echo $uptimeInfo['clients']?> clients)</label --></td>
+		<td><?php echo $uptimeTotal?></td>
+		<td><?php echo $available?></td>
 	</tr>
 	
     <tr>
 		<td>Server/Device</td>
-		<td><span><?=$serverPlan?></span></td>
-		<td><?=$uptimeInfo['agents']?> <!-- label>(<?=$uptimeInfo['internalMonitors']?> monitors)</label --></td>
-		<td><!-- <?=$uptimeInfo['internalMonitors']?> <label>from <?=$uptimeInfo['agents']?> agents</label> --></td>
+		<td><span><?php echo $serverPlan?></span></td>
+		<td><?php echo $uptimeInfo['agents']?> <!-- label>(<?php echo $uptimeInfo['internalMonitors']?> monitors)</label --></td>
+		<td><!-- <?php echo $uptimeInfo['internalMonitors']?> <label>from <?php echo $uptimeInfo['agents']?> agents</label> --></td>
 		
 		<td>&nbsp;</td>
-		<td><?=$intAvailable?></td>
+		<td><?php echo $intAvailable?></td>
 	</tr>
 </table>
 
-<?
+<?php
 }
 ?>

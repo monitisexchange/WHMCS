@@ -20,10 +20,10 @@ $(document).ready(function(){
 		<li class="tab  <?php if ($pageName == 'tabreport') echo 'tabselected'; ?>">
 			<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=tabreport">Reports</a>
 		</li>
-		<?if(empty(MonitisConf::$apiKey) || empty(MonitisConf::$secretKey)) {?>
+		<?php if(empty(MonitisConf::$apiKey) || empty(MonitisConf::$secretKey)) {?>
 		<li class="tab  <?php if ($pageName == 'account') echo 'tabselected'; ?>">
 			<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=account">Monitis Account</a>
 		</li>
-		<?}?>
+		<?php }?>
 	</ul>
 </div>

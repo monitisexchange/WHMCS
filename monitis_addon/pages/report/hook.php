@@ -46,20 +46,15 @@ if($action) {
 				if($type == 'addon') {
 					$resp = MonitisHookClass::applyCreateAddonMonitor ($_POST['addonserviceid'], $_POST['serviceid'], $_POST['userid']);
 				} else {
-					//$optionid, $configid, $serviceid
 					$resp = MonitisHookClass::applyCreateConfigOptionMonitor($_POST['option_id'], $_POST['productid'], $_POST['serviceid']);
 				}
-				//$response = MonitisSeviceHelper::createMonitor( $product );
 			break;
 		}
 	} elseif($action == 'clean') {
 		monitisSqlHelper::altQuery('DELETE FROM '.MONITIS_HOOK_REPORT_TABLE);
 	}
 }
-
-
 $list = monitisSqlHelper::query('SELECT * FROM '.MONITIS_HOOK_REPORT_TABLE.' ORDER BY `date` DESC');
-//_dump($list);
 ?>
 <div style="text-align: left;padding: 0px 0px 5px;">
 	<form method="post" action="">
@@ -74,11 +69,10 @@ $list = monitisSqlHelper::query('SELECT * FROM '.MONITIS_HOOK_REPORT_TABLE.' ORD
 		<th>Product type</th>
 		<th>URL / IP</th>
 		<th>Monitor type</th>
-		<!-- th>temp</th -->
 		<th>Response</th>
 		<th>&nbsp;</th>
 	</tr>
-<?
+<?php
 $producttype = array(
 	'addon'=>'Addon',
 	'option'=>'Configure options',
@@ -88,78 +82,60 @@ if( $list && count($list) > 0) {
 
 	for($k=0; $k<count($list); $k++) {
 		$row = $list[$k];
-		// $vars = $row['vars'];
-		
+	
 		$resp = json_decode($row['json'], true);
 		
 		$data = $resp['data'];
 		for($i=0; $i<count($data); $i++){
 			
 			$product = $data[$i]['product'];
-
-			/*
-			$is_linked = 'no';
-			$is_existed = 'no';
-			if($product['monitor'] && count($product['monitor']) > 0) {
-				$is_linked = 'yes';
-				if($product['monitor']['api'] && count($product['monitor']['api']) > 0)
-					$is_existed = 'yes';
-			}			
-			*/
 			
 			$pType = $producttype[$product["producttype"]];
 			$status = $data[$i]['response']['status'];
 			$response = $data[$i]['response']['msg'];
 			$stl = '';
 			if($status == 'error') {
-				//$stl = 'style="color:red"';
 				$stl = 'class="textred"';
 ?>
 	<tr>
-		<td><?=$row["date"]?></td>
-		<td><a href="<?=$resp['serviceurl']?>" target="_blank"><?=$resp["title"]?></a></td>
-		<td><?=$resp["username"]?></td>
-		<td><?=$pType?></td>
-		<td><?=$product['web_site']?></td>
-		<td><?=$product['monitor_type']?></td>
-<?	/*	<td>
-			<div>hook type: <?=$resp["hook_type"]?> / hook: <?=$resp["hook"]?></div>
-			<div>existed: <?=$is_existed?> / linked: <?=$is_linked?></div>
-		</td>
-	*/
-?>
-		<td><span <?=$stl?>><?=$response?></span></td>
+		<td><?php echo $row["date"]?></td>
+		<td><a href="<?php echo $resp['serviceurl']?>" target="_blank"><?php echo $resp["title"]?></a></td>
+		<td><?php echo $resp["username"]?></td>
+		<td><?php echo $pType?></td>
+		<td><?php echo $product['web_site']?></td>
+		<td><?php echo $product['monitor_type']?></td>
+		<td><span <?php echo $stl?>><?php echo $response?></span></td>
 		<td>
 			<form method="post" action="">
 			<input type="submit" value="Apply" onclick="this.form.act.value='apply'" class="btn" />
 			<input type="submit" value="Delete" onclick="this.form.act.value='delete'" class="btn" />
 			<input type="hidden" name="act" value="" />
-			<input type="hidden" name="hook" value="<?=$resp["hook"]?>" />
-			<input type="hidden" name="hook_type" value="<?=$resp["hook_type"]?>" />
-			<input type="hidden" name="id" value="<?=$row["id"]?>" />
-			<?if($resp["hook_type"] == 'order') {?>
-				<input type="hidden" name="orderid" value="<?=$product["orderid"]?>" />
-			<?} elseif($resp["hook_type"] == 'edit' || $resp["hook_type"] == 'module') {?>
-				<input type="hidden" name="serviceid" value="<?=$product["serviceid"]?>" />
-				<input type="hidden" name="userid" value="<?=$product["userid"]?>" />
-			<?} elseif($resp["hook_type"] == 'multiple') { ?>
-				<input type="hidden" name="multi_type" value="<?=$row["multi_type"]?>" />
-				<input type="hidden" name="producttype" value="<?=$product["producttype"]?>" />
-				<input type="hidden" name="option_id" value="<?=$product["option_id"]?>" />
-				<input type="hidden" name="productid" value="<?=$product["productid"]?>" />
-				<input type="hidden" name="serviceid" value="<?=$product["serviceid"]?>" />
-				<input type="hidden" name="userid" value="<?=$product["userid"]?>" />
-				<input type="hidden" name="addonserviceid" value="<?=@$product["addonserviceid"]?>" />
-			<?} else {?>
-				<input type="hidden" name="addonserviceid" value="<?=$product["addonserviceid"]?>" />
-				<input type="hidden" name="serviceid" value="<?=$product["serviceid"]?>" />
-				<input type="hidden" name="addonid" value="<?=$product["addonid"]?>" />
-				<input type="hidden" name="userid" value="<?=$product["userid"]?>" />
-			<?}?>
+			<input type="hidden" name="hook" value="<?php echo $resp["hook"]?>" />
+			<input type="hidden" name="hook_type" value="<?php echo $resp["hook_type"]?>" />
+			<input type="hidden" name="id" value="<?php echo $row["id"]?>" />
+			<?php if($resp["hook_type"] == 'order') {?>
+				<input type="hidden" name="orderid" value="<?php echo $product["orderid"]?>" />
+			<?php } elseif($resp["hook_type"] == 'edit' || $resp["hook_type"] == 'module') {?>
+				<input type="hidden" name="serviceid" value="<?php echo $product["serviceid"]?>" />
+				<input type="hidden" name="userid" value="<?php echo $product["userid"]?>" />
+			<?php } elseif($resp["hook_type"] == 'multiple') { ?>
+				<input type="hidden" name="multi_type" value="<?php echo $row["multi_type"]?>" />
+				<input type="hidden" name="producttype" value="<?php echo $product["producttype"]?>" />
+				<input type="hidden" name="option_id" value="<?php echo $product["option_id"]?>" />
+				<input type="hidden" name="productid" value="<?php echo $product["productid"]?>" />
+				<input type="hidden" name="serviceid" value="<?php echo $product["serviceid"]?>" />
+				<input type="hidden" name="userid" value="<?php echo $product["userid"]?>" />
+				<input type="hidden" name="addonserviceid" value="<?php echo @$product["addonserviceid"]?>" />
+			<?php } else {?>
+				<input type="hidden" name="addonserviceid" value="<?php echo $product["addonserviceid"]?>" />
+				<input type="hidden" name="serviceid" value="<?php echo $product["serviceid"]?>" />
+				<input type="hidden" name="addonid" value="<?php echo $product["addonid"]?>" />
+				<input type="hidden" name="userid" value="<?php echo $product["userid"]?>" />
+			<?php }?>
 			</form>
 		</td>
 	</tr>
-<?		
+<?php
 			}
 		}
 	}

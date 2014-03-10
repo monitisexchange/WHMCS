@@ -1,15 +1,10 @@
 <?php
 $addonId = monitisGetInt('addonid');
 
-//$oSrv = new clientServicesClass();
-//$products = $oSrv->addonProductsList($addonId);
-
 $result = MonitisHookClass::createAddonsMonitorById($addonId);
 $addonName = '';
 if($result && count($result)>0)
 	$addonName = $result[0]['name'];
-
-//_dump($products);
 ?>
 <style>
 .datatable .msg{
@@ -37,7 +32,7 @@ if($result && count($result)>0)
 	</tr>
     </thead>
 	
-<?
+<?php
 if( $result && count($result) > 0) {
 
 	$addonUrl = MonitisHelper::adminAddonUrl();
@@ -51,9 +46,6 @@ if( $result && count($result) > 0) {
 		
 		$orderUrl = $item["order_url"];
 		$serviceUrl = $item["service_url"];
-		
-//_dump($product);
-		
 		$isError = false;
 		if($response["status"] == 'ok') {
 			$color = '#468847';
@@ -65,33 +57,32 @@ if( $result && count($result) > 0) {
     <tbody>
 	<tr>
 		<td>
-		<?if(!empty($product["orderid"])) {?>
-			<a href="<?=$orderUrl?>" target="_blank"><?=$product["orderid"]?></a>
-		<?} else { ?>
-			<span style="color:#888888"><?=$product["serviceorderid"]?></span>
-		 <? } ?>
+		<?php if(!empty($product["orderid"])) {?>
+			<a href="<?php echo $orderUrl?>" target="_blank"><?php echo $product["orderid"]?></a>
+		<?php } else { ?>
+			<span style="color:#888888"><?php echo $product["serviceorderid"]?></span>
+		 <?php } ?>
 		</td>
-		<td><?=$product["ordernum"]?></td>
-		<td><a href="<?=$serviceUrl?>" target="_blank"><?=$product["serviceid"]?>/<?=$product["addonserviceid"]?></a></td>
-		<td><?=$product["username"]?></td>
-		<td><?=$product["monitor_type"]?></td>
-		<td><?=$product["domain"]?></td>
-		<td><?=$product["dedicatedip"]?></td>
-		<td class="msg" style="color:<?=$color?>">
-		<? if($isError) {?>
-			<a href="<?=$addonUrl?>&monitis_page=tabreport" style="color:<?=$color?>" target="_blank"><?=$response['msg']?></a>
-		<?} else {?>
-			<?=$response['msg']?>
-		<?}?>
+		<td><?php echo $product["ordernum"]?></td>
+		<td><a href="<?php echo $serviceUrl?>" target="_blank"><?php echo$product["serviceid"]?>/<?php echo $product["addonserviceid"]?></a></td>
+		<td><?php echo $product["username"]?></td>
+		<td><?php echo $product["monitor_type"]?></td>
+		<td><?php echo $product["domain"]?></td>
+		<td><?php echo $product["dedicatedip"]?></td>
+		<td class="msg" style="color:<?php echo $color?>">
+		<?php if($isError) {?>
+			<a href="<?php echo $addonUrl?>&monitis_page=tabreport" style="color:<?php echo $color?>" target="_blank"><?php echo $response['msg']?></a>
+		<?php } else {?>
+			<?php echo $response['msg']?>
+		<?php } ?>
 		</td>
 	</tr>
-<?
+<?php
 	}
 }else{ ?>
     <tr>
         <td colspan="8">No active addons available</td>
     </tr>
-<?}
-?>
+<?php } ?>
     </tbody>
 </table>

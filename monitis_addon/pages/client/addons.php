@@ -101,7 +101,7 @@ MonitisApp::printNotifications();
 <table width="100%" border="0" cellpadding="3" cellspacing="0">
 	<tr>
 		<td width="50%" align="left">
-			<b><?= count($products) ?></b> Addons Found, Page <b>1</b> of <b>1</b>
+			<b><?php echo count($products) ?></b> Addons Found, Page <b>1</b> of <b>1</b>
 		</td>
 		<td width="50%" align="right">
 			Jump to Page:&nbsp;&nbsp; 
@@ -127,7 +127,7 @@ MonitisApp::printNotifications();
 			</tr>
 		</thead>
 		<tbody>
-			<?
+			<?php
 			if ($products && count($products) > 0) {
 				for ($i = 0; $i < count($products); $i++) {
 					$productId = $products[$i]['id'];
@@ -171,37 +171,37 @@ MonitisApp::printNotifications();
 					}
 					?>
 					<tr>
-						<td><input type="checkbox" class="monitis-checkbox" value="<?= $productId ?>" name="productIds[]" /></td>
+						<td><input type="checkbox" class="monitis-checkbox" value="<?php echo $productId ?>" name="productIds[]" /></td>
 
-						<td><?= $products[$i]['name'] ?></td>
-						<td><?= $monitor_type ?></td>
+						<td><?php echo $products[$i]['name'] ?></td>
+						<td><?php echo $monitor_type ?></td>
 
-						<td><?= $interval ?></td>
-						<td><?= $timeout ?> <?= $timeoutTxt ?></td>
-						<td><?= $locationsMax ?></td>
+						<td><?php echo $interval ?></td>
+						<td><?php echo $timeout ?> <?php echo $timeoutTxt ?></td>
+						<td><?php echo $locationsMax ?></td>
 						<td>
-							<? if ($isActive) { ?>
+							<?php if ($isActive) { ?>
 								<span class="textgreen">Active</span>
-							<? } else { ?>
+							<?php } else { ?>
 								<span class="textred">Inactive</span>
-							<? } ?>
+							<?php } ?>
 						</td>				
 						<td class="action">
-							<? if ($isActive) { ?>
-								<input type="image" src="images/edit.gif" class="monitis_product_edit" data-id="<?= $productId ?>" data-settings='<?= $settingProduct ?>' title="Edit addon settings" />
+							<?php if ($isActive) { ?>
+								<input type="image" src="images/edit.gif" class="monitis_product_edit" data-id="<?php echo $productId ?>" data-settings='<?php echo $settingProduct ?>' title="Edit addon settings" />
 								<input type="image" src="images/icons/autosettings.png" class="monitis_create_monitor monitis_link_button" onclick="this.form.action_type.value = 'automate';
-								this.form.productId.value = '<?= $productId ?>';" title="Create monitors" />
-								   <? } ?>
+								this.form.productId.value = '<?php echo $productId ?>';" title="Create monitors" />
+								   <?php } ?>
 						</td>
 					</tr>
-					<?
+					<?php
 				}
 			} else {
 				?>
 				<tr>
 					<td colspan="8">No active addons available.</td>
 				</tr>
-				<?
+				<?php
 			}
 			?>
 		</tbody>
@@ -219,7 +219,7 @@ MonitisApp::printNotifications();
 <form method="post" action="" id="productEditForm">
 	<input type="hidden" name="productName" value="" />
 	<input type="hidden" name="productId" value="" />
-	<input type="hidden" name="monitor_type" value="<?= $monitor_type ?>" />
+	<input type="hidden" name="monitor_type" value="<?php echo $monitor_type ?>" />
 	<input type="hidden" name="locationIds" value="" />
 	<input type="hidden" name="timeout" value="" />
 	<input type="hidden" name="interval" value="" />
@@ -227,7 +227,7 @@ MonitisApp::printNotifications();
 	<input type="hidden" name="action_type" value="edit_product" />
 </form>
 
-<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js?<?= rand(1, 1000) ?>"></script>
+<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js?<?php echo rand(1, 1000) ?>"></script>
 <script type="text/javascript">
 
 $(document).ready(function() {
@@ -239,7 +239,7 @@ $(document).ready(function() {
 		var options = {
 			type: 'addon',
 			settings: product.attr("data-settings"),
-			locations: <?= json_encode(MonitisConf::$locations) ?>
+			locations: <?php echo json_encode(MonitisConf::$locations) ?>
 		}
 		new monitisProductDialog(options, function(response) {
 

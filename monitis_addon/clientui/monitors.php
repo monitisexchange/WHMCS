@@ -11,12 +11,12 @@ $language = 'english';
 
 include_once('modules/addons/monitis_addon/lang/'.$language.'.php');
 ?>
-<link href="http://code.jquery.com/ui/1.10.3/themes/<?=MonitisConf::$jqueryClientTheme?>/jquery-ui.css" rel="stylesheet" type="text/css" />
+<link href="http://code.jquery.com/ui/1.10.3/themes/<?php echo MonitisConf::$jqueryClientTheme?>/jquery-ui.css" rel="stylesheet" type="text/css" />
 <script type="text/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
-<link href="modules/addons/monitis_addon/static/css/monitis.css?<?=$version?>" rel="stylesheet" type="text/css" />
-<script type="text/javascript" src="modules/addons/monitis_addon/static/js/monitisclasses.js?<?=$version?>"></script>
-<script type="text/javascript" src="modules/addons/monitis_addon/static/js/clientui.js?<?=$version?>"></script>
-<script type="text/javascript" src="modules/addons/monitis_addon/lang/js/<?=$language?>.js?<?=$version?>"></script>
+<link href="modules/addons/monitis_addon/static/css/monitis.css?<?php echo $version?>" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="modules/addons/monitis_addon/static/js/monitisclasses.js?<?php echo $version?>"></script>
+<script type="text/javascript" src="modules/addons/monitis_addon/static/js/clientui.js?<?php echo $version?>"></script>
+<script type="text/javascript" src="modules/addons/monitis_addon/lang/js/<?php echo $language?>.js?<?php echo $version?>"></script>
 <style type="text/css">
 .ui-widget {
 	font-size:12px;
@@ -39,7 +39,7 @@ section.monitis-monitor-item {
 }
 </style>
 <div class="page-header">
-    <div class="styled_title"><h1><?=$MLANG['my_monitors']?> </h1></div>
+    <div class="styled_title"><h1><?php echo $MLANG['my_monitors']?> </h1></div>
 </div>
 <?php
 $userid = 0;
@@ -262,20 +262,20 @@ if($userid > 0) {
 			//
 ?>
 			<section class="monitis-monitor-item">
-				<header><h3 style="float:left"><?=$monitor["productname"]?></h3>
+				<header><h3 style="float:left"><?php echo $monitor["productname"]?></h3>
 
 					<div id="test" style="width:100px;float:right">
 						<div class="btn-group">
-						<button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><?=$MLANG['actions']?> <span class="caret"></span></button>
+						<button class="btn btn-small dropdown-toggle" data-toggle="dropdown"><?php echo $MLANG['actions']?> <span class="caret"></span></button>
 						<ul class="dropdown-menu">
-						<? if($suspend == 'suspend') { ?>
-							<li><a href="#" class="alert_monitor" monitor_id="<?=$monitor_id?>" monitor_type="external"><?=$MLANG['alert_rules']?></a></li>
-							<li><a href="#" class="monitor_settings" monitor_id="<?=$monitor_id?>"><?=$MLANG['settings']?></a></li>
+						<?php if($suspend == 'suspend') { ?>
+							<li><a href="#" class="alert_monitor" monitor_id="<?php echo $monitor_id?>" monitor_type="external"><?php echo $MLANG['alert_rules']?></a></li>
+							<li><a href="#" class="monitor_settings" monitor_id="<?php echo $monitor_id?>"><?php echo $MLANG['settings']?></a></li>
 							<li class="divider"></li>
-							<li><a href="#" class="suspend_monitor" monitor_id="<?=$monitor_id?>" suspend="<?=$suspend?>"><?=$MLANG['suspend_monitoring']?></a></li>
-						<?} else { ?>
-							<li><a href="#" class="suspend_monitor" monitor_id="<?=$monitor_id?>" suspend="<?=$suspend?>"><?=$MLANG['activate_monitoring']?></a></li>
-						<? } ?>
+							<li><a href="#" class="suspend_monitor" monitor_id="<?php echo $monitor_id?>" suspend="<?php echo $suspend?>"><?php echo $MLANG['suspend_monitoring']?></a></li>
+						<?php } else { ?>
+							<li><a href="#" class="suspend_monitor" monitor_id="<?php echo $monitor_id?>" suspend="<?php echo $suspend?>"><?php echo $MLANG['activate_monitoring']?></a></li>
+						<?php } ?>
 						</ul>
 						</div>
 					</div>
@@ -283,40 +283,40 @@ if($userid > 0) {
 				</header>
 				
 				<figure>
-				<? echo monitis_embed_module($monitor['publickey'], 770, 350 ); ?>
+				<?php echo monitis_embed_module($monitor['publickey'], 770, 350 ); ?>
 				</figure>
 
-				<form method="post" id="rulesForm<?=$monitor_id?>">
+				<form method="post" id="rulesForm<?php echo $monitor_id?>">
 				
-					<input type="hidden" name="monitor_name" value='<?=$item["name"]?>' />
-					<input type="hidden" name="settings" value='<?=$settingProduct?>' />
+					<input type="hidden" name="monitor_name" value='<?php echo $item["name"]?>' />
+					<input type="hidden" name="settings" value='<?php echo $settingProduct?>' />
 					
 					<input type="hidden" name="locationIds" value='' />
 					<input type="hidden" name="timeout" value='' />
 
-					<input type="hidden" name="contactId" value='<?=$contactId?>' />
-					<input type="hidden" name="rule_id" value='<?=$ruleid?>' />
-					<input type="hidden" name="rule_external" class="notificationRule_external" value='<?=$rule?>' />
-					<input type="hidden" value="<?=$monitor_id?>" name="monitor_id" />
-					<input type="hidden" value="<?=$monitor_type?>" name="monitor_type" />
-					<input type="hidden" name="act" value="<?=$alertAction?>" />
+					<input type="hidden" name="contactId" value='<?php echo $contactId?>' />
+					<input type="hidden" name="rule_id" value='<?php echo $ruleid?>' />
+					<input type="hidden" name="rule_external" class="notificationRule_external" value='<?php echo $rule?>' />
+					<input type="hidden" value="<?php echo $monitor_id?>" name="monitor_id" />
+					<input type="hidden" value="<?php echo $monitor_type?>" name="monitor_type" />
+					<input type="hidden" name="act" value="<?php echo $alertAction?>" />
 					
 				</form>
 				<hr style="border:solid 1px #cccccc"/>
 			</section>
-	<? } ?>
+	<?php } ?>
 		</section>
-<? } else { ?>
+<?php } else { ?>
 	<div> No monitors</div>
-<? } ?>
-<? } else { ?>
+<?php } ?>
+<?php } else { ?>
 	<div>You did not login</div>
-<? } ?>
+<?php } ?>
 <div id="monitis_dialogs" style="display:none;"></div>
 <div id="monitis_notification_dialog_div"></div>
 <script type="text/javascript">
-var countryname = <? echo json_encode($locations)?>;
-var timezone = '<?=$hTimezone?>';
+var countryname = <?php echo json_encode($locations)?>;
+var timezone = '<?php echo $hTimezone?>';
 
 
 $(document).ready(function() {
@@ -368,7 +368,7 @@ $(document).ready(function() {
         var options = {
             name: $(form).find('input[name="monitor_name"]').val(),
 			settings: $(form).find('input[name="settings"]').val(),
-            locations: <?=json_encode(MonitisConf::$locations) ?>
+            locations: <?php echo json_encode(MonitisConf::$locations) ?>
         }
 
 		new monitisClientProductDialog(options,function(response){

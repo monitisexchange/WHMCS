@@ -4,11 +4,9 @@ $limit = MONITIS_LOG_PAGE_LIMIT;
 define('MONITIS_LOG_EXPAND', false);
 
 if($_POST['clean']) {
-//monitisLog($_POST, 'POST dump');
 	monitisSqlHelper::altQuery('DELETE FROM '.MONITIS_LOG_TABLE);
 } 
 
-//$limit = 3;
 $page = isset( $_REQUEST['page'] ) ? intval($_REQUEST['page']) : 1;
 $start = isset( $_REQUEST['start'] ) ? intval($_REQUEST['start']) : 0;
 
@@ -20,8 +18,6 @@ $total = $list[0]['total'];
 $pages = intval($total/$limit);
 if( $total % $limit )
 	$pages++;
-//echo "****** start=$start ******* page=$page *********************** <br>";
-//_dump($page);
 ?>
 <style type="text/css">
 .datatable th,  .datatable td{
@@ -42,7 +38,7 @@ $(document).ready(function(){
 		<td width="50%" align="right">
 		Jump to Page:&nbsp;&nbsp; 
 			<select name="page" onchange="submit()">
-			<?	for($i=1; $i<=$pages; $i++) {
+			<?php	for($i=1; $i<=$pages; $i++) {
 					$selected = '';
 					if($i == $page)
 						$selected = 'selected="selected"';
@@ -50,7 +46,7 @@ $(document).ready(function(){
 				}
 			?>
 			</select>
-			<input type="hidden" name="start" value="<?=$start?>">
+			<input type="hidden" name="start" value="<?php echo $start?>">
 			<input type="submit" value="Go">
 			
 		</td>
@@ -63,7 +59,7 @@ $(document).ready(function(){
 		<th>Description</th>
 		<th width="7px">&nbsp;</th>
 	</tr>
-<?
+<?php
 
 if( $list && count($list) > 0) {
 
@@ -77,18 +73,18 @@ if( $list && count($list) > 0) {
 		}
 ?>
 	<tr>
-		<td><?=$row["date"]?></td>
+		<td><?php echo $row["date"]?></td>
 		<td>
-			<? if(!empty($row["title"])) { ?>
-				<h3><?=$row["title"]?></h3>
-			<? } ?>
-			<? if(MONITIS_LOG_EXPAND && $row["type"] == 'json') { ?>
-				<pre><? echo $desc; ?></pre>
-			<? } else {  echo $desc; } ?>
+			<?php if(!empty($row["title"])) { ?>
+				<h3><?php echo $row["title"]?></h3>
+			<?php } ?>
+			<?php if(MONITIS_LOG_EXPAND && $row["type"] == 'json') { ?>
+				<pre><?php echo $desc; ?></pre>
+			<?php } else {  echo $desc; } ?>
 		</td>
 		<td>&nbsp;</td>
 	</tr>
-<?		
+<?php
 	}
 }
 ?>

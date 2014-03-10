@@ -1,5 +1,6 @@
 <?php
 define('MONITIS_APP_PATH', dirname(realpath(__FILE__)));
+
 require_once 'config.php';
 
 // Includes lib

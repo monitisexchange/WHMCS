@@ -16,9 +16,9 @@ include_once('modules/addons/monitis_addon/lang/'.$language.'.php');
 
 ?>
 <div class="page-header">
-    <div class="styled_title"><h1><?=$MLANG['network_status']?></h1></div>
+    <div class="styled_title"><h1><?php echo $MLANG['network_status']?></h1></div>
 </div>
-<?
+<?php
 //echo "************ userid = $userid";
 if( isset($userid) && $userid > 0) {
 

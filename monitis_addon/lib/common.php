@@ -9,16 +9,8 @@ class MonitisHelper {
 	 */ 
 	static function getAdminName() {
 		return MonitisConf::$adminName; 
-		/*
-		$vals = monitisSqlHelper::query('SELECT * FROM tbladdonmodules WHERE module="monitis_addon" AND setting="adminuser"');
-		if ($vals)
-			return $vals[0]['value'];
-		else
-			return null;
-		*/
 	}
-	
-	
+
 	static function parentDomain() {
 		$resp = MonitisApi::userInfo(array("apikey"=>MonitisConf::$apiKey));
 		if( isset($resp['account']) ) {
@@ -27,7 +19,6 @@ class MonitisHelper {
 		} else {
 			return 'monitis.ccom';
 		}
-	
 	}
 	
 	static function checkAdminName() {
@@ -142,19 +133,12 @@ class MonitisHelper {
 	static function dump() {
 		return monitisSqlHelper::query('SELECT * FROM '.MONITIS_LOG_TABLE.' ORDER BY `date` DESC');
 	}
-/*
-	static function lostMonitors($ids, $table) {
-		if(!MonitisConf::$apiServerError) {
-			monitisSqlHelper::altQuery('DELETE FROM '.$table.' WHERE monitor_id in ('.$ids.')');
-		}
-	}
-*/
 }
 
 class monitisSqlHelper {
 	// mySql select query
 	static function query($sql) {
-		$result = mysql_query($sql); // or die("Error in query: " . mysql_error() . "<br>" . $sql . "<br>");
+		$result = @mysql_query($sql); // or die("Error in query: " . mysql_error() . "<br>" . $sql . "<br>");
 		if (!is_resource($result))
 			return null;
 		$num_rows = mysql_num_rows($result);
@@ -181,13 +165,13 @@ class monitisSqlHelper {
 	}
 
 	static function altQuery($sql) {
-		return mysql_query($sql); // or die("Error in DELETE query: " . mysql_error() . "<br>" . $sql . "<br>");
+		return @mysql_query($sql); // or die("Error in DELETE query: " . mysql_error() . "<br>" . $sql . "<br>");
 	}
 
     static function pageQuery($sql) {
 		$vals = self::query($sql);
 		if($vals) {
-			$result = mysql_query('SELECT FOUND_ROWS() as __count') or die("Error in FOUND_ROWS query: " . mysql_error() . "<br>" . $sql . "<br>");
+			$result = @mysql_query('SELECT FOUND_ROWS() as __count'); // or die("Error in FOUND_ROWS query: " . mysql_error() . "<br>" . $sql . "<br>");
 			$count = 0;
 			while ($row = mysql_fetch_object($result)) {
 				$count = $row->__count;
@@ -227,7 +211,7 @@ _dump($vObj);
 }
 
 function monitisForQA($action='', $method='', $params='', $result=''){
-    //$resultSet='';
+
     $values=array( 'action' =>  $action, 
 	           'method' =>  $method, 	      
 		   'params' =>  json_encode($params),
@@ -235,8 +219,6 @@ function monitisForQA($action='', $method='', $params='', $result=''){
 		   'code'    =>  md5(json_encode($params)),
 		   'result' =>  json_encode($result),
                 );
-    //$resultSet = mysql_query('SELECT * FROM mod_monitis_qa WHERE `action`='.$action.' AND `date`='.date("Y-m-d H:i:s", time()));
- 
     $sql = 'SELECT * FROM mod_monitis_qa WHERE action="'.$action.'" AND code= "'.md5(json_encode($params)).'"';
     $resultSet = monitisSqlHelper::query($sql);     
     if($resultSet){
@@ -317,7 +299,6 @@ function _logActivity($str, $title='') {
 function monitisLog($str, $title='') {
 
 	if( MONITIS_LOG_ALLOW ) {
-		//logActivity("MONITIS LOG ***** ".$str);
 		MonitisHelper::log($str, $title);
 	}
 }

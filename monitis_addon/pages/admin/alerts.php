@@ -412,9 +412,9 @@ try {
 
 <div class="monitis-notifications">
 	<ul class="whmcs-admins" style="display: none;">
-		<? foreach($whmcsAdmins as $whmcsAdmin): ?>
-		<li data-email="<?=$whmcsAdmin['email'] ?>"><?=$whmcsAdmin['name'] ?></li>
-		<? endforeach ?>
+		<?php foreach($whmcsAdmins as $whmcsAdmin): ?>
+		<li data-email="<?php echo $whmcsAdmin['email'] ?>"><?php echo $whmcsAdmin['name'] ?></li>
+		<?php endforeach ?>
 	</ul>
 	<table class="datatable" width="100%" border="0" cellspacing="1" cellpadding="3">
 		<thead>
@@ -424,39 +424,39 @@ try {
 		</tr>
 		</thead>
 		<tbody>
-		<? if(is_array($contactGroups) && count($contactGroups)): ?>
-		<? foreach($contactGroups as $group): ?>
-		<tr data-id="<?= $group['id'] ?>" data-name="<?= $group['name'] ?>" data-type="<?= $group['type'] ?>" data-alerts="<?= $group['alerts'] ?>">
-			<td><?= $group['name'] ?></td>
+		<?php if(is_array($contactGroups) && count($contactGroups)): ?>
+		<?php foreach($contactGroups as $group): ?>
+		<tr data-id="<?php echo $group['id'] ?>" data-name="<?php echo $group['name'] ?>" data-type="<?php echo $group['type'] ?>" data-alerts="<?php echo $group['alerts'] ?>">
+			<td><?php echo $group['name'] ?></td>
 			<td>			  
 				<ul class="contacts">				  
-					<? foreach($group['whmcsContacts'] as $contact): ?>	    
-				        <? if($contact['isActive']){?>
-					<li data-email="<?= $contact['email'] ?>" ><?= $contact['name'] ?></li>
-					<? } else{?>
-					<li data-email="<?= $contact['email'] ?>" class="passive"><?= $contact['name'] ?></li>
-					<? } ?>
-					<? endforeach ?>
-					<? foreach($group['notWhmcsContacts'] as $contact): ?>
-					<li data-email="<?= $contact['email'] ?>" class="disabled"><?= $contact['name'] ?></li>
-					<? endforeach ?>
+					<?php foreach($group['whmcsContacts'] as $contact): ?>	    
+				        <?php if($contact['isActive']){?>
+					<li data-email="<?php echo $contact['email'] ?>" ><?php echo $contact['name'] ?></li>
+					<?php } else{?>
+					<li data-email="<?php echo $contact['email'] ?>" class="passive"><?php echo $contact['name'] ?></li>
+					<?php } ?>
+					<?php endforeach ?>
+					<?php foreach($group['notWhmcsContacts'] as $contact): ?>
+					<li data-email="<?php echo $contact['email'] ?>" class="disabled"><?php echo $contact['name'] ?></li>
+					<?php endforeach ?>
 				</ul>
 				  
 				<div class="buttons">
-				<?if(!empty($group['alerts'])) {?>
+				<?php if(!empty($group['alerts'])) {?>
 					<button class="btn edit-contacts">Contacts</button>
-					<button class="btn edit-notifications" <? if(!count($group['whmcsContacts'])): ?>disabled="disabled"<? endif ?>>Alert rule</button>
-				<?}?>
+					<button class="btn edit-notifications" <?php if(!count($group['whmcsContacts'])): ?>disabled="disabled"<?php endif ?>>Alert rule</button>
+				<?php } ?>
 				</div>
 				 
 			</td>           
 		</tr>
-		<? endforeach ?>
-		<? else: ?>
+		<?php endforeach ?>
+		<?php else: ?>
 		<tr>
 		<td colspan="2">No alerts available.</td>
 		</tr>
-		<? endif ?>
+		<?php endif ?>
 		</tbody>
 	</table>
 </div>

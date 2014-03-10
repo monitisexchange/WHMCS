@@ -1,4 +1,4 @@
-<?
+<?php
 //
 define('MONITISAPIURL_JS', 'https://api.monitis.com');
 

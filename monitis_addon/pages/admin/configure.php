@@ -119,7 +119,7 @@ MonitisApp::printNotifications();
 }
 </style>
 
-<form action="<?php echo MONITIS_APP_URL ?>&monitis_page=tabadmin&sub=settings<?= $firstTime ?>" method="post" enctype="application/x-www-form-urlencoded">
+<form action="<?php echo MONITIS_APP_URL ?>&monitis_page=tabadmin&sub=settings<?php echo $firstTime ?>" method="post" enctype="application/x-www-form-urlencoded">
 
 	<table class="form" width="100%" border=0>
 		<tr><td style="width:30%">&nbsp;</td><td class="title">Ping</td></tr>
@@ -139,21 +139,21 @@ MonitisApp::printNotifications();
 		</tr>
 
 		<tr style="display:none"><td class="fieldlabel">Suspended monitor message:</td><td class="fieldarea">
-				<input type="text" name="suspendmsg_ping" value="<?= $ping['suspendmsg'] ?>" class="monitortypeswitcher" size="30" /></td></tr>
+				<input type="text" name="suspendmsg_ping" value="<?php echo $ping['suspendmsg'] ?>" class="monitortypeswitcher" size="30" /></td></tr>
 
 		<tr><td>&nbsp;</td><td class="fieldarea"><hr /></td></tr>
 
 		<tr><td class="fieldlabel">Check interval:</td><td class="fieldarea">
 				<select name="interval">
-					<?
+					<?php
 					$aInterval = explode(',', MonitisConf::$checkInterval);
 					for ($i = 0; $i < count($aInterval); $i++) {
 						if ($aInterval[$i] == $ping['interval']) {
 							?>
-							<option value="<?= $aInterval[$i] ?>" selected ><?= $aInterval[$i] ?></option>
-						<? } else { ?>
-							<option value="<?= $aInterval[$i] ?>"><?= $aInterval[$i] ?></option>
-							<?
+							<option value="<?php echo $aInterval[$i] ?>" selected ><?php echo $aInterval[$i] ?></option>
+						<?php } else { ?>
+							<option value="<?php echo $aInterval[$i] ?>"><?php echo $aInterval[$i] ?></option>
+							<?php
 						}
 					}
 					?>
@@ -163,7 +163,7 @@ MonitisApp::printNotifications();
 		<tr>
 			<td class="fieldlabel">Timeout:</td>
 			<td class="fieldarea">
-				<input type="text" size="15" name="timeout" value="<?= $ping['timeout'] ?>" />&nbsp;ms. &nbsp;(1-5000)
+				<input type="text" size="15" name="timeout" value="<?php echo $ping['timeout'] ?>" />&nbsp;ms. &nbsp;(1-5000)
 			</td>
 		</tr>
 		<tr>
@@ -173,7 +173,7 @@ MonitisApp::printNotifications();
 					<span class="monitisMultiselectText"><u>{count}</u> selected</span>
 					<input type="button" class="monitisMultiselectTrigger btn" value="Select" />
 					<div class="monitisMultiselectInputs" inputName="locationIDs[]">
-						<?
+						<?php
 						for ($i = 0; $i < count($locationIds); $i++) {
 							echo '<input type="hidden" name="locationIDs[]" value="' . $locationIds[$i] . '"/>';
 						}
@@ -182,20 +182,20 @@ MonitisApp::printNotifications();
 					<div class="monitisMultiselectDialog"  title="Monitoring locations">
 						<table style="width:100%;" cellpadding=10>
 							<tr>
-								<? foreach ($locations as $countryName => $country) { ?>
+								<?php foreach ($locations as $countryName => $country) { ?>
 									<td style="vertical-align: top;">
 										<div class="column-title">
-											<?= $countryName ?>
+											<?php echo $countryName ?>
 										</div>
 										<hr/>
-										<? foreach ($country as $location) { ?>
+										<?php foreach ($country as $location) { ?>
 											<div>
-												<input type="checkbox" name="locationIDs[]" value="<?= $location['id'] ?>">
-												<?= $location['fullName'] ?>
+												<input type="checkbox" name="locationIDs[]" value="<?php echo $location['id']?>">
+												<?php echo $location['fullName'] ?>
 											</div>
-										<? } ?>
+										<?php } ?>
 									</td>
-								<? } ?>
+								<?php } ?>
 							</tr>
 						</table>
 					</div>
@@ -207,37 +207,37 @@ MonitisApp::printNotifications();
 		<tr>
 			<td class="fieldlabel">Automate monitor creation:</td>
 			<td  class="fieldarea">
-				<input type="checkbox" name="autocreate_cpu" value="cpu" <? if (MonitisConf::$settings['cpu']['autocreate'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher" />
+				<input type="checkbox" name="autocreate_cpu" value="cpu" <?php if (MonitisConf::$settings['cpu']['autocreate'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher" />
 				<label>Create a monitor when a new server is added</label>
 			</td>
 		</tr>
 		<tr>
 			<td class="fieldlabel">Available to clients:</td>
 			<td class="fieldarea">
-				<input type="checkbox" name="available_cpu" value="cpu" <? if (MonitisConf::$settings['cpu']['available'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher" />
+				<input type="checkbox" name="available_cpu" value="cpu" <?php if (MonitisConf::$settings['cpu']['available'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher" />
 				<label>Monitor results will be available in client area</label>
 			</td>
 		</tr>
 
 
 		<tr style="display:none"><td class="fieldlabel">Suspended monitor message:</td><td class="fieldarea">
-				<input type="text" name="suspendmsg_cpu" value="<?= MonitisConf::$settings['cpu']['suspendmsg'] ?>" class="monitortypeswitcher" size="30" /></td></tr>
+				<input type="text" name="suspendmsg_cpu" value="<?php echo MonitisConf::$settings['cpu']['suspendmsg'] ?>" class="monitortypeswitcher" size="30" /></td></tr>
 
 
 		<tr><td>&nbsp;</td><td class="fieldarea"><hr /></td></tr>
 
-		<tr><td class="fieldlabel">User Max:</td><td class="fieldarea" width="50%"><input type="text" size="5" name="usedMax" value="<?= $cpu['usedMax'] ?>" /></td></tr>
-		<tr><td class="fieldlabel">Kernel Max:</td><td class="fieldarea"><input type="text" size="5" name="kernelMax" value="<?= $cpu['kernelMax'] ?>" /></td></tr>
-		<tr><td class="fieldlabel">Idle Min:</td><td class="fieldarea"><input type="text" size="5" name="idleMin" value="<?= $cpu['idleMin'] ?>" /></td></tr>
-		<tr><td class="fieldlabel">Iowait Max:</td><td class="fieldarea"><input type="text" size="5" name="ioWaitMax" value="<?= $cpu['ioWaitMax'] ?>" /></td></tr>
-		<tr><td class="fieldlabel">Nice Max:</td><td class="fieldarea"><input type="text" size="5" name="niceMax" value="<?= $cpu['niceMax'] ?>" /></td></tr>
+		<tr><td class="fieldlabel">User Max:</td><td class="fieldarea" width="50%"><input type="text" size="5" name="usedMax" value="<?php echo $cpu['usedMax']?>" /></td></tr>
+		<tr><td class="fieldlabel">Kernel Max:</td><td class="fieldarea"><input type="text" size="5" name="kernelMax" value="<?php echo $cpu['kernelMax']?>" /></td></tr>
+		<tr><td class="fieldlabel">Idle Min:</td><td class="fieldarea"><input type="text" size="5" name="idleMin" value="<?php echo $cpu['idleMin'] ?>" /></td></tr>
+		<tr><td class="fieldlabel">Iowait Max:</td><td class="fieldarea"><input type="text" size="5" name="ioWaitMax" value="<?php echo $cpu['ioWaitMax'] ?>" /></td></tr>
+		<tr><td class="fieldlabel">Nice Max:</td><td class="fieldarea"><input type="text" size="5" name="niceMax" value="<?php echo $cpu['niceMax'] ?>" /></td></tr>
 
 
 		<tr><td style="width:30%">&nbsp;</td><td class="title">Memory</td></tr>
 		<tr>
 			<td class="fieldlabel">Automate monitor creation:</td>
 			<td class="fieldarea">
-				<input type="checkbox" name="autocreate_memory" value="memory" <? if (MonitisConf::$settings['memory']['autocreate'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher" />
+				<input type="checkbox" name="autocreate_memory" value="memory" <?php if (MonitisConf::$settings['memory']['autocreate'] > 0) echo 'checked=checked'; ?> class="monitortypeswitcher" />
 				<label>Create a monitor when a new server is added</label>
 			</td>
 		</tr>
@@ -250,16 +250,16 @@ MonitisApp::printNotifications();
 		</tr>
 
 		<tr style="display:none"><td class="fieldlabel">Suspended monitor message:</td><td class="fieldarea">
-				<input type="text" name="suspendmsg_memory" value="<?= MonitisConf::$settings['memory']['suspendmsg'] ?>" class="monitortypeswitcher" size="30" /></td></tr>
+				<input type="text" name="suspendmsg_memory" value="<?php echo MonitisConf::$settings['memory']['suspendmsg'] ?>" class="monitortypeswitcher" size="30" /></td></tr>
 
 
 		<tr><td>&nbsp;</td><td class="fieldarea"><hr /></td></tr>
 
 
-		<tr><td class="fieldlabel">Free Limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit" value="<?= $memory['freeLimit'] ?>" />&nbsp;MB</td></tr>
-		<tr><td class="fieldlabel">Swap Limit:</td><td class="fieldarea"><input type="text" size="5" name="freeSwapLimit" value="<?= $memory['freeSwapLimit'] ?>" />&nbsp;MB</td></tr>
-		<tr><td class="fieldlabel">Buffered Limit:</td><td class="fieldarea"><input type="text" size="5" name="bufferedLimit" value="<?= $memory['bufferedLimit'] ?>" />&nbsp;MB</td></tr>
-		<tr><td class="fieldlabel">Cached Limit:</td><td class="fieldarea"><input type="text" size="5" name="cachedLimit" value="<?= $memory['cachedLimit'] ?>" />&nbsp;MB</td></tr>
+		<tr><td class="fieldlabel">Free Limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit" value="<?php echo $memory['freeLimit'] ?>" />&nbsp;MB</td></tr>
+		<tr><td class="fieldlabel">Swap Limit:</td><td class="fieldarea"><input type="text" size="5" name="freeSwapLimit" value="<?php echo $memory['freeSwapLimit'] ?>" />&nbsp;MB</td></tr>
+		<tr><td class="fieldlabel">Buffered Limit:</td><td class="fieldarea"><input type="text" size="5" name="bufferedLimit" value="<?php echo $memory['bufferedLimit'] ?>" />&nbsp;MB</td></tr>
+		<tr><td class="fieldlabel">Cached Limit:</td><td class="fieldarea"><input type="text" size="5" name="cachedLimit" value="<?php echo $memory['cachedLimit'] ?>" />&nbsp;MB</td></tr>
 		<tr><td class="fieldlabel">&nbsp;</td><td class="fieldarea">&nbsp;</td></tr>
 
 
@@ -280,19 +280,19 @@ MonitisApp::printNotifications();
 		</tr>
 
 		<tr style="display:none"><td class="fieldlabel">Suspended monitor message:</td><td class="fieldarea">
-				<input type="text" name="suspendmsg_drive" value="<?= $drive['suspendmsg'] ?>" class="monitortypeswitcher" size="30" /></td></tr>
+				<input type="text" name="suspendmsg_drive" value="<?php echo $drive['suspendmsg'] ?>" class="monitortypeswitcher" size="30" /></td></tr>
 
 		<tr><td>&nbsp;</td><td class="fieldarea"><hr /></td></tr>
 
 
-		<tr><td class="fieldlabel">Free Limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit_drive" value="<?= $drive['freeLimit'] ?>" />&nbsp;GB</td></tr>
+		<tr><td class="fieldlabel">Free Limit:</td><td  class="fieldarea"><input type="text" size="5" name="freeLimit_drive" value="<?php echo $drive['freeLimit'] ?>" />&nbsp;GB</td></tr>
 		<tr><td class="fieldlabel">&nbsp;</td><td class="fieldarea">&nbsp;</td></tr>
 
 		<tr><td style="width:30%">&nbsp;</td><td class="title"><input type="submit" value="Save" class="btn monitis_link_button" /></td></tr>
 	</table>
 
 
-	<input type="hidden" name="agentPlatform" value="<?= $newAgentPlatform ?>" />
+	<input type="hidden" name="agentPlatform" value="<?php echo $newAgentPlatform ?>" />
 	<input type="hidden" name="saveConfig" value="1" />
 	<input type="hidden" name="action_type" value="saveConfig" />
 	<input type="hidden" name="apply_monitor_type" value="" />

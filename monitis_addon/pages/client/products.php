@@ -263,11 +263,11 @@ $products = $oMProduct->getProducts();
 
 MonitisApp::printNotifications();
 ?>
-<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js?<?= rand(1, 1000) ?>"></script>
+<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js?<?php echo rand(1, 1000) ?>"></script>
 <table width="100%" border="0" cellpadding="3" cellspacing="0">
 	<tr>
 		<td width="50%" align="left">
-			<b><?= count($products) ?></b> Products Found, Page <b>1</b> of <b>1</b>
+			<b><?php echo count($products) ?></b> Products Found, Page <b>1</b> of <b>1</b>
 		</td>
 		<td width="50%" align="right">
 			Jump to Page:&nbsp;&nbsp; 
@@ -294,7 +294,7 @@ MonitisApp::printNotifications();
 			</tr>
 		</thead>
 		<tbody>
-			<?
+			<?php
 			if ($products && count($products) > 0) {
 
 				for ($i = 0; $i < count($products); $i++) {
@@ -360,47 +360,47 @@ MonitisApp::printNotifications();
 					}
 					?>
 					<tr>
-						<td><input type="checkbox" class="monitis-checkbox" value="<?= $productId ?>" name="productIds[]" /></td>
-						<td><?= $products[$i]['name'] ?></td>
-						<td><?= $types ?></td>
-						<td><?= $interval ?></td>
-						<td><?= $timeOut ?></td>
-						<td><?= $timeOutPing ?></td>
-						<td><?= $locationsMax ?></td>
+						<td><input type="checkbox" class="monitis-checkbox" value="<?php echo $productId ?>" name="productIds[]" /></td>
+						<td><?php echo $products[$i]['name'] ?></td>
+						<td><?php echo $types ?></td>
+						<td><?php echo $interval ?></td>
+						<td><?php echo $timeOut ?></td>
+						<td><?php echo $timeOutPing ?></td>
+						<td><?php echo $locationsMax ?></td>
 						<td>
-							<?
+							<?php
 							$action = 'update';
 							if ($isMonitisProduct) {
 								?>
-								<? if ($monitisProduct) { ?>
+								<?php if ($monitisProduct) { ?>
 									<span class="textgreen">Active</span>
 
-								<? } else { ?>
+								<?php } else { ?>
 									<span class="textred">Inactive</span>
 
-								<? } ?>
-								<?
+								<?php  } ?>
+								<?php
 							} else {
 								$action = 'create';
 								?>
 								<span class="textred">Inactive</span>
-							<? } ?>
+							<?php } ?>
 						</td>
 						<td class="action">
-							<? if ($monitisProduct) { ?>
-								<input type="image" src="images/edit.gif" class="monitis_product_edit" data-id="<?= $productId ?>" data-settings='<?= $settingProduct ?>' 
-									   website="<?= $website_id ?>" monType_id="<?= $monType_id ?>" edit_type="<?= $action ?>" title="Edit product settings" />
-								   <? } ?>
+							<?php if ($monitisProduct) { ?>
+								<input type="image" src="images/edit.gif" class="monitis_product_edit" data-id="<?php echo $productId ?>" data-settings='<?php echo $settingProduct ?>' 
+									   website="<?php echo $website_id ?>" monType_id="<?php echo $monType_id ?>" edit_type="<?php echo $action ?>" title="Edit product settings" />
+								   <?php } ?>
 						</td>
 					</tr>
-					<?
+					<?php
 				}
 			} else {
 				?>
 				<tr>
 					<td colspan="9">No active products available.</td>
 				</tr>
-				<?
+				<?php
 			}
 			?>
 		</tbody>
@@ -442,7 +442,7 @@ $(document).ready(function() {
 		var options = {
 			type: 'product',
 			settings: product.attr("data-settings"),
-			locations: <?= json_encode(MonitisConf::$locations) ?>
+			locations: <?php echo json_encode(MonitisConf::$locations) ?>
 		}
 		new monitisProductDialog(options, function(response) {
 			var form = $('#productEditForm');

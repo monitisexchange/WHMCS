@@ -1,4 +1,4 @@
-<?
+<?php
 define('MONITIS_ORDER_BEHAVIOR_TITLE', '{
 		"noaction":"No action",
 		"active":"Create/Activate",
@@ -71,30 +71,30 @@ if( isset($_POST["save_service"])){
 			<td class="fieldlabel title">Product/Addon status</td>
 			<td class="fieldarea title">&nbsp;Monitis API action (Monitors)</td>
 		</tr>
-	<?	$order_behavior=MonitisConf::$settings["order_behavior"];
+	<?php	$order_behavior=MonitisConf::$settings["order_behavior"];
 		foreach ($default_order_behavior as $key => $val) {  ?>
 		<tr>
-			<td class="fieldlabel"><?=ucfirst($key) ?>:</td>
+			<td class="fieldlabel"><?php echo ucfirst($key) ?>:</td>
 			<td class="fieldarea">
-				<select style="min-width:150px" name=<?=$key?>>
-					<? 
+				<select style="min-width:150px" name=<?php echo $key; ?>>
+					<?php 
 					foreach ($default_order_behavior[$key] as $k => $v) {                                                           
 					  $selected = ( ($order_behavior && $k == $order_behavior[$key]) || (!$order_behavior && $default_order_behavior[$key][$k] > 0 )) ? 'selected' : ''; 
 					?>    
-					<option value="<?=$k?>" <?= $selected ?> ><?=$order_title[$k]?></option>
+					<option value="<?php echo $k ?>" <?php echo $selected; ?> ><?php echo $order_title[$k] ?></option>
 
-					<? } ?>
+					<?php } ?>
 				</select>
 			</td>
 		</tr>
-	<? } ?>
+	<?php } ?>
 		<tr><td class="fieldlabel" >&nbsp;</td><td><input type="submit" value="Save" name="save_service" class="btn" /></td></tr>
 		</table> 
   </form>
 </div>
 
-<?
-//<?=MONITIS_APP_URL
+<?php
+//MONITIS_APP_URL
 //&monitis_page=tabclient&sub=settings
 
 ?>
@@ -105,25 +105,25 @@ if( isset($_POST["save_service"])){
 			<td class="fieldlabel title">Client status</td>
 			<td class="fieldarea title">&nbsp;Monitis API action (Sub Accounts)</td>
 		</tr>
-	<? 
+	<?php 
 		$userStatusBehavior=MonitisConf::$settings["user_behavior"];
 
 		foreach ($defaultStatusBehavior as $key => $val) { ?>
 		<tr>
-			<td class="fieldlabel" ><?=ucfirst($key) ?>:</td>
+			<td class="fieldlabel" ><?php echo ucfirst($key) ?>:</td>
 			<td class="fieldarea">
-				<select style="min-width:150px" name=<?=$key?>>
-					<? 
+				<select style="min-width:150px" name=<?php echo $key ?>>
+					<?php 
 					foreach ($defaultStatusBehavior[$key] as $k => $v) {                                                           
 					  $selected = ( ($userStatusBehavior && $k == $userStatusBehavior[$key]) || (!$userStatusBehavior && $defaultStatusBehavior[$key][$k] > 0 )) ? 'selected' : ''; 
 					?>    
-						<option value="<?=$k?>" <?= $selected ?> ><?=$clientStatusTitle[$k]?></option>
+						<option value="<?php echo $k ?>" <?php echo $selected ?> ><?php echo $clientStatusTitle[$k]?></option>
 
-					<? } ?>
+					<?php } ?>
 				</select>
 			</td>
 		</tr>
-	<? } ?>
+	<?php } ?>
 		<tr><td class="fieldlabel" >&nbsp;</td><td><input type="submit" value="Save" name="save_client" class="btn" /></td></tr>
 		</table> 
    

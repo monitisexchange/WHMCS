@@ -241,7 +241,7 @@ $actionTitle = array(
 <table width="100%" border="0" cellpadding="3" cellspacing="0">
 	<tr>
 		<td width="50%" align="left">
-			<b><?= count($all) ?></b> Changes
+			<b><?php echo count($all) ?></b> Changes
 		</td>
 		<td width="50%" align="right">
 			<a href="<?php echo MONITIS_APP_URL ?>&monitis_page=tabadmin&sub=servers" class="monitis_link_result">&#8592; Back to servers list</a>
@@ -257,7 +257,7 @@ $actionTitle = array(
 		<th>Action</th>
 		<th>&nbsp;</th>
     </thead>
-<?
+<?php 
 if($all && count($all) > 0) {
 	for($i=0; $i<count($all); $i++) {
 		$server = $all[$i];
@@ -265,19 +265,19 @@ if($all && count($all) > 0) {
 
 	<tr>
 		<td>&nbsp;</td>
-		<td><?=$server['server']?></td>
-		<td><?=$server['monitor']['monitor_type']?></td>
-		<td><?=$actionTitle[$server['action']]?></td>
+		<td><?php echo $server['server']?></td>
+		<td><?php echo $server['monitor']['monitor_type']?></td>
+		<td><?php echo $actionTitle[$server['action']]?></td>
 		<td>&nbsp;</td>
 	</tr>
-<?
+<?php
 	}
 } else {
 ?>
 	<tr>
 		<td colspan="6">No changed monitors</td>
 	</tr>
-<?
+<?php
 }
 ?>
 </table>

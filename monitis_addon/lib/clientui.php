@@ -1,4 +1,4 @@
-<?
+<?php
 class monitisClientUi {
 
 	private $pubKeys = null;
