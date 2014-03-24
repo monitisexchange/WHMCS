@@ -139,8 +139,7 @@ class MonitisConf {
 			update_query(MONITIS_SETTING_TABLE, $update, $where);
 			return true;
 		} else {
-			echo '<div><b> Monitis server not respose!</b></div>';
-//monitisLog("<b>Monitis server not respose!</b>");
+			//echo '<div><b> Monitis server not respose!</b></div>';
 			return false;
 		}
 	}
