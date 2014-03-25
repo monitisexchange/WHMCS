@@ -222,17 +222,17 @@ $(document).ready(function() {
 			$('.monitis-options-form-save').submit();
 		});
 	});
-
+ 
 	$('.monitis-options-link input').click(function() {
 		monitisProductDialog({
 			'type': 'option',
 			'name': 'New Configurable Option',
 			'settings': {
 				'types': 'http',
-				'interval': 1,
-				'timeout': 1000,
+				'interval': <?php echo MonitisConf::$settings["http"]["interval"];?>,
+				'timeout': <?php echo MonitisConf::$settings["http"]["timeout"]?>,
 				'locationIds': [1, 9, 10],
-				'locationsMax': 5
+				'locationsMax': <?php echo MonitisConf::$settings["http"]["locationsMax"]?>
 			},
 			'locations': locations,
 			'optionGrups': optionGrups
