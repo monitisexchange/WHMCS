@@ -51,6 +51,10 @@ class MonitisApi {
 			$url = self::$endpoint . '?' . $query;
 			$ch = curl_init( $url );
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			if(MONITIS_SSL_NOVERIFY) {
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 0);
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+			}
 			$json = curl_exec($ch);
 			curl_close($ch);
 			$result = json_decode($json, true);
@@ -95,6 +99,10 @@ monitisLog("<b>***************Parent Set authToken</b><p>$json</p>");
 			$ch = curl_init( $url );
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($ch, CURLOPT_ENCODING, 'UTF-8');
+			if(MONITIS_SSL_NOVERIFY) {
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 0);
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+			}
 			$result = curl_exec($ch);
 			curl_close($ch);
 
@@ -136,6 +144,10 @@ monitisLog("<b>***************Parent Set authToken</b><p>$json</p>");
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($ch, CURLOPT_POST, 1 );
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+			if(MONITIS_SSL_NOVERIFY) {
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 0);
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+			}
 			$result = curl_exec($ch);
 			curl_close($ch);
 			
@@ -166,6 +178,10 @@ monitisLog("POST requestPost **** action = <b>$action</b><p>$query</p><p>$result
 		$query = http_build_query($params);
 		$ch = curl_init(self::$endpoint . '?' . $query);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		if(MONITIS_SSL_NOVERIFY) {
+			curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 0);
+			curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+		}
 		//$json = json_decode(curl_exec($ch), true);
 		$result = curl_exec($ch);
 		$json = self::jsonDecode($result);

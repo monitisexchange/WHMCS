@@ -12,6 +12,7 @@ define('MONITIS_CLIENT_ID', 1 );		// admin
 define('MONITIS_REMOVE_TABLES', false);		// drop Monitis addon all tables
 define('MONITIS_LOGGER', false);			// hide Monitis addon Activity Log
 
+define('MONITIS_SSL_NOVERIFY', true);	// SSL verification
 /*
  *	for notification Rule
  */

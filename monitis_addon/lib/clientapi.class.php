@@ -36,6 +36,10 @@ class monitisClientApiAccess {
 			
 			$ch = curl_init( $url );
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			if(MONITIS_SSL_NOVERIFY) {
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 0);
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+			}
 			$result = curl_exec($ch);
 monitisLog("client requestGet **** action = <b>$action</b><p>$url</p><p>$result</p>");
 			//$resp = json_decode($result, true); // mml
@@ -76,6 +80,11 @@ monitisLog("client requestGet **** action = <b>$action</b><p>$url</p><p>$result<
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 			curl_setopt($ch, CURLOPT_POST, 1 );
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+			if(MONITIS_SSL_NOVERIFY) {
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 0);
+				curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, 0); 
+			}
+			
 			$result = curl_exec($ch);
 monitisLog("client requestPost **** action = <b>$action</b><p>$query</p><p>$result</p>");
 			//$resp = json_decode($result, true);
