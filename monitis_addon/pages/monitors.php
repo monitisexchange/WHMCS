@@ -5,6 +5,7 @@ $drives = array();
 $serverId = $_GET['server_id'];
 $serverMonitors = new serverMonitors();
 $serverInfo = $serverMonitors->getServerInfo($serverId);
+
 if(isset($_POST['action'])) {
     $action = $_POST['action'];
     $monitorId = isset($_POST['id']) ? (int) $_POST['id'] : 0;
@@ -101,7 +102,8 @@ elseif(isset($_POST['type'])) {
             $locationIds = mysql_escape_string($_POST['locationIds']);
             $params = array(
                 'type' => 'ping',
-                'name' => $serverInfo['ipaddress'] . '_ping',
+                //'name' => $serverInfo['ipaddress'] . '_ping',
+				'name' => $serverInfo['hostname'] . '_ping',
                 'url' => $serverInfo['ipaddress'],
                 'timeout' => (int) $_POST['timeout'],
                 'tag' => $serverInfo['hostname'] . '_whmcs',
@@ -148,7 +150,7 @@ elseif(isset($_POST['type'])) {
                 $platform = $monitor['agentPlatform'];
                 $params = array(
                     'testId' => $monitorId,
-                    'name' => $serverInfo['ipaddress'] . '_cpu',
+                    'name' => 'cpu@'.$serverInfo['hostname'],
                     'tag' => $serverInfo['hostname'] . '_whmcs'
                 );	
                 $cpu = MonitisConf::$settings['cpu'][$platform];
@@ -192,7 +194,7 @@ elseif(isset($_POST['type'])) {
                     $serverInfo['agent']['cpu'] = $serverMonitors->getMonitor($resp['id'], 'cpu');
                 }
                 else {
-                    MonitisApp::addError($resp['error']);
+                    MonitisApp::addError($resp['msg']);
                 }
             }
             break;
@@ -203,7 +205,7 @@ elseif(isset($_POST['type'])) {
                 $monitorId = (int) $_POST['id'];
                 $params = array(
                     'testId' => $monitorId,
-                    'name' => $serverInfo['ipaddress'] . '_memory',
+                    'name' => 'memory@'.$serverInfo['hostname'],
                     'tag' => $serverInfo['hostname'] . '_whmcs',
                     'platform'=>$platform
                 );	
@@ -276,7 +278,6 @@ elseif(isset($_POST['type'])) {
                 $params = array(
                     'testId' => $monitorId,
                     'freeLimit' => $freeLimit,
-                    //'name' => $serverInfo['ipaddress'] . '_drive',
 					'name' => 'drive_' . $driveLetter . '@' . $serverInfo['hostname'],
                     'tag' => $serverInfo['hostname'] . '_whmcs'
                 );
@@ -361,11 +362,13 @@ if($serverInfo['agent'] != NULL){
     if($serverInfo['agent']['cpu'] != NULL){
         $settings = array(
             'kernelMax' => $serverInfo['agent']['cpu']['kernelMax'],
-            'usedMax' => $serverInfo['agent']['cpu']['userMax'],
-            'idleMin' => $serverInfo['agent']['cpu']['idleMin'],
-            'ioWaitMax' => $serverInfo['agent']['cpu']['iowaitMax'],
-            'niceMax' => $serverInfo['agent']['cpu']['niceMax']
+            'usedMax' => $serverInfo['agent']['cpu']['userMax']
         );
+        if($serverInfo['agent']['platform'] == 'LINUX'){
+            $settings['idleMin'] = $serverInfo['agent']['cpu']['idleMin'];
+            $settings['ioWaitMax'] = $serverInfo['agent']['cpu']['iowaitMax'];
+            $settings['niceMax'] = $serverInfo['agent']['cpu']['niceMax'];
+        }
         $serverInfo['agent']['cpu']['settings'] = str_replace('"', "~", json_encode($settings));
     }
     if($serverInfo['agent']['memory'] != NULL){
@@ -373,6 +376,9 @@ if($serverInfo['agent'] != NULL){
             'freeLimit' => $serverInfo['agent']['memory']['freeLimit'],
             'freeSwapLimit' => $serverInfo['agent']['memory']['freeSwapLimit']
         );
+        if($serverInfo['agent']['platform'] == 'WINDOWS'){
+            $settings['freeVirtualLimit'] = $serverInfo['agent']['memory']['freeVirtualLimit'];
+        }
         $serverInfo['agent']['memory']['settings'] = str_replace('"', "~", json_encode($settings));
     }
     if($serverInfo['agent']['drive'] != NULL){
@@ -451,7 +457,7 @@ else{
 }
 </style>
 
-<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js"></script>
+<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js?<?php echo MONITIS_RESOURCE_VERSION ?>"></script>
 <script type="text/javascript">
 $(document).ready(function(){
     var monitisMonitors = {};
@@ -501,7 +507,7 @@ $(document).ready(function(){
         monitisProductDialog({
                 'type': 'server-cpu',
                 'name': 'New CPU Monitor',
-                'settings': <?php echo json_encode(MonitisConf::$settings['cpu']['LINUX']) ?>
+                'settings': <?php echo json_encode(MonitisConf::$settings['cpu'][$serverInfo['agent']['platform']]) ?>
         }, function(settings) {
             settings.type = 'cpu';
             monitisMonitors.submit(settings);
@@ -527,7 +533,7 @@ $(document).ready(function(){
         monitisProductDialog({
                 'type': 'server-memory',
                 'name': 'New Memory Monitor',
-                'settings': <?php echo json_encode(MonitisConf::$settings['memory']['LINUX']) ?>,
+                'settings': <?php echo json_encode(MonitisConf::$settings['memory'][$serverInfo['agent']['platform']]) ?>,
                 'locations': monitisMonitors.locations
         }, function(settings) {
             settings.type = 'memory';

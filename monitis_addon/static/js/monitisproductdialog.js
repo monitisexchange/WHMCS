@@ -133,18 +133,24 @@ function monitisProductDialog(properties, callback) {
         str += '<label class="monitis-title monitis-fixed-mini">Used Max:</label>';
         str += '<input type="text" size="15" name="used_max" value="'+ settings.usedMax +'" />';
         str += '</div>';
+	if(typeof(settings.idleMin) !== 'undefined') {
         str += '<div class="monitis-block-mini">';
         str += '<label class="monitis-title monitis-fixed-mini">Idle Min:</label>';
         str += '<input type="text" size="15" name="idle_min" value="'+ settings.idleMin +'" />';
         str += '</div>';
+	}
+	if(typeof(settings.ioWaitMax) !== 'undefined') {
         str += '<div class="monitis-block-mini">';
         str += '<label class="monitis-title monitis-fixed-mini">IOWait Max:</label>';
         str += '<input type="text" size="15" name="io_wait_max" value="'+ settings.ioWaitMax +'" />';
         str += '</div>';
+	}
+	if(typeof(settings.niceMax) !== 'undefined') {
         str += '<div class="monitis-block-mini">';
         str += '<label class="monitis-title monitis-fixed-mini">Nice Max:</label>';
         str += '<input type="text" size="15" name="nice_max" value="'+ settings.niceMax +'" />';
         str += '</div>';
+    }
     }
     
     if(properties.type == 'server-memory') {
@@ -156,6 +162,12 @@ function monitisProductDialog(properties, callback) {
         str += '<label class="monitis-title monitis-fixed-mini">Swap Limit:</label>';
         str += '<input type="text" size="15" name="free_swap_limit" value="' + settings.freeSwapLimit + '" />&nbsp;MB';
         str += '</div>';
+	if(typeof(settings.freeVirtualLimit) !== 'undefined') {
+	    str += '<div class="monitis-block-mini">';
+	    str += '<label class="monitis-title monitis-fixed-mini">Free Virtual Limit:</label>';
+	    str += '<input type="text" size="15" name="free_virtual_limit" value="' + settings.freeVirtualLimit + '" />&nbsp;MB';
+	    str += '</div>';
+    }
     }
     
     if(properties.type == 'server-drive') {
@@ -338,6 +350,7 @@ function monitisProductDialog(properties, callback) {
                     if(properties.type === 'server-memory'){
                         settings['freeLimit'] = parseInt($(this).find('[name=free_limit]').val());
                         settings['freeSwapLimit'] = parseInt($(this).find('[name=free_swap_limit]').val());
+			settings['freeVirtualLimit'] = parseInt($(this).find('[name=free_virtual_limit]').val());
                     }
                     
                     if(properties.type === 'server-drive'){

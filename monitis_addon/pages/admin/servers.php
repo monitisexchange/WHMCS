@@ -208,11 +208,14 @@ if ($total % $limit)
 						}
 						if ($monitors['drive']) {
 							$drive = $monitors['drive'];
-							$drive_status = 0;
+							$drive_status = $drive_nok_status = $drive_ok_status = 0;
 							$noassociate = 0;
+
 							for ($d = 0; $d < count($drive); $d++) {
 								if ($drive[$d]['status'] == 'NOK')
 									$drive_nok_status++;
+								if ($drive[$d]['status'] == 'OK')
+									$drive_ok_status++;
 								if ($drive[$d]['associate'] == 'yes')
 									$noassociate++;
 							}
@@ -286,6 +289,8 @@ if ($total % $limit)
 											$stl = 'pending';
 										} elseif ($drive_nok_status > 0) {
 											$stl = 'closed';
+										} elseif ($drive_ok_status > 0 && $drive_ok_status == count($drive)) {
+											$stl = 'active';
 										} else {
 											$stl = 'closed';
 										}
