@@ -316,11 +316,11 @@ function monitisProductDialog(properties, callback) {
                         
                         settings['timeoutPing'] = parseInt($(this).find('[name=timeout_ping]').val());
                     }
-                    else if(properties.type === 'addon' || properties.type === 'options') {
+                    else if(properties.type === 'addon' || properties.type === 'option') {
                         settings['types'] = $(this).find('[name=type]:checked').val();
                     }
                     
-                    if(properties.type === 'product' || properties.type === 'addon' || properties.type === 'options' || properties.type === 'server-ping'){
+                    if(properties.type === 'product' || properties.type === 'addon' || properties.type === 'option' || properties.type === 'server-ping'){
 			$(this).find('[name=timeout]').change();
                         settings['interval'] = parseInt($(this).find('[name=interval]').val());
                         settings['timeout'] = parseInt($(this).find('[name=timeout]').val());
@@ -331,7 +331,7 @@ function monitisProductDialog(properties, callback) {
                         });
                     }
                     
-                    if(properties.type === 'product' || properties.type === 'addon' || properties.type === 'options') {
+                    if(properties.type === 'product' || properties.type === 'addon' || properties.type === 'option') {
                         settings['locationsMax'] = parseInt($(this).find('[name=locations_max]').val());
                     }
                     

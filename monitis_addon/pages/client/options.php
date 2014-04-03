@@ -82,7 +82,7 @@ $query = '
 		subs.id AS sub_id, subs.optionname AS sub_name, moptions.option_id as oid,
 		moptions.type, moptions.settings, moptions.is_active
 	FROM `mod_monitis_options` AS moptions
-		LEFT JOIN `tblproductconfigoptionssub` AS subs
+		JOIN `tblproductconfigoptionssub` AS subs
 			ON subs.id = moptions.option_id
 		LEFT JOIN `tblproductconfigoptions` AS options
 			ON options.id = subs.configid
@@ -201,7 +201,7 @@ MonitisApp::addError($error);
 }
 </style>
 
-<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js?<?php echo rand(1, 1000) ?>"></script>
+<script type="text/javascript" src="../modules/addons/monitis_addon/static/js/monitisproductdialog.js?<?php echo MONITIS_RESOURCE_VERSION ?>"></script>
 <script type="text/javascript">
 $(document).ready(function() {
 	var locations = <?php echo json_encode($locations) ?>;
